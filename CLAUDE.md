@@ -12,6 +12,6 @@
 
 | File | Contents |
 |------|----------|
-| `product.md` | Vision, stack decisions, sprint cycle, entities, views, and all UX rules (input parsing, gestures, animations, native-feel requirements) |
-| `data_model.md` | Schema definitions, field types, indexes, sync/conflict strategy, and business logic rules |
-| `roadmap.md` | Phased implementation plan — 26 tasks across 5 phases from POC to AI completions |
+| `docs/product.md` | Vision, stack decisions, sprint cycle, entities, views, and all UX rules (input parsing, gestures, animations, native-feel requirements) |
+| `docs/data_model.md` | Schema definitions, field types, indexes, sync/conflict strategy, and business logic rules |
+| `docs/roadmap.md` | Phased implementation plan — 26 tasks across 5 phases from POC to AI completions |

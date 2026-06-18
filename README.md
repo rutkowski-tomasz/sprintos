@@ -28,6 +28,6 @@ A learning project exploring: AI-assisted development, docs-first planning, PWA 
 
 | File | Contents |
 |------|----------|
-| `product.md` | Vision, stack, views, UX rules |
-| `data_model.md` | Schemas, sync strategy, business rules |
-| `roadmap.md` | 26-task implementation plan |
+| `docs/product.md` | Vision, stack, views, UX rules |
+| `docs/data_model.md` | Schemas, sync strategy, business rules |
+| `docs/roadmap.md` | 26-task implementation plan |
