@@ -1,136 +1,148 @@
-Product Vision: Personal Offline-First Sprint Manager
+# Product: Personal Sprint Manager
 
-1. Core Purpose & Philosophy
+## Core Purpose
 
-This application is a strictly personal, single-user productivity tool designed to remove friction from a specific task-management workflow. It is not intended for public release or monetization. The overarching philosophy is "Inbox Zero for Tasks," leveraging automated weekly sprint cycles to force prioritization and keep the active workspace clean.
+Personal, single-user productivity tool built around **"Inbox Zero for Tasks"** — automated weekly sprint cycles force prioritization and keep the active workspace clean. Not intended for public release.
 
-2. Platform & Architecture Strategy
+## Stack
 
-Platform: React (e.g., Vite + React) configured as a Progressive Web App (PWA). Because App Store distribution is intentionally avoided, a standard React PWA is the optimal choice. It provides a lightweight, fast codebase that can be natively installed to an iOS Home Screen via Safari.
+- **Frontend**: React + Vite PWA — installable to iOS Home Screen via Safari, no App Store needed
+- **Backend**: Supabase (PostgreSQL)
+- **Offline Layer**: IndexedDB (Dexie.js) + custom offline sync queue
+- **Animations**: Framer Motion (gestures, layout transitions, enter/exit) + AutoAnimate (simple list tables) + Tailwind transitions (micro-interactions)
 
-Offline-First Data Layer: Powered by Supabase + PowerSync. This provides a robust PostgreSQL cloud database synced to a local SQLite database running directly in the browser via WASM.
+All reads/writes execute instantly against local IndexedDB. A background sync queue pushes mutations to the cloud when online. Pending mutations survive force-close and sync on next launch.
 
-Sync Behavior: Read, write, update, and delete actions execute instantly against the local SQLite database. Background synchronization (via PowerSync) pushes changes to the cloud when a connection is available. If the app is force-closed while offline, pending mutations are safely stored in local SQLite and synced upon the next launch.
+## Sprint Cycle
 
-3. The Automated Sprint Cycle
+Sprints run **Saturday–Friday** (7 days). Automated rollover at **Saturday 00:00** — incomplete tasks in Current move to Next; a new sprint is generated.
 
-The core engine of the app is an automated, rolling weekly sprint.
+**Trigger**: checked on app open. All Fridays missed since the last rollover are executed in sequence before the UI renders. Rollover writes to IndexedDB first and syncs via the normal queue.
 
-Rollover Trigger: Friday midnight.
+| Label | Description |
+|-------|-------------|
+| Past | Archived sprints |
+| Previous | Most recently finished sprint |
+| **Current** | Active working week |
+| Next | Upcoming week (planning) |
+| Future | Backlog / horizon |
 
-Rollover Action: All incomplete tasks in the Current sprint are automatically moved to the Next sprint. A new sprint is generated.
+## Entities
 
-Sprint Taxonomy (Dynamically Calculated): * Past (Historical, archived sprints)
+### Task
+- **Core**: emoji, title, status, assigned sprint, goal link
+- **Time**: `eventDate` (hard deadline/appointment), `snoozeDate` (visibility toggle)
+- **Context**: Markdown description, source URL, duration
 
-Previous (The most recently finished sprint)
+### Goal
+Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, linked tasks.
 
-Current (The active working view)
+## Views
 
-Next (Planned for the upcoming week)
+| View | Description |
+|------|-------------|
+| **Current Sprint** | Default view. Incomplete tasks for active week, ordered: In Progress → To-Do |
+| **Next Sprint** | Tasks planned for the upcoming week |
+| **Planning** | All incomplete tasks — sprint-assigned and unassigned — ordered by Sprint → Status. Shows both what is planned and what still needs a sprint. |
+| **All Tasks** | Cursor-paginated table. Filter by Goal/Status (including Completed), full-text search, sort by `createdAt` for mass cleanup |
+| **Goals** | Aggregated progress (completed / total tasks). Inline create/rename, multi-select delete |
+| **Sprints** | Read-only history. Delete past or distant-future sprints to clear clutter |
 
-Future (Backlog/horizon)
+## UX Rules
 
-4. Core Entities
+### General
+- No Save/Cancel buttons — changes auto-persist on blur/state change
+- Subtle sync indicator in the header (non-blocking)
+- Keyboard shortcuts explicitly visible in the UI
 
-Tasks: The fundamental unit of work. Contains all associated data:
+### Task Entry
+- **Desktop**: New Task opens a bottom row. Fuzzy completions suggested from existing task names and goal names; Tab to accept, Enter to save and open the next row.
+- **Mobile**: Accessory toolbar for acceptance; Return saves and keeps input active.
 
-Primary: Emoji icon, Title, Status (To-Do, Next, In Progress, Done, Archive), Assigned Sprint, Goal Link. (Note: Done and Archive are both considered "Completed").
+### Natural Language Parsing
 
-Time Management: Event Date (hard deadline/appointment) and Snooze Date (visibility toggle).
+The raw input string is never modified while the user types. Instead, each recognised token is **color-coded in place** and a small badge floats above it showing the resolved value (e.g. `Mon` → `18 Jun`, `2h` → `7 200s`, `#write` → `Writing`). On Enter the string is decomposed: unparsed words become the title, everything else goes to its field. To edit a field after saving, interact with that column directly — the raw string is not re-shown.
 
-Context: Markdown description (free text) and Source URL/Duration (for media/links).
+**Parsed tokens**
 
-Goals: Quarterly objectives containing:
+| Token | Field | Example → Resolved |
+|-------|-------|--------------------|
+| Leading emoji | `emoji` | `🏋️ Gym Mon` → emoji: 🏋️ |
+| Date / time (see formats below) | `eventDate` | `1st June 12:00` → ISO datetime |
+| Status keyword (see list below) | `status` | `progress` → IN_PROGRESS |
+| `@Mon`, `@tmrw`, `@1st June` | `snooze` (absolute ISO date) | hidden until that date; `@Mon` resolves to the *next* Monday |
+| `@1d`, `@2h` | `snooze` (relative to now, ISO date) | hidden for that duration from now |
+| `@-1d`, `@-2h` | `snooze` (relative to event, stored as `"-{seconds}"`) | hidden until N before `eventDate`; requires `eventDate` — blocked if missing |
+| `30m`, `1h`, `1h30m`, `1.5h` | `duration` (seconds) | `1h30m` → 5 400 |
+| `#prefix` | `goalId` | fuzzy-matched against existing goal names |
+| Bare URL | `sourceUrl` | stripped from title automatically |
 
-Title and Emoji icon.
+Sprint assignment is **context-driven** — new tasks inherit the sprint of the active view. No parsing token needed. The Planning view is an exception: new tasks default to unassigned (`sprintId = null`) so they appear in the unassigned bucket.
 
-Quarter format (e.g., "26 Q3").
+**General rule**: a newly created task must always appear in the view it was created from. It inherits whatever filters that view implies (sprint, goal, status, etc.).
 
-Markdown summary.
+**Supported date formats**
 
-Linked tasks to track overall progress.
+| Format | Example |
+|--------|---------|
+| Day of week (+ optional time) | `Monday 12`, `Tue 13:12`, `Wed` |
+| Ordinal date (+ optional time) | `1st Apr`, `3rd June`, `4th December 13:12` |
+| DD.MM HH:MM | `01.06 12:00` |
+| Relative | `today 12:00`, `tmrw 13`, `tomorrow 18:19` |
 
-5. View Hierarchy
+**Supported status tokens** (case-insensitive)
 
-Current Sprint (Default): Incomplete tasks for the active week, grouped/ordered by status (In Progress -> To-Do).
+| Token(s) | Status |
+|----------|--------|
+| `todo`, `to do` | TODO |
+| `next` | NEXT |
+| `progress`, `in progress` | IN_PROGRESS |
+| `done` | DONE |
+| `archive` | ARCHIVED |
 
-Next Sprint: Planning view showing only tasks slated for the upcoming week.
+### Snooze
+- Global **Show Snoozed** toggle. Snoozed tasks appear ghosted (reduced opacity).
+- Snoozed tasks are fully interactive while visible — no need to un-snooze before acting.
 
-Planning: A holistic view of all incomplete tasks across all sprints, ordered by Sprint, then Status.
+### Duplication (Cmd+D)
 
-All Tasks: Comprehensive table allowing filtering by Goal, Status (including viewing all "Completed"), full-text search, and sorting by creation date to facilitate mass deletion of old tasks.
+All fields are copied. `name` gets ` 1` appended; if that name already exists, increment until a unique name is found (`name 2`, `name 3`, …).
 
-Goals Management: A table view listing all Goals. Displays aggregated progress metrics (Total Tasks vs. Completed Tasks). Allows inline creation, renaming, and mass-deletion via multi-select.
+### Keyboard Shortcuts (Desktop)
 
-Sprints Management: A read-only table view of historical and future Sprints. Allows deletion of past or distant-future sprints to clear database clutter.
+| Shortcut | Action |
+|----------|--------|
+| Hover → checkbox | Reveal per-row checkbox; click to select |
+| Shift + click | Select all rows between last selected and clicked |
+| Shift + ↑ / ↓ | Extend selection by one row |
+| Cmd+D / Ctrl+D | Duplicate selected |
+| Backspace | Delete selected |
+| 1–4 | Set status |
 
-6. Architecture & Tech Stack Decisions
+### Mobile Gestures
+- **Swipe right**: Mark Done
+- **Swipe left**: Quick-snooze menu
 
-Chosen Stack: React PWA + Supabase (PostgreSQL) + PowerSync.
+### Animation & Native Feel
 
-Reasoning: Provides a clean, relational data structure, guarantees persistent offline capability via an embedded SQLite database, and uniquely supports lightning-fast, 100% offline full-text search and complex multi-field filtering out of the box.
+**Principles**: all state changes are animated. Animations use spring physics (via Framer Motion defaults) — never linear easing, which reads as "web".
 
-Rejected Options:
+| Trigger | Animation |
+|---------|-----------|
+| Task created | Slide in from bottom |
+| Task deleted / completed | Fade + height collapse |
+| Task status change | Background colour transition |
+| List reorder | Smooth layout transition (`layout` prop) |
+| Snoozed task shown/hidden | Opacity fade |
+| View navigation | Slide transition between routes |
+| Swipe gesture | Real-time drag with spring snap-back or completion |
 
-Firebase / Firestore: Rejected because it lacks native offline full-text search and requires tedious, manual composite indexes for the complex multi-field filtering required by the views.
+**Native-feel CSS (applied globally)**
 
-Convex: Rejected because its client stores mutations in-memory, meaning offline data is permanently lost if the iOS browser app is force-closed before regaining an internet connection.
+```css
+overscroll-behavior: none;           /* kills browser rubber-band scroll */
+-webkit-tap-highlight-color: transparent; /* removes iOS grey tap flash */
+user-select: none;                   /* no accidental text selection on rows */
+```
 
-Custom .NET Backend + Next.js: Rejected because writing a custom SQLite sync engine, WebSocket server, and conflict-resolution logic from scratch severely violates the strict 1-week timeline constraint.
-
-
----
-
-User Experience & Interaction Rules
-
-1. UI Principles
-
-Visual Clarity: Table views hide heavy text behind a muted, expandable icon.
-
-Auto-Persist & Inline Editing: No "Save" or "Cancel" buttons. Clicking a field enters edit mode; changes save automatically on blur/state change.
-
-Sync Indicator: A non-blocking, subtle UI element (e.g., an icon in the header) must indicate when the app is actively syncing with the cloud.
-
-Discoverable Shortcuts: Shortcuts are explicitly visible in the UI.
-
-2. Rapid Task Entry & Autocompletion
-
-Desktop: Clicking "New Task" opens a bottom row. AI suggests completions. Press Tab to accept. Press Enter to save and open a new blank row.
-
-Mobile: An accessory toolbar handles acceptance. Tapping "Return" saves and keeps the input active.
-
-3. Natural Language Input Parsing
-
-Text input intelligently extracts metadata from the string in real-time.
-
-Live Color-Coding: Parsed entities highlight instantly. (e.g., "Vet 1st June 12:00 progres @-1d").
-
-Post-Parse Editing: Once the string is confirmed, the natural language text is stripped. The title becomes just "Vet". If the user clicks the title to edit it, they only edit the word "Vet". They do not see the raw string again. To edit the date or status, they must interact with the respective columns.
-
-Snooze Parsing: Triggered by @ (e.g., "@-1d"). Snooze Date cannot be set after the Event Date.
-
-4. Time Management & View Toggles
-
-Snooze Visibility Toggle: A global toggle to "Show Snoozed Tasks". Snoozed tasks appear ghosted/opacity reduced.
-
-Snoozed Task Interaction: Users can fully interact with snoozed tasks while they are visible (e.g., swiping a ghosted task to mark it DONE immediately) without needing to un-snooze it first.
-
-5. View Modifiers (All Tasks)
-
-The "All Tasks" view utilizes cursor pagination to ensure UI performance is unaffected by years of historical task data. It allows filtering by "Completed" status and sorting by createdAt for mass cleanup.
-
-6. Keyboard Shortcuts & Mass Actions (Desktop)
-
-Multi-Select: Shift-click or command-click multiple rows.
-
-Duplication: Cmd+D / Ctrl+D instantly duplicates.
-
-Deletion: Backspace instantly deletes selected rows.
-
-Status Updates: Dedicated keybindings (e.g., numbers 1-4).
-
-7. Mobile Gestures
-
-Swipe Right: Quick-action to mark a task as DONE.
-
-Swipe Left: Opens a quick-snooze menu.
+`touch-action` scoped to gesture zones only, to prevent scroll/swipe conflicts.
