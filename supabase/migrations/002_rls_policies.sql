@@ -1,3 +1,8 @@
+-- Table-level privileges for the authenticated role (required alongside RLS)
+GRANT SELECT, INSERT, UPDATE, DELETE ON goals   TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON sprints TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON tasks   TO authenticated;
+
 ALTER TABLE goals   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sprints ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tasks   ENABLE ROW LEVEL SECURITY;
