@@ -1,10 +1,16 @@
-import { useState } from 'react'
 import { motion } from 'motion/react'
 import { CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { AuthPage } from '@/components/AuthPage'
+import { useSession } from '@/hooks/useSession'
+import { supabase } from '@/lib/supabase'
 
 export default function App() {
-  const [count, setCount] = useState(0)
+  const { session, loading } = useSession()
+
+  if (loading) return null
+
+  if (!session) return <AuthPage />
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -18,11 +24,9 @@ export default function App() {
         <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           SprintOS
         </h1>
-        <p className="text-sm text-muted-foreground">
-          Tailwind · shadcn/ui · motion · lucide-react
-        </p>
-        <Button onClick={() => setCount(c => c + 1)}>
-          Clicked {count} {count === 1 ? 'time' : 'times'}
+        <p className="text-sm text-muted-foreground">{session.user.email}</p>
+        <Button variant="outline" onClick={() => supabase.auth.signOut()}>
+          Sign out
         </Button>
       </motion.div>
     </div>
