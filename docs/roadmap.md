@@ -19,10 +19,9 @@
 
 | # | Task | Done When |
 |---|------|-----------|
-| 7 | Apply production schemas to Supabase and Dexie | Cloud and local structurally match the data model |
-| 7a | Row Level Security: enable RLS on all tables (`goals`, `sprints`, `tasks`); add `USING (user_id = auth.uid())` policies for SELECT/INSERT/UPDATE/DELETE | Authenticated user A cannot read, write, or delete any row owned by user B — verified by querying with a second account's JWT |
-| 8 | `react-router-dom` + Protected Route; unauthenticated → `/login` | Visiting `/` without session redirects to `/login` |
-| 9 | Zustand stores; `dexie-react-hooks` subscription drives UI state | Adding an IndexedDB row instantly updates Zustand |
+| ✅ 7 | Apply production schemas to Supabase and Dexie | Cloud and local structurally match the data model |
+| ✅ 7a | Row Level Security: enable RLS on all tables (`goals`, `sprints`, `tasks`); add `USING (user_id = auth.uid())` policies for SELECT/INSERT/UPDATE/DELETE | Authenticated user A cannot read, write, or delete any row owned by user B — verified by querying with a second account's JWT |
+| ✅ 8 | `react-router-dom` + Protected Route; unauthenticated → `/login` | Visiting `/` without session redirects to `/login` |
 
 ## Phase 3 — Engine
 
