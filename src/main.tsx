@@ -21,7 +21,7 @@ supabase.auth.onAuthStateChange((_event, session) => {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/sprintos">
       <App />
     </BrowserRouter>
   </StrictMode>,
