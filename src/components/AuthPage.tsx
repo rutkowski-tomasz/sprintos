@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'motion/react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import { Logo } from '@/components/Logo'
 import googleLogo from '@/assets/google.svg'
 
 type Mode = 'sign-in' | 'sign-up'
@@ -47,7 +48,10 @@ export function AuthPage() {
         transition={{ duration: 0.3, ease: 'easeOut' }}
         className="w-full max-w-sm space-y-6 px-4"
       >
-        <div className="space-y-1 text-center">
+        <div className="space-y-2 text-center">
+          <div className="flex justify-center">
+            <Logo size={48} />
+          </div>
           <h1 className="text-xl font-semibold tracking-tight text-foreground">SprintOS</h1>
           <p className="text-sm text-muted-foreground">
             {mode === 'sign-in' ? 'Sign in to your account' : 'Create an account'}
