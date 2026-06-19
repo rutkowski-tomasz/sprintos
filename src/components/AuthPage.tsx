@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'motion/react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
+import googleLogo from '@/assets/google.svg'
 
 type Mode = 'sign-in' | 'sign-up'
 
@@ -53,6 +54,20 @@ export function AuthPage() {
           </p>
         </div>
 
+        <Button variant="outline" className="w-full" onClick={handleGoogle}>
+          <img src={googleLogo} alt="" className="size-4" />
+          Continue with Google
+        </Button>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-border" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-background px-2 text-muted-foreground">or</span>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit} className="space-y-3">
           <input
             type="email"
@@ -76,19 +91,6 @@ export function AuthPage() {
             {mode === 'sign-in' ? 'Sign in' : 'Sign up'}
           </Button>
         </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-border" />
-          </div>
-          <div className="relative flex justify-center text-xs">
-            <span className="bg-background px-2 text-muted-foreground">or</span>
-          </div>
-        </div>
-
-        <Button variant="outline" className="w-full" onClick={handleGoogle}>
-          Continue with Google
-        </Button>
 
         <p className="text-center text-xs text-muted-foreground">
           {mode === 'sign-in' ? "Don't have an account? " : 'Already have an account? '}
