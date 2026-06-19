@@ -45,10 +45,9 @@ function AnimatedContent() {
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: d * -30, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-        className="absolute inset-0 overflow-auto"
+        className="absolute inset-0 overflow-hidden"
       >
         {element}
-        <div className="md:hidden" style={{ height: 'calc(3.5rem + env(safe-area-inset-bottom))' }} aria-hidden="true" />
       </motion.div>
     </AnimatePresence>
   )

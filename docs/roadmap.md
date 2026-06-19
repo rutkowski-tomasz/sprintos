@@ -45,7 +45,7 @@
 | ✅ 15 | Reusable Task list component: status colours, description icon, Framer Motion enter/exit/reorder animations | Mock data renders and animates per spec |
 | ✅ 16 | Current Sprint + Next Sprint views wired to live Dexie queries | Correct tasks appear in each view; status ordering correct |
 | ✅ 17 | Planning view: all incomplete tasks grouped by assigned sprint + unassigned bucket, ordered Sprint → Status | Unassigned and sprint-assigned tasks both appear, correctly grouped |
-| 18 | Bottom-row rapid entry + live NL parser: tokens colour-coded in place, resolved-value badges | Enter saves to Dexie, opens new row; badges show correctly |
+| ✅ 18 | Bottom-row rapid entry + live NL parser: tokens colour-coded in place, resolved-value badges | Enter saves to Dexie, opens new row; badges show correctly |
 | 19 | Inline cell editing (Title, Status, Dates) — auto-save on blur | Click title → input; click away → saved. No Save buttons. |
 | 20 | Multi-select + desktop shortcuts: Cmd+D, Backspace, 1–4 | Selecting rows and pressing Backspace soft-deletes them locally |
 | 21 | Show Snoozed toggle + ghosted opacity (Tailwind transition) | Toggle hides/shows tasks where `snoozeDate` is in the future |
