@@ -48,6 +48,15 @@ Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, l
 | **Goals** | Aggregated progress (completed / total tasks). Inline create/rename, multi-select delete |
 | **Sprints** | Read-only history. Delete past or distant-future sprints to clear clutter |
 
+## Display Labels
+
+Full form always available as a tooltip. Omit context that matches today:
+
+| Full form | Current year | Current year + quarter |
+|-----------|-------------|------------------------|
+| `26 Q3` | `Q3` | `Q3` |
+| `26 Q2 11` | `Q2 11` | `11` |
+
 ## UX Rules
 
 ### General
