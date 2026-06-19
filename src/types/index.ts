@@ -21,22 +21,10 @@ export interface Goal {
   deletedAt: string | null
 }
 
-export interface Sprint {
-  id: string
-  userId: string
-  name: string
-  startDate: string
-  endDate: string
-  version: number
-  createdAt: string
-  updatedAt: string
-  deletedAt: string | null
-}
-
 export interface Task {
   id: string
   userId: string
-  sprintId: string | null
+  sprint: string | null
   goalId: string | null
   name: string
   emoji: string | null

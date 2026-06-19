@@ -1,6 +1,29 @@
 import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import type { Goal, Sprint, Task } from '@/types'
+import { sprintKey, compareSprintKeys } from '@/lib/sprintEngine'
+import { TaskStatus, type Goal, type Task } from '@/types'
+
+async function rollover(now: Date) {
+  const currentKey = sprintKey(now)
+  const staleTasks = await db.tasks
+    .filter(
+      t =>
+        t.deletedAt === null &&
+        t.status < TaskStatus.DONE &&
+        t.sprint !== null &&
+        compareSprintKeys(t.sprint, currentKey) < 0,
+    )
+    .toArray()
+
+  if (staleTasks.length === 0) return
+
+  const ts = now.toISOString()
+  for (const task of staleTasks) {
+    const updated = { ...task, sprint: currentKey, updatedAt: ts }
+    await db.tasks.put(updated)
+    await db.sync_queue.add({ operation: 'update', table: 'tasks', payload: updated })
+  }
+}
 
 async function flushQueue() {
   const items = await db.sync_queue.toArray()
@@ -20,20 +43,19 @@ async function flushQueue() {
 async function bootstrap() {
   if (!navigator.onLine) return
 
-  const [{ data: goals }, { data: sprints }, { data: tasks }] = await Promise.all([
+  const [{ data: goals }, { data: tasks }] = await Promise.all([
     supabase.from('goals').select('*'),
-    supabase.from('sprints').select('*'),
     supabase.from('tasks').select('*'),
   ])
 
   if (goals) await db.goals.bulkPut(goals as Goal[])
-  if (sprints) await db.sprints.bulkPut(sprints as Sprint[])
   if (tasks) await db.tasks.bulkPut(tasks as Task[])
 
   await flushQueue()
 }
 
 export function setupSync() {
+  rollover(new Date())
   bootstrap()
   window.addEventListener('online', flushQueue)
 
@@ -42,10 +64,6 @@ export function setupSync() {
     .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, async (payload) => {
       if (payload.eventType === 'DELETE') await db.goals.delete((payload.old as Goal).id)
       else await db.goals.put(payload.new as Goal)
-    })
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'sprints' }, async (payload) => {
-      if (payload.eventType === 'DELETE') await db.sprints.delete((payload.old as Sprint).id)
-      else await db.sprints.put(payload.new as Sprint)
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async (payload) => {
       if (payload.eventType === 'DELETE') await db.tasks.delete((payload.old as Task).id)

@@ -1,9 +1,8 @@
 import Dexie, { type Table } from 'dexie'
-import type { Goal, Sprint, Task, SyncQueueItem } from '@/types'
+import type { Goal, Task, SyncQueueItem } from '@/types'
 
 class AppDB extends Dexie {
   goals!: Table<Goal>
-  sprints!: Table<Sprint>
   tasks!: Table<Task>
   sync_queue!: Table<SyncQueueItem>
 
@@ -11,8 +10,7 @@ class AppDB extends Dexie {
     super('sprintos')
     this.version(1).stores({
       goals: 'id, userId',
-      sprints: 'id, userId, startDate, endDate',
-      tasks: 'id, userId, sprintId, goalId, status, createdAt',
+      tasks: 'id, userId, sprint, goalId, status, createdAt',
       sync_queue: '++id',
     })
   }

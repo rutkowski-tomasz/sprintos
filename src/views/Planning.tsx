@@ -20,14 +20,14 @@ export function Planning() {
         <p className="text-sm text-muted-foreground">No incomplete tasks.</p>
       ) : (
         groups.map((group) => {
-          const key = group.sprint?.id ?? 'unassigned'
+          const key = group.sprint ?? 'unassigned'
           const badge = group.sprintLabel ? LABEL_BADGE[group.sprintLabel] : undefined
 
           return (
             <section key={key} className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  {group.sprint ? group.sprint.name : 'Unassigned'}
+                  {group.sprint ?? 'Unassigned'}
                 </h3>
                 {badge && (
                   <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">

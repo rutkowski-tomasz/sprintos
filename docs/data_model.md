@@ -29,22 +29,31 @@
 
 Index: `userId`
 
-### Sprint
-`id, userId, name` (auto-generated as `"Q[quarter] [week-within-quarter]"`, e.g. `"Q2 07"` = 7th week of Q2; weeks 1–13 within the quarter), `startDate, endDate, version, createdAt, updatedAt, deletedAt`
-
-Indexes: `userId, startDate, endDate`
-
 ### Task
-`id, userId, sprintId, goalId, name, emoji, status`
+`id, userId, sprint, goalId, name, emoji, status`
+- `sprint` — string | null; normalized sprint key (e.g. `"26 Q2 11"` = 11th week of Q2 2026, Saturday–Friday cycle) or `null` for unassigned
 - `eventDate` — ISO string | null
 - `snooze` — string | null; either an ISO date string (absolute / relative-to-now) or `"-{seconds}"` (negative offset relative to `eventDate`, e.g. `"-86400"` for −1 day)
 - `description` (Markdown), `sourceUrl`, `duration` (Number, in seconds)
 - `version, createdAt, updatedAt, deletedAt`
 
-Indexes: `userId, sprintId, goalId, status, createdAt`
+Indexes: `userId, sprint, goalId, status, createdAt`
+
+## Sprint Keys
+
+Not stored — derived from the current date. Format: `"YY QN W"` (e.g. `"26 Q2 11"` = 11th Saturday–Friday week of Q2 2026). Week 1 of a quarter is the week starting on the first Saturday on or after the quarter's first day.
+
+| Label | Offset from current |
+|-------|---------------------|
+| past | < −1 week |
+| previous | −1 week |
+| **current** | this week |
+| next | +1 week |
+| future | > +1 week |
 
 ## Business Rules
 
+- **Rollover**: On app open, any incomplete task (`status < DONE`) whose `sprint` key is before the current sprint key is updated to the current sprint key.
 - **Snooze Shifting**: When `eventDate` shifts, recalculate the display date for any `snooze` value starting with `"-"` by adding the offset to the new `eventDate`. Absolute ISO snooze values are unaffected.
 - **Snooze Constraint**: Resolved snooze date must always precede `eventDate`. Validated on save and on any edit that affects either field. `@-Nd/h` tokens require `eventDate` to be present — blocked in the UI if missing.
-- **Deletion Constraints**: Deleting a Goal or Sprint nullifies its foreign key on linked Tasks. Current and Next sprints cannot be deleted.
+- **Deletion Constraints**: Deleting a Goal nullifies its foreign key on linked Tasks.

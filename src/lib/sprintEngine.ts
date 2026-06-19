@@ -1,56 +1,53 @@
-import type { Sprint } from '@/types'
-
 export type SprintLabel = 'past' | 'previous' | 'current' | 'next' | 'future'
-
-function dayStart(dateStr: string): Date {
-  return new Date(dateStr + 'T00:00:00')
-}
-
-function dayEnd(dateStr: string): Date {
-  return new Date(dateStr + 'T23:59:59.999')
-}
-
-export function classifySprints(sprints: Sprint[], now: Date): Map<string, SprintLabel> {
-  const result = new Map<string, SprintLabel>()
-  if (sprints.length === 0) return result
-
-  const ended = sprints
-    .filter(s => dayEnd(s.endDate) < now)
-    .sort((a, b) => dayEnd(b.endDate).getTime() - dayEnd(a.endDate).getTime())
-
-  const upcoming = sprints
-    .filter(s => dayStart(s.startDate) > now)
-    .sort((a, b) => dayStart(a.startDate).getTime() - dayStart(b.startDate).getTime())
-
-  const current = sprints.find(
-    s => dayStart(s.startDate) <= now && dayEnd(s.endDate) >= now,
-  )
-
-  if (current) result.set(current.id, 'current')
-  if (ended[0]) result.set(ended[0].id, 'previous')
-  ended.slice(1).forEach(s => result.set(s.id, 'past'))
-  if (upcoming[0]) result.set(upcoming[0].id, 'next')
-  upcoming.slice(1).forEach(s => result.set(s.id, 'future'))
-
-  return result
-}
 
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
 
-export function missedRollovers(sprints: Sprint[], now: Date): number {
-  if (sprints.length === 0) return 0
+function sprintStartOf(date: Date): Date {
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  d.setDate(d.getDate() - (d.getDay() + 1) % 7)
+  return d
+}
 
-  const latestEnd = sprints
-    .map(s => dayEnd(s.endDate))
-    .reduce((max, d) => (d > max ? d : max))
+function quarterOf(date: Date): number {
+  return Math.floor(date.getMonth() / 3) + 1
+}
 
-  if (now <= latestEnd) return 0
+function firstSaturdayOfQuarter(year: number, quarter: number): Date {
+  const d = new Date(year, (quarter - 1) * 3, 1)
+  d.setDate(d.getDate() + (6 - d.getDay() + 7) % 7)
+  return d
+}
 
-  const firstRollover = new Date(latestEnd)
-  firstRollover.setDate(firstRollover.getDate() + 1)
-  firstRollover.setHours(0, 0, 0, 0)
+export function sprintKey(date: Date): string {
+  const sat = sprintStartOf(date)
+  const year = sat.getFullYear()
+  const q = quarterOf(sat)
+  const firstSat = firstSaturdayOfQuarter(year, q)
+  const week = Math.round((sat.getTime() - firstSat.getTime()) / MS_PER_WEEK) + 1
+  return `${year % 100} Q${q} ${week}`
+}
 
-  if (firstRollover > now) return 0
+export function sprintKeyOffset(now: Date, weekOffset: number): string {
+  const sat = sprintStartOf(now)
+  sat.setDate(sat.getDate() + weekOffset * 7)
+  return sprintKey(sat)
+}
 
-  return Math.floor((now.getTime() - firstRollover.getTime()) / MS_PER_WEEK) + 1
+function keyOrd(key: string): number {
+  const m = key.match(/^(\d+) Q(\d) (\d+)$/)
+  if (!m) return 0
+  return parseInt(m[1]) * 1000 + parseInt(m[2]) * 100 + parseInt(m[3])
+}
+
+export function compareSprintKeys(a: string, b: string): number {
+  return keyOrd(a) - keyOrd(b)
+}
+
+export function classifySprintKey(key: string, now: Date): SprintLabel {
+  const current = sprintKey(now)
+  if (key === current) return 'current'
+  if (key === sprintKeyOffset(now, 1)) return 'next'
+  if (key === sprintKeyOffset(now, -1)) return 'previous'
+  return keyOrd(key) < keyOrd(current) ? 'past' : 'future'
 }

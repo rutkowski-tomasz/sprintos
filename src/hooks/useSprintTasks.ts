@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { classifySprints, type SprintLabel } from '@/lib/sprintEngine'
-import { TaskStatus, type Sprint, type Task } from '@/types'
+import { sprintKey, sprintKeyOffset, type SprintLabel } from '@/lib/sprintEngine'
+import { TaskStatus, type Task } from '@/types'
 
 const STATUS_ORDER: Record<number, number> = {
   [TaskStatus.IN_PROGRESS]: 0,
@@ -9,27 +9,33 @@ const STATUS_ORDER: Record<number, number> = {
   [TaskStatus.TODO]: 2,
 }
 
+function keyForLabel(label: SprintLabel, now: Date): string | null {
+  if (label === 'current') return sprintKey(now)
+  if (label === 'next') return sprintKeyOffset(now, 1)
+  if (label === 'previous') return sprintKeyOffset(now, -1)
+  return null
+}
+
 export interface SprintTasksResult {
-  sprint: Sprint | undefined
+  sprintKey: string | undefined
   tasks: Task[]
 }
 
 export function useSprintTasks(label: SprintLabel): SprintTasksResult | undefined {
   return useLiveQuery(async () => {
-    const allSprints = await db.sprints.toArray()
-    const labels = classifySprints(allSprints, new Date())
-    const sprint = allSprints.find(s => labels.get(s.id) === label)
+    const now = new Date()
+    const key = keyForLabel(label, now)
 
-    if (!sprint) return { sprint: undefined, tasks: [] }
+    if (!key) return { sprintKey: undefined, tasks: [] }
 
     const tasks = await db.tasks
-      .where('sprintId')
-      .equals(sprint.id)
+      .where('sprint')
+      .equals(key)
       .filter(t => t.deletedAt === null && t.status < TaskStatus.DONE)
       .toArray()
 
     tasks.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
 
-    return { sprint, tasks }
+    return { sprintKey: key, tasks }
   }, [label])
 }

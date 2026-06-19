@@ -23,7 +23,7 @@
 | # | Task | Done When |
 |---|------|-----------|
 | ✅ 10 | Apply production schemas to Supabase and Dexie | Cloud and local structurally match the data model |
-| ✅ 10a | Row Level Security: enable RLS on all tables (`goals`, `sprints`, `tasks`); add `USING (user_id = auth.uid())` policies for SELECT/INSERT/UPDATE/DELETE | Authenticated user A cannot read, write, or delete any row owned by user B — verified by querying with a second account's JWT |
+| ✅ 10a | Row Level Security: enable RLS on all tables (`goals`, `tasks`); add `USING (user_id = auth.uid())` policies for SELECT/INSERT/UPDATE/DELETE | Authenticated user A cannot read, write, or delete any row owned by user B — verified by querying with a second account's JWT |
 | ✅ 11 | `react-router-dom` + Protected Route; unauthenticated → `/login` | Visiting `/` without session redirects to `/login` |
 
 ## Phase 3 — Engine
@@ -32,7 +32,7 @@
 
 | # | Task | Done When |
 |---|------|-----------|
-| ✅ 12 | Sprint engine: derive Previous/Current/Next/Future from date boundaries + Friday midnight rollover | Unit tests confirm date inputs map to correct sprint state |
+| ✅ 12 | Sprint engine: derive sprint key from date (`"YY QN W"` format); classify any key as past/previous/current/next/future; rollover incomplete tasks on app open | Unit tests confirm date inputs map to correct sprint keys and labels |
 | ✅ 13 | NL parser: extract `emoji`, `eventDate`, `status`, `snoozeDate` (all 3 modes), `duration`, `#goal`, bare URLs | `"🏋️ Vet 1st June 12:00 progres @-1d 30m #health"` returns correct metadata for all fields |
 
 ## Phase 4 — UI
@@ -41,7 +41,7 @@
 
 | # | Task | Done When |
 |---|------|-----------|
-| ✅ 14 | Persistent sidebar + route shell (Current, Next, Planning, All Tasks, Goals, Sprints) | Navigation between empty route views works |
+| ✅ 14 | Persistent sidebar + route shell (Current, Next, Planning, All Tasks, Goals) | Navigation between empty route views works |
 | ✅ 15 | Reusable Task list component: status colours, description icon, Framer Motion enter/exit/reorder animations | Mock data renders and animates per spec |
 | ✅ 16 | Current Sprint + Next Sprint views wired to live Dexie queries | Correct tasks appear in each view; status ordering correct |
 | ✅ 17 | Planning view: all incomplete tasks grouped by assigned sprint + unassigned bucket, ordered Sprint → Status | Unassigned and sprint-assigned tasks both appear, correctly grouped |
@@ -60,5 +60,4 @@
 |---|------|-----------|
 | 24 | All Tasks view: cursor pagination, Goal/Status filter, full-text search, sort by `createdAt` | User can view and mass-delete historical tasks |
 | 25 | Goals table: inline editing, aggregate task counts, multi-select delete (unlinks tasks, doesn't delete them) | Modifying goal name persists; deleting unlinks without removing tasks |
-| 26 | Sprints view: read-only history table, delete past/distant-future sprints | User can delete clutter sprints; Current and Next are protected |
-| 27 | AI completions (Gemini Flash free tier): send input + sprint/goal context, suggest task title; Tab to accept | Typing while online shows an AI-suggested completion |
+| 26 | AI completions (Gemini Flash free tier): send input + sprint/goal context, suggest task title; Tab to accept | Typing while online shows an AI-suggested completion |

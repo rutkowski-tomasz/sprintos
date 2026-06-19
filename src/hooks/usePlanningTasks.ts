@@ -1,7 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { classifySprints, type SprintLabel } from '@/lib/sprintEngine'
-import { TaskStatus, type Sprint, type Task } from '@/types'
+import { classifySprintKey, compareSprintKeys, type SprintLabel } from '@/lib/sprintEngine'
+import { TaskStatus, type Task } from '@/types'
 
 const STATUS_ORDER: Record<number, number> = {
   [TaskStatus.IN_PROGRESS]: 0,
@@ -10,37 +10,37 @@ const STATUS_ORDER: Record<number, number> = {
 }
 
 export interface PlanningGroup {
-  sprint: Sprint | null
+  sprint: string | null
   sprintLabel: SprintLabel | undefined
   tasks: Task[]
 }
 
 export function usePlanningTasks(): PlanningGroup[] | undefined {
   return useLiveQuery(async () => {
-    const [allSprints, allTasks] = await Promise.all([
-      db.sprints.orderBy('startDate').toArray(),
-      db.tasks.filter(t => t.deletedAt === null && t.status < TaskStatus.DONE).toArray(),
-    ])
+    const allTasks = await db.tasks
+      .filter(t => t.deletedAt === null && t.status < TaskStatus.DONE)
+      .toArray()
 
     allTasks.sort((a, b) => (STATUS_ORDER[a.status] ?? 99) - (STATUS_ORDER[b.status] ?? 99))
 
-    const sprintLabels = classifySprints(allSprints, new Date())
-
+    const now = new Date()
     const grouped = new Map<string | null, Task[]>()
+
     for (const task of allTasks) {
-      const key = task.sprintId
+      const key = task.sprint
       if (!grouped.has(key)) grouped.set(key, [])
       grouped.get(key)!.push(task)
     }
 
-    const result: PlanningGroup[] = []
+    const sprintKeys = [...grouped.keys()]
+      .filter((k): k is string => k !== null)
+      .sort(compareSprintKeys)
 
-    for (const sprint of allSprints) {
-      const tasks = grouped.get(sprint.id)
-      if (tasks?.length) {
-        result.push({ sprint, sprintLabel: sprintLabels.get(sprint.id), tasks })
-      }
-    }
+    const result: PlanningGroup[] = sprintKeys.map(key => ({
+      sprint: key,
+      sprintLabel: classifySprintKey(key, now),
+      tasks: grouped.get(key)!,
+    }))
 
     const unassigned = grouped.get(null)
     if (unassigned?.length) {

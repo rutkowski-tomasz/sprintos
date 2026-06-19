@@ -9,9 +9,8 @@ import { NextSprint } from '@/views/NextSprint'
 import { Planning } from '@/views/Planning'
 import { AllTasks } from '@/views/AllTasks'
 import { Goals } from '@/views/Goals'
-import { Sprints } from '@/views/Sprints'
 
-const ROUTE_ORDER = ['/current', '/next', '/planning', '/all-tasks', '/goals', '/sprints']
+const ROUTE_ORDER = ['/current', '/next', '/planning', '/all-tasks', '/goals']
 
 const VIEW_ROUTES = [
   { path: '/current', element: <CurrentSprint /> },
@@ -19,7 +18,6 @@ const VIEW_ROUTES = [
   { path: '/planning', element: <Planning /> },
   { path: '/all-tasks', element: <AllTasks /> },
   { path: '/goals', element: <Goals /> },
-  { path: '/sprints', element: <Sprints /> },
   { path: '/', element: <Navigate to="/current" replace /> },
   { path: '*', element: <Navigate to="/current" replace /> },
 ]

@@ -15,14 +15,16 @@ All reads/writes execute instantly against local IndexedDB. A background sync qu
 
 ## Sprint Cycle
 
-Sprints run **Saturday–Friday** (7 days). Automated rollover at **Saturday 00:00** — incomplete tasks in Current move to Next; a new sprint is generated.
+Sprints run **Saturday–Friday** (7 days). The current sprint, previous, next, and all past/future sprints are derived from the current date — no sprint entities are created or stored.
 
-**Trigger**: checked on app open. All Fridays missed since the last rollover are executed in sequence before the UI renders. Rollover writes to IndexedDB first and syncs via the normal queue.
+Each task carries a `sprint` field: a normalized key like `"26 Q2 11"` (11th week of Q2 2026) or `null` if unassigned. Sprint labels are computed at read time.
+
+**Rollover**: checked on app open. Any incomplete task assigned to a sprint key before the current sprint is moved to the current sprint key.
 
 | Label | Description |
 |-------|-------------|
-| Past | Archived sprints |
-| Previous | Most recently finished sprint |
+| Past | Sprint keys before previous |
+| Previous | Last completed sprint |
 | **Current** | Active working week |
 | Next | Upcoming week (planning) |
 | Future | Backlog / horizon |
@@ -30,7 +32,7 @@ Sprints run **Saturday–Friday** (7 days). Automated rollover at **Saturday 00:
 ## Entities
 
 ### Task
-- **Core**: emoji, title, status, assigned sprint, goal link
+- **Core**: emoji, title, status, assigned sprint key, goal link
 - **Time**: `eventDate` (hard deadline/appointment), `snoozeDate` (visibility toggle)
 - **Context**: Markdown description, source URL, duration
 
@@ -46,7 +48,6 @@ Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, l
 | **Planning** | All incomplete tasks — sprint-assigned and unassigned — ordered by Sprint → Status. Shows both what is planned and what still needs a sprint. |
 | **All Tasks** | Cursor-paginated table. Filter by Goal/Status (including Completed), full-text search, sort by `createdAt` for mass cleanup |
 | **Goals** | Aggregated progress (completed / total tasks). Inline create/rename, multi-select delete |
-| **Sprints** | Read-only history. Delete past or distant-future sprints to clear clutter |
 
 ## Display Labels
 
@@ -86,7 +87,7 @@ The raw input string is never modified while the user types. Instead, each recog
 | `#prefix` | `goalId` | fuzzy-matched against existing goal names |
 | Bare URL | `sourceUrl` | stripped from title automatically |
 
-Sprint assignment is **context-driven** — new tasks inherit the sprint of the active view. No parsing token needed. The Planning view is an exception: new tasks default to unassigned (`sprintId = null`) so they appear in the unassigned bucket.
+Sprint assignment is **context-driven** — new tasks inherit the sprint key of the active view. No parsing token needed. The Planning view is an exception: new tasks default to unassigned (`sprint = null`) so they appear in the unassigned bucket.
 
 **General rule**: a newly created task must always appear in the view it was created from. It inherits whatever filters that view implies (sprint, goal, status, etc.).
 

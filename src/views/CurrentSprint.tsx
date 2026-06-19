@@ -6,18 +6,16 @@ export function CurrentSprint() {
 
   if (!result) return null
 
-  const { sprint, tasks } = result
+  const { sprintKey, tasks } = result
 
   return (
     <div className="p-6 flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold">Current Sprint</h2>
-        {sprint && <span className="text-sm text-muted-foreground">{sprint.name}</span>}
+        {sprintKey && <span className="text-sm text-muted-foreground">{sprintKey}</span>}
       </div>
       {tasks.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          {sprint ? 'No active tasks.' : 'No current sprint found.'}
-        </p>
+        <p className="text-sm text-muted-foreground">No active tasks.</p>
       ) : (
         <TaskList tasks={tasks} />
       )}
