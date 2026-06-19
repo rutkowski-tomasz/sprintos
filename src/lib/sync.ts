@@ -9,9 +9,32 @@ async function flushQueue() {
   }
 }
 
+async function bootstrap() {
+  if (!navigator.onLine) return
+  const { data } = await supabase.from('test_tasks').select('*')
+  if (data) await db.test_tasks.bulkPut(data as TestTask[])
+  await flushQueue()
+}
+
 export function setupSync() {
+  bootstrap()
   window.addEventListener('online', flushQueue)
-  return () => window.removeEventListener('online', flushQueue)
+
+  const channel = supabase
+    .channel('test_tasks_changes')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'test_tasks' },
+      async (payload) => {
+        await db.test_tasks.put(payload.new as TestTask)
+      }
+    )
+    .subscribe()
+
+  return () => {
+    window.removeEventListener('online', flushQueue)
+    channel.unsubscribe()
+  }
 }
 
 export async function addTask(title: string) {
