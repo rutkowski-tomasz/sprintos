@@ -41,9 +41,9 @@
 
 | # | Task | Done When |
 |---|------|-----------|
-| 14 | Persistent sidebar + route shell (Current, Next, Planning, All Tasks, Goals, Sprints) | Navigation between empty route views works |
-| 15 | Reusable Task list component: status colours, description icon, Framer Motion enter/exit/reorder animations | Mock data renders and animates per spec |
-| 16 | Current Sprint + Next Sprint views wired to live Dexie queries | Correct tasks appear in each view; status ordering correct |
+| ✅ 14 | Persistent sidebar + route shell (Current, Next, Planning, All Tasks, Goals, Sprints) | Navigation between empty route views works |
+| ✅ 15 | Reusable Task list component: status colours, description icon, Framer Motion enter/exit/reorder animations | Mock data renders and animates per spec |
+| ✅ 16 | Current Sprint + Next Sprint views wired to live Dexie queries | Correct tasks appear in each view; status ordering correct |
 | 17 | Planning view: all incomplete tasks grouped by assigned sprint + unassigned bucket, ordered Sprint → Status | Unassigned and sprint-assigned tasks both appear, correctly grouped |
 | 18 | Bottom-row rapid entry + live NL parser: tokens colour-coded in place, resolved-value badges | Enter saves to Dexie, opens new row; badges show correctly |
 | 19 | Inline cell editing (Title, Status, Dates) — auto-save on blur | Click title → input; click away → saved. No Save buttons. |
