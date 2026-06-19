@@ -9,6 +9,20 @@ import { setupSync } from './lib/sync'
 
 db.open()
 
+if ('serviceWorker' in navigator) {
+  // Force update check on every open so deployments are detected immediately.
+  navigator.serviceWorker.getRegistration().then(reg => reg?.update())
+
+  // Reload the page when a new SW takes control — the new assets are now in
+  // cache and a reload is the only way to swap them in for the current session.
+  let reloading = false
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (reloading) return
+    reloading = true
+    window.location.reload()
+  })
+}
+
 let cleanupSync: (() => void) | null = null
 supabase.auth.onAuthStateChange((_event, session) => {
   if (session && !cleanupSync) {
