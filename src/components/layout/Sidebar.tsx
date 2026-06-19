@@ -47,7 +47,10 @@ export function Sidebar() {
         </button>
       </aside>
 
-      <nav className="md:hidden fixed bottom-0 inset-x-0 bg-sidebar border-t border-border flex z-50">
+      <nav
+        className="md:hidden fixed bottom-0 inset-x-0 bg-sidebar border-t border-border flex z-50"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)', paddingLeft: 'env(safe-area-inset-left)', paddingRight: 'env(safe-area-inset-right)' }}
+      >
         {NAV.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

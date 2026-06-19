@@ -50,6 +50,7 @@ function AnimatedContent() {
         className="absolute inset-0 overflow-auto"
       >
         {element}
+        <div className="md:hidden" style={{ height: 'calc(3.5rem + env(safe-area-inset-bottom))' }} aria-hidden="true" />
       </motion.div>
     </AnimatePresence>
   )
@@ -59,7 +60,7 @@ function AppShell() {
   return (
     <div className="flex h-screen">
       <Sidebar />
-      <main className="flex-1 relative overflow-hidden pb-14 md:pb-0">
+      <main className="flex-1 relative overflow-hidden">
         <AnimatedContent />
       </main>
     </div>
