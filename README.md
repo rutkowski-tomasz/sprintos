@@ -21,7 +21,8 @@ A learning project exploring: AI-assisted development, docs-first planning, PWA 
 ## Run
 
 ```bash
-# coming soon
+pnpm install
+pnpm dev
 ```
 
 ## Docs
