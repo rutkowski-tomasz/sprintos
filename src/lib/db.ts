@@ -1,26 +1,18 @@
 import Dexie, { type Table } from 'dexie'
-
-export interface TestTask {
-  id: string
-  title: string
-  created_at: string
-}
-
-export interface SyncQueueItem {
-  id?: number
-  operation: 'insert'
-  table: string
-  payload: TestTask
-}
+import type { Goal, Sprint, Task, SyncQueueItem } from '@/types'
 
 class AppDB extends Dexie {
-  test_tasks!: Table<TestTask>
+  goals!: Table<Goal>
+  sprints!: Table<Sprint>
+  tasks!: Table<Task>
   sync_queue!: Table<SyncQueueItem>
 
   constructor() {
     super('sprintos')
     this.version(1).stores({
-      test_tasks: 'id, created_at',
+      goals: 'id, userId',
+      sprints: 'id, userId, startDate, endDate',
+      tasks: 'id, userId, sprintId, goalId, status, createdAt',
       sync_queue: '++id',
     })
   }
