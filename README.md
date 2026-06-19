@@ -47,9 +47,13 @@ cp .env.example .env
 # fill in VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY from Supabase → Settings → API
 ```
 
-**4. GitHub Pages** — repo Settings → Pages → Source: set to **GitHub Actions**
+**4. GitHub secrets** — repo Settings → Secrets and variables → Actions → add:
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
 
-**5. Run**
+**5. GitHub Pages** — repo Settings → Pages → Source: set to **GitHub Actions**
+
+**6. Run**
 
 ```bash
 pnpm install

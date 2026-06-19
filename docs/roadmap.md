@@ -12,8 +12,8 @@
 | ✅ 4 | Offline write: submit → Dexie instantly; if offline → enqueue mutation | Going offline and submitting updates UI + adds to `sync_queue` |
 | ✅ 5 | `online` listener flushes queue to Supabase, clears on success | Re-enabling network clears queue and updates Supabase |
 | ✅ 6 | Supabase Postgres Changes subscription → updates local Dexie | Edit in Window A instantly reflects in Window B |
-| 7 | GitHub Actions CI: `tsc --noEmit` + `pnpm test` on every push to `main` | A push with a failing type or test is flagged in GitHub before anything deploys |
-| 8 | GitHub Actions CD: build + deploy to GitHub Pages on every push to `main`; add `404.html` SPA redirect | Pushing to `main` publishes the app; reloading any route (e.g. `/current`) returns the app, not a 404 |
+| ✅ 7 | GitHub Actions CI: `tsc --noEmit` + `pnpm test` on every push to `main` | A push with a failing type or test is flagged in GitHub before anything deploys |
+| ✅ 8 | GitHub Actions CD: build + deploy to GitHub Pages on every push to `main`; add `404.html` SPA redirect | Pushing to `main` publishes the app; reloading any route (e.g. `/current`) returns the app, not a 404 |
 
 ## Phase 2 — Core Data & State
 
