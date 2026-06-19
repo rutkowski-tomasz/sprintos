@@ -1,27 +1,67 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { useRef } from 'react'
+import { Navigate, Route, Routes, useLocation, useRoutes } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/components/AuthPage'
-import { Logo } from '@/components/Logo'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Button } from '@/components/ui/button'
-import { useSession } from '@/hooks/useSession'
-import { supabase } from '@/lib/supabase'
+import { Sidebar } from '@/components/layout/Sidebar'
+import { CurrentSprint } from '@/views/CurrentSprint'
+import { NextSprint } from '@/views/NextSprint'
+import { Planning } from '@/views/Planning'
+import { AllTasks } from '@/views/AllTasks'
+import { Goals } from '@/views/Goals'
+import { Sprints } from '@/views/Sprints'
 
-function AppShell() {
-  const { session } = useSession()
-  if (!session) return null
+const ROUTE_ORDER = ['/current', '/next', '/planning', '/all-tasks', '/goals', '/sprints']
+
+const VIEW_ROUTES = [
+  { path: '/current', element: <CurrentSprint /> },
+  { path: '/next', element: <NextSprint /> },
+  { path: '/planning', element: <Planning /> },
+  { path: '/all-tasks', element: <AllTasks /> },
+  { path: '/goals', element: <Goals /> },
+  { path: '/sprints', element: <Sprints /> },
+  { path: '/', element: <Navigate to="/current" replace /> },
+  { path: '*', element: <Navigate to="/current" replace /> },
+]
+
+function AnimatedContent() {
+  const location = useLocation()
+  const element = useRoutes(VIEW_ROUTES, location)
+
+  const currentIdx = ROUTE_ORDER.indexOf(location.pathname)
+  const prevIdxRef = useRef(currentIdx)
+  const dirRef = useRef(0)
+
+  if (currentIdx !== -1 && currentIdx !== prevIdxRef.current) {
+    dirRef.current = currentIdx > prevIdxRef.current ? 1 : -1
+    prevIdxRef.current = currentIdx
+  }
+
+  const d = dirRef.current
 
   return (
-    <div className="mx-auto flex min-h-screen max-w-lg flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Logo size={28} />
-          <h1 className="text-lg font-semibold text-foreground">SprintOS</h1>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => supabase.auth.signOut()}>
-          Sign out
-        </Button>
-      </div>
-      <p className="text-sm text-muted-foreground">Phase 2 in progress</p>
+    <AnimatePresence mode="wait" initial={false}>
+      <motion.div
+        key={location.pathname}
+        initial={{ x: d * 30, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: d * -30, opacity: 0 }}
+        transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+        className="absolute inset-0 overflow-auto"
+      >
+        {element}
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+function AppShell() {
+  return (
+    <div className="flex h-screen">
+      <Sidebar />
+      <main className="flex-1 relative overflow-hidden pb-14 md:pb-0">
+        <AnimatedContent />
+      </main>
     </div>
   )
 }
@@ -38,7 +78,6 @@ export default function App() {
           </ProtectedRoute>
         }
       />
-      <Route path="/" element={<Navigate to="/current" replace />} />
     </Routes>
   )
 }
