@@ -6,12 +6,12 @@
 
 | # | Task | Done When |
 |---|------|-----------|
-| 1 | Bootstrap Vite + React + TS; install Tailwind, lucide-react, shadcn/ui, Framer Motion, AutoAnimate | App compiles, renders a Tailwind screen |
-| 2 | Supabase client + Email/Google Auth UI | User can log in and receive a session token |
-| 3 | Dexie.js IndexedDB setup — `test_tasks` + `sync_queue` tables | Tables visible in DevTools → IndexedDB |
-| 4 | Offline write: submit → Dexie instantly; if offline → enqueue mutation | Going offline and submitting updates UI + adds to `sync_queue` |
-| 5 | `online` listener flushes queue to Supabase, clears on success | Re-enabling network clears queue and updates Supabase |
-| 6 | Supabase Postgres Changes subscription → updates local Dexie | Edit in Window A instantly reflects in Window B |
+| ✅ 1 | Bootstrap Vite + React + TS; install Tailwind, lucide-react, shadcn/ui, Framer Motion, AutoAnimate | App compiles, renders a Tailwind screen |
+| ✅ 2 | Supabase client + Email/Google Auth UI | User can log in and receive a session token |
+| ✅ 3 | Dexie.js IndexedDB setup — `test_tasks` + `sync_queue` tables | Tables visible in DevTools → IndexedDB |
+| ✅ 4 | Offline write: submit → Dexie instantly; if offline → enqueue mutation | Going offline and submitting updates UI + adds to `sync_queue` |
+| ✅ 5 | `online` listener flushes queue to Supabase, clears on success | Re-enabling network clears queue and updates Supabase |
+| ✅ 6 | Supabase Postgres Changes subscription → updates local Dexie | Edit in Window A instantly reflects in Window B |
 
 ## Phase 2 — Core Data & State
 

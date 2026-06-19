@@ -1,24 +1,30 @@
-# SprintOS
+# 🏃 SprintOS
 
 Personal offline-first weekly sprint manager — task inbox-zero via automated Friday rollovers, installable as a PWA.
 
-## Intent
+## 💡 Intent
 
-A learning project exploring: AI-assisted development, docs-first planning, PWA as a native iOS app (no App Store), offline-first architecture, real-time streaming, and backend-as-a-service — with as little hand-written infrastructure as possible. Polished, native-feeling UX is a first-class goal.
+- Offline-first: all reads/writes hit local IndexedDB instantly; a custom sync queue pushes to the cloud and survives force-close
+- Real-time: changes in one window appear in another instantly via Supabase Postgres Changes
+- UX is a first-class concern — keyboard shortcuts, spring-physics animations, mobile swipe gestures, and native-feel CSS (no rubber-band scroll, no tap flash) are specced before any component is built
+- Ships to iOS without the App Store: installed as a PWA via Safari Add to Home Screen — a workaround, not a native app, but good enough for personal use
+- Docs-first: product vision, data model, and full UX rules were written and iterated on extensively before the first line of code — the goal is to spend more time imagining and modeling than implementing
+- Maximum product, minimum infrastructure — Supabase handles auth, database, and real-time; almost no backend code written by hand
+- AI-assisted development throughout
 
-## Stack
+## 🧱 Stack
 
 | Layer | Choice |
 |-------|--------|
 | Frontend | React + Vite + TypeScript |
 | Styling | Tailwind CSS + shadcn/ui |
-| Animations | Framer Motion + AutoAnimate |
+| Animations | Motion + AutoAnimate |
 | Local DB | Dexie.js (IndexedDB) |
 | Sync | Custom offline queue → Supabase real-time |
 | Backend | Supabase (PostgreSQL + Auth + Realtime) |
 | Distribution | PWA via `vite-plugin-pwa` |
 
-## First Setup
+## 🚀 First Setup
 
 **1. Google OAuth** — console.cloud.google.com:
 - APIs & Services → OAuth consent screen — configure this first (required before creating a client)
@@ -44,7 +50,7 @@ pnpm install
 pnpm dev
 ```
 
-## Docs
+## 📚 Docs
 
 | File | Contents |
 |------|----------|
