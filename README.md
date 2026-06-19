@@ -34,7 +34,7 @@ Personal offline-first weekly sprint manager — task inbox-zero via automated F
 
 **2. Supabase project** — create one at supabase.com, then:
 - Authentication → Providers → Google → enable, paste Client ID + Secret from step 1
-- Authentication → URL Configuration → Site URL + Redirect URL: `http://localhost:5173`
+- Authentication → URL Configuration → Site URL + Redirect URLs: `http://localhost:5173`, `https://<github-username>.github.io`
 
 **2a. Database schema** — Supabase → SQL Editor → run these files in order:
 1. `supabase/migrations/001_production_schema.sql`
