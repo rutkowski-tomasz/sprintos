@@ -47,10 +47,10 @@
 | ✅ 17 | Planning view: all incomplete tasks grouped by assigned sprint + unassigned bucket, ordered Sprint → Status | Unassigned and sprint-assigned tasks both appear, correctly grouped |
 | ✅ 18 | Bottom-row rapid entry + live NL parser: tokens colour-coded in place, resolved-value badges | Enter saves to Dexie, opens new row; badges show correctly |
 | ✅ 19 | Inline cell editing (Title, Status, Dates) — auto-save on blur | Click title → input; click away → saved. No Save buttons. |
-| 20 | Multi-select + desktop shortcuts: Cmd+D, Backspace, 1–4 | Selecting rows and pressing Backspace soft-deletes them locally |
+| ✅ 20 | Multi-select + desktop shortcuts: Cmd+D, Backspace, 1–4 | Selecting rows and pressing Backspace soft-deletes them locally |
 | 21 | Show Snoozed toggle + ghosted opacity (Tailwind transition) | Toggle hides/shows tasks where `snoozeDate` is in the future |
 | 22 | Mobile gesture layer: swipe right → Done, swipe left → quick-snooze menu (Framer Motion drag) | Swiping a task card triggers correct action with spring snap-back |
-| 23 | Native-feel CSS globals + view slide transitions | No rubber-band scroll, no tap flash; navigating views slides smoothly |
+| ✅ 23 | Native-feel CSS globals + view slide transitions | No rubber-band scroll, no tap flash; navigating views slides smoothly |
 
 ## Phase 5 — Extra Views & AI
 

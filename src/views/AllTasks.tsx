@@ -11,7 +11,7 @@ export function AllTasks() {
   )
 
   return (
-    <div className="h-full overflow-auto p-4 pb-safe-nav md:pb-4">
+    <div className="h-full overflow-auto overscroll-contain p-4 pb-safe-nav md:pb-4">
       <TaskTable tasks={tasks ?? []} />
     </div>
   )

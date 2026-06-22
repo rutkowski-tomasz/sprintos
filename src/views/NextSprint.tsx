@@ -11,7 +11,7 @@ export function NextSprint() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-auto overscroll-contain p-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Next Sprint</h2>
           {sprintKey && (

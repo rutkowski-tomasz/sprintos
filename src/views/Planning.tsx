@@ -13,7 +13,7 @@ export function Planning() {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-auto p-4 flex flex-col gap-4">
+      <div className="flex-1 overflow-auto overscroll-contain p-4 flex flex-col gap-4">
         <h2 className="text-xl font-semibold">Planning</h2>
         <TaskTable tasks={tasks ?? []} />
       </div>

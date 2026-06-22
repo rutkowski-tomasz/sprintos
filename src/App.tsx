@@ -41,9 +41,9 @@ function AnimatedContent() {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location.pathname}
-        initial={{ x: d * 30, opacity: 0 }}
+        initial={{ x: `${d * 25}%`, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
-        exit={{ x: d * -30, opacity: 0 }}
+        exit={{ x: `${d * -25}%`, opacity: 0 }}
         transition={{ type: 'spring', stiffness: 400, damping: 35 }}
         className="absolute inset-0 overflow-hidden"
       >
