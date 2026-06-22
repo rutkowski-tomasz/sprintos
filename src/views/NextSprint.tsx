@@ -1,4 +1,5 @@
 import { TaskInput } from '@/components/tasks/TaskInput'
+import { TaskListMobile } from '@/components/tasks/TaskListMobile'
 import { TaskTable } from '@/components/tasks/TaskTable'
 import { useSprintTasks } from '@/hooks/useSprintTasks'
 
@@ -18,7 +19,12 @@ export function NextSprint() {
             <span className="text-sm text-muted-foreground">{sprintKey.replace(/^\d+ /, '')}</span>
           )}
         </div>
-        <TaskTable tasks={tasks} />
+        <div className="md:hidden -mx-4">
+          <TaskListMobile tasks={tasks} />
+        </div>
+        <div className="hidden md:block">
+          <TaskTable tasks={tasks} />
+        </div>
       </div>
       <div className="shrink-0 border-t border-border px-4 pt-3 pb-safe-nav md:pb-3">
         <TaskInput sprint={sprintKey ?? null} />

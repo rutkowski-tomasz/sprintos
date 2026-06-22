@@ -182,7 +182,7 @@ export function SprintPicker({ task }: { task: Task }) {
     close()
   }
 
-  const label = task.sprint ? formatSprintKey(task.sprint, now) : null
+  const label = task.sprint ? `Sprint ${formatSprintKey(task.sprint, now)}` : null
 
   return (
     <>
