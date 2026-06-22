@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { sprintKey, sprintKeyOffset, classifySprintKey, compareSprintKeys } from './sprintEngine'
+import {
+  classifySprintKey,
+  compareSprintKeys,
+  formatSprintKey,
+  generateSprintKeys,
+  sprintDateRange,
+  sprintKey,
+  sprintKeyOffset,
+} from './sprintEngine'
 
 // Reference: 2026-06-19 is a Friday.
 // Sprint cycle: Saturday–Friday.
@@ -89,5 +97,139 @@ describe('compareSprintKeys', () => {
 
   it('returns 0 for equal keys', () => {
     expect(compareSprintKeys('26 Q2 11', '26 Q2 11')).toBe(0)
+  })
+})
+
+// NOW = 2026-06-19: current year = 26, current quarter = 2
+describe('formatSprintKey', () => {
+  it('returns just the week when in the current year and quarter', () => {
+    expect(formatSprintKey('26 Q2 11', NOW)).toBe('11')
+  })
+
+  it('zero-pads a single-digit week in the current quarter', () => {
+    expect(formatSprintKey('26 Q2 1', NOW)).toBe('01')
+  })
+
+  it('returns quarter+week when same year but different quarter', () => {
+    expect(formatSprintKey('26 Q1 13', NOW)).toBe('Q1 13')
+    expect(formatSprintKey('26 Q4 9', NOW)).toBe('Q4 09')
+  })
+
+  it('zero-pads a single-digit week for a different quarter in the same year', () => {
+    expect(formatSprintKey('26 Q3 1', NOW)).toBe('Q3 01')
+  })
+
+  it('returns the full key for a different year', () => {
+    expect(formatSprintKey('25 Q2 11', NOW)).toBe('25 Q2 11')
+    expect(formatSprintKey('27 Q4 13', NOW)).toBe('27 Q4 13')
+  })
+
+  it('zero-pads a single-digit week for a different year', () => {
+    expect(formatSprintKey('27 Q1 1', NOW)).toBe('27 Q1 01')
+  })
+})
+
+// Q2 2026: first Saturday = Apr 4. Week 11 start = Apr 4 + 70 days = Jun 13.
+// Q3 2026: first Saturday = Jul 4 (Jul 1 is Wed; +3 days).
+// Q1 2026: first Saturday = Jan 3 (Jan 1 is Thu; +2 days).
+describe('sprintDateRange', () => {
+  it('returns the correct start (Saturday) and end (Friday) for a known sprint', () => {
+    const { start, end } = sprintDateRange('26 Q2 11')
+    expect(start.getFullYear()).toBe(2026)
+    expect(start.getMonth()).toBe(5) // June (0-indexed)
+    expect(start.getDate()).toBe(13)
+    expect(end.getFullYear()).toBe(2026)
+    expect(end.getMonth()).toBe(5)
+    expect(end.getDate()).toBe(19)
+  })
+
+  it('start is always a Saturday', () => {
+    expect(sprintDateRange('26 Q2 11').start.getDay()).toBe(6)
+    expect(sprintDateRange('26 Q3 1').start.getDay()).toBe(6)
+    expect(sprintDateRange('26 Q1 1').start.getDay()).toBe(6)
+  })
+
+  it('end is always a Friday', () => {
+    expect(sprintDateRange('26 Q2 11').end.getDay()).toBe(5)
+    expect(sprintDateRange('26 Q3 1').end.getDay()).toBe(5)
+    expect(sprintDateRange('26 Q1 1').end.getDay()).toBe(5)
+  })
+
+  it('span is always 6 days', () => {
+    const { start, end } = sprintDateRange('26 Q2 11')
+    const days = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+    expect(days).toBe(6)
+  })
+
+  it('first sprint of Q2 2026 starts Apr 4', () => {
+    const { start } = sprintDateRange('26 Q2 1')
+    expect(start.getMonth()).toBe(3) // April
+    expect(start.getDate()).toBe(4)
+  })
+
+  it('first sprint of Q3 2026 starts Jul 4', () => {
+    const { start } = sprintDateRange('26 Q3 1')
+    expect(start.getMonth()).toBe(6) // July
+    expect(start.getDate()).toBe(4)
+  })
+
+  it('first sprint of Q1 2026 starts Jan 3', () => {
+    const { start } = sprintDateRange('26 Q1 1')
+    expect(start.getMonth()).toBe(0) // January
+    expect(start.getDate()).toBe(3)
+  })
+
+  it('consecutive sprints are adjacent (no gap, no overlap)', () => {
+    const { end: end11 } = sprintDateRange('26 Q2 11')
+    const { start: start12 } = sprintDateRange('26 Q2 12')
+    const gap = (start12.getTime() - end11.getTime()) / (1000 * 60 * 60 * 24)
+    expect(gap).toBe(1)
+  })
+
+  it('throws for an invalid key', () => {
+    expect(() => sprintDateRange('invalid')).toThrow()
+  })
+})
+
+// generateSprintKeys(NOW, 1, 1):
+//   cursor starts at firstSat(Q1 2025) = Jan 4 → "25 Q1 1"
+//   limit   is   firstSat(Q1 2027) = Jan 2, 2027 (exclusive)
+//   last sprint  = Dec 26, 2026 → "26 Q4 13"
+describe('generateSprintKeys', () => {
+  it('includes the current sprint', () => {
+    expect(generateSprintKeys(NOW, 1, 1)).toContain('26 Q2 11')
+  })
+
+  it('starts at Q1 of (currentYear - yearsBefore)', () => {
+    expect(generateSprintKeys(NOW, 1, 1)[0]).toBe('25 Q1 1')
+  })
+
+  it('ends at the last sprint of Q4 of (currentYear + yearsAfter)', () => {
+    const keys = generateSprintKeys(NOW, 1, 1)
+    expect(keys[keys.length - 1]).toBe('27 Q4 13')
+  })
+
+  it('with yearsBefore=0 yearsAfter=0, covers only the current year', () => {
+    const keys = generateSprintKeys(NOW, 0, 0)
+    expect(keys.every(k => k.startsWith('26'))).toBe(true)
+    expect(keys[0]).toBe('26 Q1 1')
+    expect(keys[keys.length - 1]).toBe('26 Q4 13')
+  })
+
+  it('keys are in ascending order', () => {
+    const keys = generateSprintKeys(NOW, 1, 1)
+    for (let i = 1; i < keys.length; i++) {
+      expect(compareSprintKeys(keys[i - 1], keys[i])).toBeLessThan(0)
+    }
+  })
+
+  it('has no duplicate keys', () => {
+    const keys = generateSprintKeys(NOW, 1, 1)
+    expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('all keys match the sprint key format', () => {
+    const keys = generateSprintKeys(NOW, 1, 1)
+    for (const k of keys) expect(k).toMatch(/^\d+ Q[1-4] \d+$/)
   })
 })

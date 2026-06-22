@@ -51,3 +51,41 @@ export function classifySprintKey(key: string, now: Date): SprintLabel {
   if (key === sprintKeyOffset(now, -1)) return 'previous'
   return keyOrd(key) < keyOrd(current) ? 'past' : 'future'
 }
+
+export function formatSprintKey(key: string, now: Date): string {
+  const m = key.match(/^(\d+) Q(\d) (\d+)$/)
+  if (!m) return key
+  const yy = parseInt(m[1])
+  const q = parseInt(m[2])
+  const w = m[3].padStart(2, '0')
+  const nowYY = now.getFullYear() % 100
+  const nowQ = Math.floor(now.getMonth() / 3) + 1
+  if (yy === nowYY && q === nowQ) return w
+  if (yy === nowYY) return `Q${q} ${w}`
+  return `${m[1]} Q${q} ${w}`
+}
+
+export function sprintDateRange(key: string): { start: Date; end: Date } {
+  const m = key.match(/^(\d+) Q(\d) (\d+)$/)
+  if (!m) throw new Error(`Invalid sprint key: ${key}`)
+  const year = 2000 + parseInt(m[1])
+  const q = parseInt(m[2])
+  const w = parseInt(m[3])
+  const start = firstSaturdayOfQuarter(year, q)
+  start.setDate(start.getDate() + (w - 1) * 7)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+  return { start, end }
+}
+
+export function generateSprintKeys(now: Date, yearsBefore = 1, yearsAfter = 1): string[] {
+  const keys: string[] = []
+  const year = now.getFullYear()
+  const cursor = firstSaturdayOfQuarter(year - yearsBefore, 1)
+  const limit = firstSaturdayOfQuarter(year + yearsAfter + 1, 1)
+  while (cursor < limit) {
+    keys.push(sprintKey(cursor))
+    cursor.setDate(cursor.getDate() + 7)
+  }
+  return keys
+}

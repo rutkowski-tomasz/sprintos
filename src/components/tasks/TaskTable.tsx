@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Keys } from '@/components/ui/keys'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { SprintPicker } from '@/components/tasks/SprintPicker'
 
 const STATUS_LABEL: Record<number, string> = {
   [TaskStatus.TODO]: 'To-Do',
@@ -239,11 +240,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
     {
       accessorKey: 'sprint',
       header: ({ column }) => <SortableHeader column={column}>Sprint</SortableHeader>,
-      cell: ({ row }) => {
-        const sprint = row.getValue<string | null>('sprint')
-        if (!sprint) return <span className="text-muted-foreground/30">—</span>
-        return <span className="text-sm text-muted-foreground">{sprint.replace(/^\d+ /, '')}</span>
-      },
+      cell: ({ row }) => <SprintPicker task={row.original} />,
       sortingFn: (a, b) => {
         const ak = a.getValue<string | null>('sprint')
         const bk = b.getValue<string | null>('sprint')
