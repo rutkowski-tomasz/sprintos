@@ -26,8 +26,15 @@ async function rollover(now: Date) {
   }
 }
 
-async function flushQueue() {
+let flushPending = false
+
+export async function flushQueue() {
+  if (syncFlushState.isFlushing) {
+    flushPending = true
+    return
+  }
   syncFlushState.setFlushing(true)
+  flushPending = false
   try {
     const items = await db.sync_queue.toArray()
     for (const item of items) {
@@ -43,6 +50,7 @@ async function flushQueue() {
     }
   } finally {
     syncFlushState.setFlushing(false)
+    if (flushPending) flushQueue()
   }
 }
 

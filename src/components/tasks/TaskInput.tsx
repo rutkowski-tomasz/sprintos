@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
+import { flushQueue } from '@/lib/sync'
 import { parseTaskInput } from '@/lib/parser'
 import { tokenizeInput, type TokenType } from '@/lib/taskTokenizer'
 import { formatDate, formatDuration, formatSnooze } from '@/lib/formatters'
@@ -83,6 +84,7 @@ export function TaskInput({ sprint }: TaskInputProps) {
       table: 'tasks',
       payload: task as unknown as Record<string, unknown>,
     })
+    flushQueue()
 
     setValue('')
     inputRef.current?.focus()
