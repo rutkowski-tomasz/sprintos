@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   flexRender,
@@ -8,18 +8,20 @@ import {
   useReactTable,
   type ColumnDef,
   type ColumnFiltersState,
+  type Row,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowUpDown, FileText, Trash2 } from 'lucide-react'
+import { ArrowUpDown, Copy, FileText, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
 import { compareSprintKeys } from '@/lib/sprintEngine'
 import { formatDuration } from '@/lib/formatters'
-import { updateTask } from '@/lib/taskActions'
+import { deleteTask, duplicateTask, updateTask } from '@/lib/taskActions'
 import { TaskStatus, type Goal, type Task } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
+import { Keys } from '@/components/ui/keys'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 
@@ -126,6 +128,16 @@ export function TaskTable({ tasks }: TaskTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
+  const [focusedTaskId, setFocusedTaskId] = useState<string | null>(null)
+
+  const anchorTaskIdRef = useRef<string | null>(null)
+  const shiftHeldRef = useRef(false)
+  const rowIndexMapRef = useRef<Map<string, number>>(new Map())
+  const kbRef = useRef({
+    orderedRows: [] as Row<Task>[],
+    rowSelection: {} as Record<string, boolean>,
+    focusedTaskId: null as string | null,
+  })
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -146,7 +158,27 @@ export function TaskTable({ tasks }: TaskTableProps) {
       cell: ({ row }) => (
         <Checkbox
           checked={row.getIsSelected()}
-          onCheckedChange={v => row.toggleSelected(!!v)}
+          onCheckedChange={v => {
+            if (shiftHeldRef.current && anchorTaskIdRef.current) {
+              const { orderedRows } = kbRef.current
+              const clickedIdx = rowIndexMapRef.current.get(row.id) ?? 0
+              const anchorIdx = rowIndexMapRef.current.get(anchorTaskIdRef.current) ?? clickedIdx
+              const lo = Math.min(anchorIdx, clickedIdx)
+              const hi = Math.max(anchorIdx, clickedIdx)
+              setRowSelection(prev => {
+                const next = { ...prev }
+                for (let i = lo; i <= hi; i++) {
+                  if (orderedRows[i]) next[orderedRows[i].id] = true
+                }
+                return next
+              })
+            } else {
+              row.toggleSelected(!!v)
+              anchorTaskIdRef.current = row.id
+            }
+            setFocusedTaskId(row.id)
+          }}
+          onClick={e => e.stopPropagation()}
           aria-label="Select row"
         />
       ),
@@ -226,6 +258,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
   const table = useReactTable({
     data: tasks,
     columns,
+    getRowId: row => row.id,
     state: { sorting, columnFilters, rowSelection },
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -235,11 +268,130 @@ export function TaskTable({ tasks }: TaskTableProps) {
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const orderedRows = table.getRowModel().rows
+  rowIndexMapRef.current = new Map(orderedRows.map((row, idx) => [row.id, idx]))
+  kbRef.current = { orderedRows, rowSelection, focusedTaskId }
+
+  const focusedIndex = focusedTaskId ? orderedRows.findIndex(r => r.id === focusedTaskId) : -1
+
+  useEffect(() => {
+    const onShiftDown = (e: KeyboardEvent) => { if (e.key === 'Shift') shiftHeldRef.current = true }
+    const onShiftUp = (e: KeyboardEvent) => {
+      if (e.key === 'Shift') {
+        shiftHeldRef.current = false
+        // Re-lock anchor to focused row so the next shift-arrow session starts cleanly
+        anchorTaskIdRef.current = kbRef.current.focusedTaskId
+      }
+    }
+    document.addEventListener('keydown', onShiftDown)
+    document.addEventListener('keyup', onShiftUp)
+    return () => {
+      document.removeEventListener('keydown', onShiftDown)
+      document.removeEventListener('keyup', onShiftUp)
+    }
+  }, [])
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      const { orderedRows, rowSelection, focusedTaskId } = kbRef.current
+      const meta = e.metaKey || e.ctrlKey
+      const tag = document.activeElement?.tagName ?? ''
+      const inputFocused = tag === 'INPUT' || tag === 'TEXTAREA'
+
+      // Cmd+1–5: change status (works even when an input is focused)
+      if (meta && !e.shiftKey && e.key >= '1' && e.key <= '5') {
+        const selectedIds = Object.keys(rowSelection).filter(k => rowSelection[k])
+        const ids = selectedIds.length > 0 ? selectedIds : focusedTaskId ? [focusedTaskId] : []
+        if (!ids.length) return
+        e.preventDefault()
+        const status = (Number(e.key) - 1) as TaskStatus
+        void Promise.all(ids.map(id => updateTask(id, { status })))
+        return
+      }
+
+      if (inputFocused) return
+
+      if (meta && e.key.toLowerCase() === 'a') {
+        if (!orderedRows.length) return
+        e.preventDefault()
+        const allSelected = orderedRows.every(r => rowSelection[r.id])
+        if (allSelected) {
+          setRowSelection({})
+        } else {
+          const newSel: Record<string, boolean> = {}
+          orderedRows.forEach(r => { newSel[r.id] = true })
+          setRowSelection(newSel)
+        }
+        return
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        if (!orderedRows.length) return
+        e.preventDefault()
+        const dir = e.key === 'ArrowDown' ? 1 : -1
+        const curIdx = focusedTaskId
+          ? orderedRows.findIndex(r => r.id === focusedTaskId)
+          : dir > 0 ? -1 : orderedRows.length
+        const nextIdx = Math.max(0, Math.min(orderedRows.length - 1, curIdx + dir))
+        const nextRow = orderedRows[nextIdx]
+        if (!nextRow) return
+        setFocusedTaskId(nextRow.id)
+        if (e.shiftKey) {
+          // Lock the anchor on the first shift-arrow; keep it until shift is released
+          if (!anchorTaskIdRef.current && focusedTaskId) {
+            anchorTaskIdRef.current = focusedTaskId
+          }
+          const anchorId = anchorTaskIdRef.current
+          if (anchorId) {
+            const anchorIdx = orderedRows.findIndex(r => r.id === anchorId)
+            const lo = Math.min(anchorIdx, nextIdx)
+            const hi = Math.max(anchorIdx, nextIdx)
+            // Replace selection with anchor→focus range so moving back shrinks it
+            const newSel: Record<string, boolean> = {}
+            for (let i = lo; i <= hi; i++) {
+              if (orderedRows[i]) newSel[orderedRows[i].id] = true
+            }
+            setRowSelection(newSel)
+          }
+        } else {
+          anchorTaskIdRef.current = nextRow.id
+        }
+        return
+      }
+
+      if ((e.key === 'Backspace' || e.key === 'Delete') && !meta) {
+        const selectedIds = Object.keys(rowSelection).filter(k => rowSelection[k])
+        const ids = selectedIds.length > 0 ? selectedIds : focusedTaskId ? [focusedTaskId] : []
+        if (!ids.length) return
+        e.preventDefault()
+        void Promise.all(ids.map(id => deleteTask(id)))
+        setRowSelection({})
+        return
+      }
+
+      if (meta && e.key.toLowerCase() === 'd') {
+        const selectedIds = Object.keys(rowSelection).filter(k => rowSelection[k])
+        const ids = selectedIds.length > 0 ? selectedIds : focusedTaskId ? [focusedTaskId] : []
+        if (!ids.length) return
+        e.preventDefault()
+        void Promise.all(ids.map(id => duplicateTask(id)))
+        return
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   async function deleteSelected() {
     const ids = table.getFilteredSelectedRowModel().rows.map(r => r.original.id)
-    const now = new Date().toISOString()
-    await Promise.all(ids.map(id => updateTask(id, { deletedAt: now })))
+    await Promise.all(ids.map(id => deleteTask(id)))
     setRowSelection({})
+  }
+
+  async function duplicateSelected() {
+    const ids = table.getFilteredSelectedRowModel().rows.map(r => r.original.id)
+    await Promise.all(ids.map(id => duplicateTask(id)))
   }
 
   const selectedCount = table.getFilteredSelectedRowModel().rows.length
@@ -286,10 +438,18 @@ export function TaskTable({ tasks }: TaskTableProps) {
           </Select>
         )}
         {selectedCount > 0 && (
-          <Button variant="destructive" size="sm" className="ml-auto" onClick={deleteSelected}>
-            <Trash2 />
-            Delete {selectedCount}
-          </Button>
+          <>
+            <Button variant="outline" size="sm" className="ml-auto gap-2" onClick={duplicateSelected}>
+              <Copy size={14} />
+              Duplicate {selectedCount}
+              <Keys meta k="D" />
+            </Button>
+            <Button variant="destructive" size="sm" className="gap-2" onClick={deleteSelected}>
+              <Trash2 size={14} />
+              Delete {selectedCount}
+              <Keys k="⌫" />
+            </Button>
+          </>
         )}
       </div>
 
@@ -307,9 +467,17 @@ export function TaskTable({ tasks }: TaskTableProps) {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map(row => (
-                <TableRow key={row.id} data-state={row.getIsSelected() ? 'selected' : undefined}>
+            {orderedRows.length ? (
+              orderedRows.map((row, idx) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() ? 'selected' : undefined}
+                  onClick={() => {
+                    setFocusedTaskId(row.id)
+                    if (!shiftHeldRef.current) anchorTaskIdRef.current = row.id
+                  }}
+                  className={`cursor-pointer${focusedIndex === idx && !row.getIsSelected() ? ' bg-muted/40' : ''}`}
+                >
                   {row.getVisibleCells().map(cell => (
                     <TableCell key={cell.id} className="overflow-hidden">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
