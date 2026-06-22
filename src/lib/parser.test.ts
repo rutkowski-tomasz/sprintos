@@ -59,6 +59,12 @@ describe('parseTaskInput', () => {
     it('does not treat a letter as emoji', () => {
       expect(parseTaskInput('Read book', [], NOW).emoji).toBeNull()
     })
+
+    it('extracts a trailing emoji', () => {
+      const r = parseTaskInput('Trening Mon 07 💪🏻', [], NOW)
+      expect(r.emoji).toBe('💪🏻')
+      expect(r.name).toBe('Trening')
+    })
   })
 
   describe('sourceUrl', () => {

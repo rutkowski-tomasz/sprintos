@@ -197,5 +197,17 @@ export function parseTaskInput(
     }
   }
 
+  // 8. Emoji anywhere in remaining tokens (if no leading emoji was found)
+  if (!emoji) {
+    for (let i = 0; i < tokens.length; i++) {
+      const segs = [...new Intl.Segmenter().segment(tokens[i])]
+      if (segs.length === 1 && /\p{Extended_Pictographic}/u.test(segs[0].segment)) {
+        emoji = tokens[i]
+        tokens.splice(i, 1)
+        break
+      }
+    }
+  }
+
   return { name: tokens.join(' '), emoji, eventDate, status, snooze, duration, goalId, sourceUrl }
 }

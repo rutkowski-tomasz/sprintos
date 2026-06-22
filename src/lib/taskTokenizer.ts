@@ -14,9 +14,10 @@ interface Range {
 export function tokenizeInput(input: string): Segment[] {
   const ranges: Range[] = []
 
-  const seg = [...new Intl.Segmenter().segment(input)][0]
-  if (seg && /\p{Extended_Pictographic}/u.test(seg.segment)) {
-    ranges.push({ start: 0, end: seg.segment.length, type: 'emoji' })
+  for (const { segment, index } of new Intl.Segmenter().segment(input)) {
+    if (/\p{Extended_Pictographic}/u.test(segment)) {
+      ranges.push({ start: index, end: index + segment.length, type: 'emoji' })
+    }
   }
 
   let m: RegExpExecArray | null
