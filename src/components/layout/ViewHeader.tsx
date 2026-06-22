@@ -40,7 +40,7 @@ export function ViewHeader({ viewName, sprintKey, tasks }: Props) {
 
   const inProgress = tasks?.filter(t => t.status === TaskStatus.IN_PROGRESS).length ?? 0
 
-  const syncIndicator = (
+  const syncIndicator = syncStatus !== 'synced' && (
     <div className="flex items-center gap-1.5 shrink-0">
       <span className={cn('size-1.5 rounded-full', SYNC_DOT[syncStatus])} />
       <span className={cn('text-xs font-medium', SYNC_COLOR[syncStatus])}>
@@ -62,9 +62,9 @@ export function ViewHeader({ viewName, sprintKey, tasks }: Props) {
             </span>
             <span className="text-5xl font-black leading-none tabular-nums">{sprintNum}</span>
           </div>
+          <div className="h-0.75 bg-purple-500 mt-2" />
         </div>
-        <div className="w-px bg-border mx-0.5 self-stretch" />
-        <div className="flex-1 flex flex-col items-end justify-between gap-1">
+        <div className="flex-1 flex flex-col items-end justify-end gap-1">
           {syncIndicator}
           {dateRange && <span className="text-sm font-medium">{dateRange}</span>}
           {tasks && (
