@@ -1,6 +1,7 @@
 import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 import { sprintKey, compareSprintKeys } from '@/lib/sprintEngine'
+import { syncFlushState } from '@/lib/syncStatus'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 async function rollover(now: Date) {
@@ -26,17 +27,22 @@ async function rollover(now: Date) {
 }
 
 async function flushQueue() {
-  const items = await db.sync_queue.toArray()
-  for (const item of items) {
-    let result
-    if (item.operation === 'insert') {
-      result = await supabase.from(item.table).insert(item.payload)
-    } else if (item.operation === 'update') {
-      result = await supabase.from(item.table).update(item.payload).eq('id', item.payload['id'])
-    } else if (item.operation === 'delete') {
-      result = await supabase.from(item.table).delete().eq('id', item.payload['id'])
+  syncFlushState.setFlushing(true)
+  try {
+    const items = await db.sync_queue.toArray()
+    for (const item of items) {
+      let result
+      if (item.operation === 'insert') {
+        result = await supabase.from(item.table).insert(item.payload)
+      } else if (item.operation === 'update') {
+        result = await supabase.from(item.table).update(item.payload).eq('id', item.payload['id'])
+      } else if (item.operation === 'delete') {
+        result = await supabase.from(item.table).delete().eq('id', item.payload['id'])
+      }
+      if (result && !result.error) await db.sync_queue.delete(item.id!)
     }
-    if (result && !result.error) await db.sync_queue.delete(item.id!)
+  } finally {
+    syncFlushState.setFlushing(false)
   }
 }
 

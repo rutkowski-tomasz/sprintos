@@ -1,3 +1,4 @@
+import { ViewHeader } from '@/components/layout/ViewHeader'
 import { TaskInput } from '@/components/tasks/TaskInput'
 import { TaskListMobile } from '@/components/tasks/TaskListMobile'
 import { TaskTable } from '@/components/tasks/TaskTable'
@@ -12,13 +13,8 @@ export function NextSprint() {
 
   return (
     <div className="h-full flex flex-col">
+      <ViewHeader viewName="Next Sprint" sprintKey={sprintKey} tasks={tasks} />
       <div className="flex-1 overflow-auto overscroll-contain p-4 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold">Next Sprint</h2>
-          {sprintKey && (
-            <span className="text-sm text-muted-foreground">{sprintKey.replace(/^\d+ /, '')}</span>
-          )}
-        </div>
         <div className="md:hidden -mx-4">
           <TaskListMobile tasks={tasks} />
         </div>
