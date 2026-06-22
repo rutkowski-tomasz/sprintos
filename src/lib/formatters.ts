@@ -14,9 +14,37 @@ export function formatDate(iso: string): string {
 export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h && m) return `${h}h ${m}m`
-  if (h) return `${h}h`
-  return `${m}m`
+  const s = seconds % 60
+  const mm = String(m).padStart(2, '0')
+  const ss = String(s).padStart(2, '0')
+  if (h) return `${String(h).padStart(2, '0')}:${mm}:${ss}`
+  return `${mm}:${ss}`
+}
+
+export function parseDuration(input: string): number | null {
+  const s = input.trim()
+  if (!s) return null
+  if (!/^[\d:]+$/.test(s)) return null
+
+  const parts = s.split(':')
+  const nums = parts.map(p => parseInt(p, 10))
+  if (nums.some(isNaN)) return null
+
+  if (parts.length === 1) return nums[0]
+
+  if (parts.length === 2) {
+    const [m, sec] = nums
+    if (sec > 59) return null
+    return m * 60 + sec
+  }
+
+  if (parts.length === 3) {
+    const [h, m, sec] = nums
+    if (m > 59 || sec > 59) return null
+    return h * 3600 + m * 60 + sec
+  }
+
+  return null
 }
 
 export function formatSnooze(snooze: string): string {

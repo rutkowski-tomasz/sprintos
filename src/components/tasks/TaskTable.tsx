@@ -14,7 +14,7 @@ import {
 import { ArrowUpDown, Copy, FileText, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
 import { compareSprintKeys } from '@/lib/sprintEngine'
-import { formatDuration } from '@/lib/formatters'
+import { formatDuration, parseDuration } from '@/lib/formatters'
 import { deleteTask, duplicateTask, updateTask } from '@/lib/taskActions'
 import { TaskStatus, type Goal, type Task } from '@/types'
 import { Badge } from '@/components/ui/badge'
@@ -90,6 +90,48 @@ function NameCell({ task }: { task: Task }) {
       )}
       {task.description && <FileText size={12} className="shrink-0 text-muted-foreground/40" />}
     </div>
+  )
+}
+
+function DurationCell({ task }: { task: Task }) {
+  const [editing, setEditing] = useState(false)
+
+  function save(value: string) {
+    const trimmed = value.trim()
+    if (!trimmed) {
+      if (task.duration !== null) void updateTask(task.id, { duration: null })
+      return
+    }
+    const secs = parseDuration(trimmed)
+    if (secs !== null && secs > 0 && secs !== task.duration) void updateTask(task.id, { duration: secs })
+  }
+
+  if (editing) {
+    return (
+      <input
+        autoFocus
+        defaultValue={task.duration ? formatDuration(task.duration) : ''}
+        onKeyDown={e => {
+          if (e.key === 'Enter') e.currentTarget.blur()
+          if (e.key === 'Escape') {
+            e.currentTarget.value = task.duration ? formatDuration(task.duration) : ''
+            e.currentTarget.blur()
+          }
+          if (!/[\d:]/.test(e.key) && e.key.length === 1 && !e.metaKey && !e.ctrlKey) e.preventDefault()
+        }}
+        onBlur={e => { save(e.target.value); setEditing(false) }}
+        className="w-full bg-transparent outline-none border-b border-border text-sm"
+      />
+    )
+  }
+
+  return (
+    <span
+      className={`text-sm cursor-text ${task.duration ? 'text-muted-foreground' : 'text-muted-foreground/30'}`}
+      onClick={() => setEditing(true)}
+    >
+      {task.duration ? formatDuration(task.duration) : '—'}
+    </span>
   )
 }
 
@@ -231,11 +273,7 @@ export function TaskTable({ tasks }: TaskTableProps) {
     {
       accessorKey: 'duration',
       header: ({ column }) => <SortableHeader column={column}>Duration</SortableHeader>,
-      cell: ({ row }) => {
-        const d = row.getValue<number | null>('duration')
-        if (!d) return <span className="text-muted-foreground/30">—</span>
-        return <span className="text-sm text-muted-foreground">{formatDuration(d)}</span>
-      },
+      cell: ({ row }) => <DurationCell task={row.original} />,
     },
     {
       accessorKey: 'sprint',
