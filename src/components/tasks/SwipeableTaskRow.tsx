@@ -3,27 +3,11 @@ import { Check, Clock } from 'lucide-react'
 import { updateTask } from '@/lib/taskActions'
 import { formatDate, formatDuration } from '@/lib/formatters'
 import { TaskStatus, type Goal, type Task } from '@/types'
-import { Badge } from '@/components/ui/badge'
 import { SprintPicker } from '@/components/tasks/SprintPicker'
+import { StatusPicker } from '@/components/tasks/StatusPicker'
 
 const DONE_THRESHOLD = 80
 const SNOOZE_THRESHOLD = 80
-
-const STATUS_BADGE: Record<number, string> = {
-  [TaskStatus.TODO]: 'bg-zinc-500/15 text-zinc-400 border-transparent',
-  [TaskStatus.NEXT]: 'bg-purple-500/15 text-purple-400 border-transparent',
-  [TaskStatus.IN_PROGRESS]: 'bg-blue-500/15 text-blue-400 border-transparent',
-  [TaskStatus.DONE]: 'bg-emerald-500/15 text-emerald-400 border-transparent',
-  [TaskStatus.ARCHIVED]: 'bg-zinc-400/10 text-zinc-500 border-transparent',
-}
-
-const STATUS_LABELS: Record<number, string> = {
-  [TaskStatus.TODO]: 'To-Do',
-  [TaskStatus.NEXT]: 'Next',
-  [TaskStatus.IN_PROGRESS]: 'In Progress',
-  [TaskStatus.DONE]: 'Done',
-  [TaskStatus.ARCHIVED]: 'Archived',
-}
 
 function snoozeShort(snooze: string): string {
   if (snooze.startsWith('-')) {
@@ -109,19 +93,7 @@ export function SwipeableTaskRow({ task, goalMap, onSnoozeRequest }: SwipeableTa
           className="shrink-0 flex flex-col items-end gap-1"
           onPointerDown={e => e.stopPropagation()}
         >
-          <div className="relative inline-flex">
-            <Badge className={STATUS_BADGE[task.status]}>{STATUS_LABELS[task.status]}</Badge>
-            <select
-              value={task.status}
-              onChange={e => void updateTask(task.id, { status: Number(e.target.value) as TaskStatus })}
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              aria-label="Task status"
-            >
-              {Object.entries(STATUS_LABELS).map(([v, label]) => (
-                <option key={v} value={v}>{label}</option>
-              ))}
-            </select>
-          </div>
+          <StatusPicker task={task} />
           <div className="text-[11px] text-muted-foreground/50">
             <SprintPicker task={task} />
           </div>
