@@ -138,11 +138,11 @@ export function BottomNav() {
 
   // ── Touch handlers via stable ref — avoids passive listener constraint ──
   const touchHandlers = useRef({
-    triggerStart: (e: TouchEvent) => {},
-    triggerMove: (e: TouchEvent) => {},
-    triggerEnd: (e: TouchEvent) => {},
-    panelMove: (e: TouchEvent) => {},
-    panelEnd: (e: TouchEvent) => {},
+    triggerStart: (_e: TouchEvent) => {},
+    triggerMove: (_e: TouchEvent) => {},
+    triggerEnd: (_e: TouchEvent) => {},
+    panelMove: (_e: TouchEvent) => {},
+    panelEnd: (_e: TouchEvent) => {},
   })
 
   // Update handlers each render so closures stay fresh
@@ -164,7 +164,6 @@ export function BottomNav() {
     },
     triggerEnd(e) {
       e.preventDefault()
-      const t = e.changedTouches[0]
       if (draggingRef.current && highlightedRef.current) {
         const route = (highlightedRef.current as HTMLElement).dataset.route
         if (route) doNavigate(route)
