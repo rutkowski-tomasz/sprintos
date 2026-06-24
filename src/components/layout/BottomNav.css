@@ -261,7 +261,28 @@
     width 0.38s var(--bn-spring),
     height 0.38s var(--bn-spring),
     border-radius 0.32s var(--bn-ease-out),
-    opacity 0.18s ease;
+    opacity 0.18s ease,
+    transform 0.55s var(--bn-spring);
+}
+
+.bn-panel[data-morph="v"] {
+  transform: scaleX(0.97) scaleY(1.02);
+  transition:
+    width 0.38s var(--bn-spring),
+    height 0.38s var(--bn-spring),
+    border-radius 0.32s var(--bn-ease-out),
+    opacity 0.18s ease,
+    transform 0s;
+}
+
+.bn-panel[data-morph="h"] {
+  transform: scaleX(1.02) scaleY(0.97);
+  transition:
+    width 0.38s var(--bn-spring),
+    height 0.38s var(--bn-spring),
+    border-radius 0.32s var(--bn-ease-out),
+    opacity 0.18s ease,
+    transform 0s;
 }
 
 .bn-panel.bn-panel-open {
@@ -274,10 +295,30 @@
 
 /* ── Nav content ── */
 .bn-nav-content {
+  position: relative;
   width: var(--bn-panel-w);
   padding: 8px;
   opacity: 0;
   transition: opacity 0.16s ease 0.22s;
+}
+
+/* ── Animated highlight pill ── */
+.bn-highlight {
+  position: absolute;
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.11);
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    left 0.38s var(--bn-spring),
+    top 0.38s var(--bn-spring),
+    width 0.38s var(--bn-spring),
+    height 0.38s var(--bn-spring),
+    opacity 0.18s ease;
+}
+
+.bn-highlight.bn-highlight-visible {
+  opacity: 1;
 }
 
 .bn-panel.bn-panel-open .bn-nav-content {
@@ -308,8 +349,7 @@
   opacity: 0.75;
 }
 
-.bn-nav-row:active,
-.bn-nav-row.bn-hi {
+.bn-nav-row:active {
   background: rgba(255, 255, 255, 0.11);
 }
 
@@ -361,8 +401,7 @@
   opacity: 0.75;
 }
 
-.bn-tile:active,
-.bn-tile.bn-hi {
+.bn-tile:active {
   background: rgba(255, 255, 255, 0.11);
 }
 

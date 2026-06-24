@@ -32,6 +32,9 @@ export function BottomNav() {
   const highlightedRef = useRef<Element | null>(null)
   const draggingRef = useRef(false)
   const touchOriginRef = useRef({ x: 0, y: 0 })
+  const highlightPillRef = useRef<HTMLDivElement>(null)
+  const navContentRef = useRef<HTMLDivElement>(null)
+  const morphRafRef = useRef<number | null>(null)
 
   const placeholders = useMemo(
     () => [...BASE_PLACEHOLDERS, ROUTE_PLACEHOLDER[location.pathname] ?? 'Add task...'],
@@ -91,6 +94,7 @@ export function BottomNav() {
       highlightedRef.current.classList.remove('bn-hi')
       highlightedRef.current = null
     }
+    highlightPillRef.current?.classList.remove('bn-highlight-visible')
   }, [])
 
   const openMenu = useCallback(() => {
@@ -124,11 +128,53 @@ export function BottomNav() {
     return null
   }
 
+  const applyMorph = (direction: 'h' | 'v') => {
+    const panel = panelRef.current
+    if (!panel) return
+    if (morphRafRef.current) cancelAnimationFrame(morphRafRef.current)
+    panel.dataset.morph = direction
+    morphRafRef.current = requestAnimationFrame(() => {
+      morphRafRef.current = requestAnimationFrame(() => {
+        delete panel.dataset.morph
+      })
+    })
+  }
+
   const setHighlightAt = (x: number, y: number) => {
     const target = hitNavItem(x, y)
     if (target === highlightedRef.current) return
-    clearHighlight()
-    if (target) { target.classList.add('bn-hi'); highlightedRef.current = target }
+
+    const prevTarget = highlightedRef.current
+    if (prevTarget) prevTarget.classList.remove('bn-hi')
+    highlightedRef.current = null
+
+    const pill = highlightPillRef.current
+    const navContent = navContentRef.current
+
+    if (target) {
+      target.classList.add('bn-hi')
+      highlightedRef.current = target
+
+      if (pill && navContent) {
+        const contentRect = navContent.getBoundingClientRect()
+        const targetRect = target.getBoundingClientRect()
+
+        if (prevTarget) {
+          const prevRect = prevTarget.getBoundingClientRect()
+          const dx = Math.abs(targetRect.left + targetRect.width / 2 - prevRect.left - prevRect.width / 2)
+          const dy = Math.abs(targetRect.top + targetRect.height / 2 - prevRect.top - prevRect.height / 2)
+          applyMorph(dx > dy ? 'h' : 'v')
+        }
+
+        pill.style.left = `${targetRect.left - contentRect.left}px`
+        pill.style.top = `${targetRect.top - contentRect.top}px`
+        pill.style.width = `${targetRect.width}px`
+        pill.style.height = `${targetRect.height}px`
+        pill.classList.add('bn-highlight-visible')
+      }
+    } else {
+      pill?.classList.remove('bn-highlight-visible')
+    }
   }
 
   const doNavigate = useCallback((route: string) => {
@@ -278,7 +324,8 @@ export function BottomNav() {
       <div ref={overlayRef} className="bn-overlay" onClick={closeMenu} />
 
       <nav ref={panelRef} className="bn-panel" aria-label="Main navigation">
-        <div className="bn-nav-content">
+        <div ref={navContentRef} className="bn-nav-content">
+          <div ref={highlightPillRef} className="bn-highlight" />
           <div className="bn-nav-row" data-route="settings" onClick={() => doNavigate('settings')}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="3"/>
