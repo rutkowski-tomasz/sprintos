@@ -54,12 +54,14 @@ function AnimatedContent() {
 
 function AppShell() {
   return (
-    <div className="flex h-screen">
+    <div className="flex h-dvh">
       <Sidebar />
-      <main className="flex-1 relative overflow-hidden">
-        <AnimatedContent />
-      </main>
-      <BottomNav />
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+        <main className="flex-1 relative overflow-hidden min-h-0">
+          <AnimatedContent />
+        </main>
+        <BottomNav />
+      </div>
     </div>
   )
 }

@@ -24,15 +24,12 @@
 
 /* ── Bottom bar ── */
 .bn-root {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   z-index: 100;
   padding: 10px 14px;
   padding-bottom: max(20px, env(safe-area-inset-bottom, 20px));
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 8px;
   -webkit-tap-highlight-color: transparent;
 }
@@ -41,9 +38,9 @@
 .bn-search-bar {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 6px;
-  height: 48px;
+  min-height: 48px;
   border-radius: 24px;
   padding: 5px 6px 5px 20px;
   background: var(--bn-glass-bg);
@@ -119,7 +116,7 @@
   flex: 1;
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   min-width: 0;
 }
 
@@ -134,11 +131,13 @@
   font-weight: 400;
   letter-spacing: -0.01em;
   caret-color: #fff;
-  padding: 0;
-}
-
-.bn-search-input::placeholder {
-  color: transparent;
+  padding: 5px 0;
+  cursor: text;
+  word-break: break-word;
+  max-height: 120px;
+  overflow-y: auto;
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .bn-placeholder {

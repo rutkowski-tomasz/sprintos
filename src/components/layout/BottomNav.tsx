@@ -18,7 +18,7 @@ export function BottomNav() {
   const triggerRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const overlayRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLDivElement>(null)
   const phRef = useRef<HTMLDivElement>(null)
   const barRef = useRef<HTMLDivElement>(null)
 
@@ -294,8 +294,8 @@ export function BottomNav() {
     }
   }
 
-  const onSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value
+  const onSearchInput = (e: React.FormEvent<HTMLDivElement>) => {
+    const val = (e.currentTarget as HTMLDivElement).textContent ?? ''
     setInputValue(val)
     if (phRef.current) phRef.current.style.opacity = val ? '0' : ''
   }
@@ -303,7 +303,7 @@ export function BottomNav() {
   const onClearMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
-    if (inputRef.current) inputRef.current.value = ''
+    if (inputRef.current) inputRef.current.textContent = ''
     if (phRef.current) phRef.current.style.opacity = ''
   }
 
@@ -311,7 +311,7 @@ export function BottomNav() {
     const ok = await submit()
     if (ok) {
       setInputValue('')
-      if (inputRef.current) inputRef.current.value = ''
+      if (inputRef.current) inputRef.current.textContent = ''
       if (phRef.current) phRef.current.style.opacity = ''
       phVisibleRef.current = true
       startCycle()
@@ -395,20 +395,20 @@ export function BottomNav() {
 
         <div className="bn-search-bar">
           <div className="bn-search-area">
-            <input
+            <div
               ref={inputRef}
               className="bn-search-input"
-              type="text"
+              contentEditable
               inputMode="search"
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
+              autoCapitalize="sentences"
               spellCheck={false}
               aria-label="Search or add task"
-              value={inputValue}
+              role="textbox"
+              aria-multiline="false"
+              suppressContentEditableWarning
               onFocus={onSearchFocus}
               onBlur={onSearchBlur}
-              onChange={onSearchChange}
+              onInput={onSearchInput}
               onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
             />
             <div ref={phRef} className="bn-placeholder" aria-hidden="true" />
