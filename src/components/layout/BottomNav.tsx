@@ -1,12 +1,19 @@
-import { useEffect, useRef, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTaskCreator } from '@/hooks/useTaskCreator'
 import './BottomNav.css'
 
-const PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?", 'Add to Sprint 12...']
+const ROUTE_PLACEHOLDER: Record<string, string> = {
+  '/current': 'Add to current sprint...',
+  '/next': 'Add to next sprint...',
+  '/backlog': 'Add to backlog...',
+}
+
+const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
 
 export function BottomNav() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const triggerRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
@@ -25,6 +32,11 @@ export function BottomNav() {
   const highlightedRef = useRef<Element | null>(null)
   const draggingRef = useRef(false)
   const touchOriginRef = useRef({ x: 0, y: 0 })
+
+  const placeholders = useMemo(
+    () => [...BASE_PLACEHOLDERS, ROUTE_PLACEHOLDER[location.pathname] ?? 'Add task...'],
+    [location.pathname]
+  )
 
   const phIdxRef = useRef(0)
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -49,14 +61,16 @@ export function BottomNav() {
   }, [])
 
   const startCycle = useCallback(() => {
-    showPlaceholder(PLACEHOLDERS[phIdxRef.current], false)
+    showPlaceholder(placeholders[phIdxRef.current], false)
     phTimerRef.current = setInterval(() => {
-      phIdxRef.current = (phIdxRef.current + 1) % PLACEHOLDERS.length
-      showPlaceholder(PLACEHOLDERS[phIdxRef.current], true)
+      phIdxRef.current = (phIdxRef.current + 1) % placeholders.length
+      showPlaceholder(placeholders[phIdxRef.current], true)
     }, 3000)
-  }, [showPlaceholder])
+  }, [showPlaceholder, placeholders])
 
   useEffect(() => {
+    if (phTimerRef.current) clearInterval(phTimerRef.current)
+    phIdxRef.current = 0
     startCycle()
     return () => { if (phTimerRef.current) clearInterval(phTimerRef.current) }
   }, [startCycle])
