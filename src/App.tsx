@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/components/AuthPage'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { BottomNav } from '@/components/layout/BottomNav'
 import { CurrentSprint } from '@/views/CurrentSprint'
 import { NextSprint } from '@/views/NextSprint'
 import { Backlog } from '@/views/Backlog'
@@ -58,6 +59,7 @@ function AppShell() {
       <main className="flex-1 relative overflow-hidden">
         <AnimatedContent />
       </main>
+      <BottomNav />
     </div>
   )
 }
