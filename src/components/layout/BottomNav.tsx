@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTaskCreator } from '@/hooks/useTaskCreator'
 import './BottomNav.css'
 
-const PLACEHOLDERS = ['Search task', 'Add or search', "What's next?", 'Add to Sprint']
+const PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?", 'Add to Sprint 12...']
 
 export function BottomNav() {
   const navigate = useNavigate()
@@ -17,6 +18,8 @@ export function BottomNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
+
+  const { submit } = useTaskCreator(inputValue)
 
   const menuOpenRef = useRef(false)
   const highlightedRef = useRef<Element | null>(null)
@@ -245,6 +248,18 @@ export function BottomNav() {
     if (phRef.current) phRef.current.style.opacity = ''
   }
 
+  const handleSubmit = useCallback(async () => {
+    const ok = await submit()
+    if (ok) {
+      setInputValue('')
+      if (inputRef.current) inputRef.current.value = ''
+      if (phRef.current) phRef.current.style.opacity = ''
+      phVisibleRef.current = true
+      startCycle()
+      inputRef.current?.focus()
+    }
+  }, [submit, startCycle])
+
   return (
     <>
       <div ref={overlayRef} className="bn-overlay" onClick={closeMenu} />
@@ -334,6 +349,7 @@ export function BottomNav() {
               onFocus={onSearchFocus}
               onBlur={onSearchBlur}
               onChange={onSearchChange}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
             />
             <div ref={phRef} className="bn-placeholder" aria-hidden="true" />
           </div>
@@ -350,7 +366,7 @@ export function BottomNav() {
             </svg>
           </button>
 
-          <button className="bn-submit" aria-label="Submit" type="button">
+          <button className="bn-submit" aria-label="Submit" type="button" onClick={handleSubmit}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="12" y1="19" x2="12" y2="5"/>
               <polyline points="5 12 12 5 19 12"/>

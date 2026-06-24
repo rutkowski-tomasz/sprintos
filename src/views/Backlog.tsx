@@ -1,6 +1,5 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ViewHeader } from '@/components/layout/ViewHeader'
-import { TaskInput } from '@/components/tasks/TaskInput'
 import { TaskListMobile } from '@/components/tasks/TaskListMobile'
 import { TaskTable } from '@/components/tasks/TaskTable'
 import { db } from '@/lib/db'
@@ -23,9 +22,6 @@ export function Backlog() {
         <div className="hidden md:block">
           <TaskTable tasks={tasks ?? []} />
         </div>
-      </div>
-      <div className="shrink-0 border-t border-border px-4 pt-3 pb-safe-nav md:pb-3">
-        <TaskInput sprint={null} />
       </div>
     </div>
   )
