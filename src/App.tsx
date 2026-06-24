@@ -6,17 +6,15 @@ import { ProtectedRoute } from '@/components/ProtectedRoute'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { CurrentSprint } from '@/views/CurrentSprint'
 import { NextSprint } from '@/views/NextSprint'
-import { Planning } from '@/views/Planning'
-import { AllTasks } from '@/views/AllTasks'
+import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
 
-const ROUTE_ORDER = ['/current', '/next', '/planning', '/all-tasks', '/goals']
+const ROUTE_ORDER = ['/current', '/next', '/backlog']
 
 const VIEW_ROUTES = [
   { path: '/current', element: <CurrentSprint /> },
   { path: '/next', element: <NextSprint /> },
-  { path: '/planning', element: <Planning /> },
-  { path: '/all-tasks', element: <AllTasks /> },
+  { path: '/backlog', element: <Backlog /> },
   { path: '/goals', element: <Goals /> },
   { path: '/', element: <Navigate to="/current" replace /> },
   { path: '*', element: <Navigate to="/current" replace /> },
