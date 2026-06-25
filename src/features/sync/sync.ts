@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import { sprintKey, compareSprintKeys } from '@/features/sprints/sprintEngine'
+import { sprintKey, compareSprintKeys } from '@/features/properties/sprints/sprintEngine'
 import { syncFlushState } from './syncStatus'
 import { TaskStatus, type Goal, type Task } from '@/types'
 

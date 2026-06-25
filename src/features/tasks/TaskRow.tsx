@@ -1,12 +1,12 @@
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'motion/react'
 import { Check } from 'lucide-react'
 import { updateTask } from './taskActions'
-import { formatDate } from './formatters'
-import { formatDuration } from '@/features/duration/duration'
-import { SnoozeLabel } from '@/features/snooze/snooze'
+import { Duration } from '@/features/properties/duration/Duration'
+import { EventDate } from '@/features/properties/event-date/EventDate'
+import { Snooze } from '@/features/properties/snooze/Snooze'
 import { TaskStatus, type Goal, type Task } from '@/types'
-import { SprintPicker } from '@/features/sprints/SprintPicker'
-import { StatusPicker } from '@/features/status/StatusPicker'
+import { SprintPicker } from '@/features/properties/sprints/SprintPicker'
+import { StatusPicker } from '@/features/properties/status/StatusPicker'
 
 const DONE_THRESHOLD = 80
 
@@ -25,10 +25,7 @@ export function TaskRow({ task, goalMap }: TaskRowProps) {
   }
 
   const goal = task.goalId ? goalMap.get(task.goalId) : null
-  const leftMeta = [
-    task.duration ? formatDuration(task.duration) : null,
-    goal ? (goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name) : null,
-  ].filter(Boolean)
+  const goalText = goal ? (goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name) : null
 
   return (
     <div className="relative overflow-hidden border-b border-border">
@@ -51,15 +48,15 @@ export function TaskRow({ task, goalMap }: TaskRowProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-sm truncate flex-1 min-w-0">{task.name}</p>
-            {task.eventDate && (
-              <span className="text-xs text-muted-foreground shrink-0">{formatDate(task.eventDate)}</span>
-            )}
-            {task.snooze && <SnoozeLabel snooze={task.snooze} />}
+            {task.eventDate && <EventDate date={task.eventDate} />}
+            {task.snooze && <Snooze snooze={task.snooze} />}
           </div>
 
-          {leftMeta.length > 0 && (
+          {(task.duration || goalText) && (
             <p className="text-[11px] text-muted-foreground/50 mt-1 truncate">
-              {leftMeta.join(' · ')}
+              {task.duration && <Duration seconds={task.duration} />}
+              {task.duration && goalText && ' · '}
+              {goalText}
             </p>
           )}
         </div>

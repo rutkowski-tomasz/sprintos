@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
-import { useTaskCreator } from './useTaskCreator'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '@/lib/db'
+import { flushQueue } from '@/features/sync/sync'
+import { parseTaskInput } from './taskInputParser'
+import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
+import { useSession } from '@/features/auth/useSession'
+import { TaskStatus, type Goal, type Task } from '@/types'
 
 const ROUTE_PLACEHOLDER: Record<string, string> = {
   '/current': 'Add to current sprint...',
@@ -14,8 +20,16 @@ interface CommandBarProps {
   onFocusChange: (focused: boolean) => void
 }
 
+function sprintForPath(pathname: string): string | null {
+  const now = new Date()
+  if (pathname === '/current') return sprintKey(now)
+  if (pathname === '/next') return sprintKeyOffset(now, 1)
+  return null
+}
+
 export function CommandBar({ onFocusChange }: CommandBarProps) {
   const location = useLocation()
+  const { session } = useSession()
   const inputRef = useRef<HTMLDivElement>(null)
   const phRef = useRef<HTMLDivElement>(null)
   const phIdxRef = useRef(0)
@@ -23,7 +37,39 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
   const phVisibleRef = useRef(true)
   const [inputValue, setInputValue] = useState('')
 
-  const { submit } = useTaskCreator(inputValue)
+  const goals = useLiveQuery(
+    () => db.goals.filter(g => g.deletedAt === null).toArray(),
+    [],
+    [] as Goal[],
+  )
+
+  const submit = useCallback(async (): Promise<boolean> => {
+    if (!inputValue.trim() || !session) return false
+    const parsed = parseTaskInput(inputValue, goals)
+    const now = new Date().toISOString()
+    const task: Task = {
+      id: crypto.randomUUID(),
+      userId: session.user.id,
+      sprint: sprintForPath(location.pathname),
+      goalId: parsed.goalId,
+      name: parsed.name || 'Untitled',
+      emoji: parsed.emoji,
+      status: parsed.status ?? TaskStatus.TODO,
+      eventDate: parsed.eventDate,
+      snooze: parsed.snooze,
+      description: null,
+      sourceUrl: parsed.sourceUrl,
+      duration: parsed.duration,
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    }
+    await db.tasks.add(task)
+    await db.sync_queue.add({ operation: 'insert', table: 'tasks', payload: task })
+    flushQueue()
+    return true
+  }, [inputValue, session, goals, location.pathname])
 
   const placeholders = useMemo(
     () => [...BASE_PLACEHOLDERS, ROUTE_PLACEHOLDER[location.pathname] ?? 'Add task...'],

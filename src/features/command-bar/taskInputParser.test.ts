@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Goal } from '@/types'
 import { TaskStatus } from '@/types'
-import { parseTaskInput } from './parser'
+import { parseTaskInput } from './taskInputParser'
 
 // Fixed reference point: Wednesday 15 Jan 2025 10:00 local time
 const NOW = new Date('2025-01-15T10:00:00')
