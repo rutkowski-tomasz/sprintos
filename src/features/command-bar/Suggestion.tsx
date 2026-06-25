@@ -1,4 +1,4 @@
-import { Copy } from 'lucide-react'
+import { ArrowDownLeft } from 'lucide-react'
 import type { Task } from '@/types'
 import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/TaskStatus'
 
@@ -39,7 +39,7 @@ export function Suggestion({ task, onCopy }: SuggestionProps) {
         }}
         aria-label="Copy to input"
       >
-        <Copy size={13} />
+        <ArrowDownLeft size={16} />
       </button>
     </div>
   )

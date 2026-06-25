@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { useLocation } from 'react-router-dom'
 import type { Goal } from '@/types'
 import { TaskStatus } from '@/types'
@@ -40,7 +41,7 @@ export function TaskPreview({ inputValue, goals }: TaskPreviewProps) {
         {STATUS_LABEL[status]}
       </span>
 
-      <span className="shrink-0 text-white/35 text-sm">↵</span>
+      <Plus className="w-5 h-5 shrink-0 text-white/35" />
     </div>
   )
 }
