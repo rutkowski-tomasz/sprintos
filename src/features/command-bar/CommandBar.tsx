@@ -6,7 +6,7 @@ import { parseTaskInput } from './taskInputParser'
 import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
 import { useSession } from '@/features/auth/useSession'
 import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
-import type { Goal } from '@/types'
+import { TaskStatus, type Goal } from '@/types'
 
 const ROUTE_PLACEHOLDER: Record<string, string> = {
   '/current': 'Add to current sprint...',
@@ -74,7 +74,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       goalId: parsed.goalId,
       name: parsed.name,
       emoji: parsed.emoji,
-      status: parsed.status,
+      status: parsed.status ?? TaskStatus.TODO,
       eventDate: parsed.eventDate,
       snooze: parsed.snooze,
       sourceUrl: parsed.sourceUrl,
