@@ -205,12 +205,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         </svg>
       </button>
 
-      <button className="bn-submit" aria-label="Submit" type="button" onClick={handleSubmit}>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <line x1="12" y1="19" x2="12" y2="5"/>
-          <polyline points="5 12 12 5 19 12"/>
-        </svg>
-      </button>
+
     </div>
   )
 })
