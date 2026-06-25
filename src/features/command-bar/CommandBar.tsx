@@ -43,6 +43,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const placeholderIndexRef = useRef(0)
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [inputValue, setInputValue] = useState('')
+  const [suggestedEmoji, setSuggestedEmoji] = useState<string | null>(null)
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -144,17 +145,22 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     setPlaceholderVisible(!val)
 
     if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
-    if (val.trim()) {
+    const parsed = parseTaskInput(val, goals)
+    if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
-        await findSimilarTask(val.trim())
+        const task = await findSimilarTask(val.trim())
+        setSuggestedEmoji(task?.emoji ?? null)
       }, 400)
+    } else {
+      setSuggestedEmoji(null)
     }
-  }, [onInputChange, setPlaceholderVisible])
+  }, [onInputChange, setPlaceholderVisible, goals])
 
   const onClearMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
     onInputChange?.('')
+    setSuggestedEmoji(null)
     setPlaceholderVisible(true)
     inputRef.current?.focus()
   }, [onInputChange, setPlaceholderVisible])
@@ -164,6 +170,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (ok) {
       setInputValue('')
       onInputChange?.('')
+      setSuggestedEmoji(null)
       setPlaceholderVisible(true)
       startCycle()
       inputRef.current?.focus()
@@ -192,6 +199,24 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         />
         <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
       </div>
+
+      {suggestedEmoji && (
+        <button
+          type="button"
+          className="mx-3 mb-2 self-start px-2.5 py-1 rounded-md border border-dashed border-white/30 bg-white/5 text-base leading-none hover:bg-white/10 transition-colors"
+          onMouseDown={e => {
+            e.preventDefault()
+            const next = `${suggestedEmoji} ${inputValue}`
+            setInputValue(next)
+            onInputChange?.(next)
+            setSuggestedEmoji(null)
+            inputRef.current?.focus()
+          }}
+          aria-label={`Suggest emoji ${suggestedEmoji}`}
+        >
+          {suggestedEmoji}
+        </button>
+      )}
 
       <button
         className={`bn-clear${inputValue ? ' bn-clear-visible' : ''}`}
