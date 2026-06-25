@@ -1,12 +1,9 @@
-import { useLiveQuery } from 'dexie-react-hooks'
 import { Copy } from 'lucide-react'
-import { motion } from 'motion/react'
-import { db } from '@/lib/db'
 import type { Task } from '@/types'
 import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/TaskStatus'
 
-interface SuggestionsProps {
-  inputValue: string
+interface SuggestionProps {
+  task: Task
   onCopy: (text: string) => void
 }
 
@@ -19,12 +16,7 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-interface SuggestionRowProps {
-  task: Task
-  onCopy: (text: string) => void
-}
-
-function SuggestionRow({ task, onCopy }: SuggestionRowProps) {
+export function Suggestion({ task, onCopy }: SuggestionProps) {
   return (
     <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8 last:border-0">
       <span className="text-lg w-6 text-center leading-none shrink-0">{task.emoji ?? ''}</span>
@@ -50,34 +42,5 @@ function SuggestionRow({ task, onCopy }: SuggestionRowProps) {
         <Copy size={13} />
       </button>
     </div>
-  )
-}
-
-export function Suggestions({ inputValue, onCopy }: SuggestionsProps) {
-  const tasks = useLiveQuery(async () => {
-    const all = await db.tasks.filter(t => t.deletedAt === null).toArray()
-    all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
-
-    const q = inputValue.trim().toLowerCase()
-    if (!q) return all.slice(0, 5)
-    return all.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5)
-  }, [inputValue])
-
-  if (!tasks?.length) return null
-
-  return (
-    <motion.div
-      className="bn-suggestions rounded-xl overflow-hidden"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 36 }}
-    >
-      <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
-        Suggestions
-      </p>
-      {tasks.map(task => (
-        <SuggestionRow key={task.id} task={task} onCopy={onCopy} />
-      ))}
-    </motion.div>
   )
 }

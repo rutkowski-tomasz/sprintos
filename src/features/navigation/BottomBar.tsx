@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { NavMenu } from './NavMenu'
 import { CommandBar, type CommandBarHandle } from '@/features/command-bar/CommandBar'
-import { Suggestions } from '@/features/command-bar/Suggestions'
+import { CommandResults } from '@/features/command-bar/CommandResults'
 import './BottomBar.css'
 
 export function BottomBar() {
@@ -26,8 +26,8 @@ export function BottomBar() {
   return (
     <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`}>
       {searchFocused && (
-        <div className="absolute bottom-full left-0 right-0 px-3.5 mb-2">
-          <Suggestions
+        <div className="absolute bottom-full left-0 right-0 px-3.5 mb-1">
+          <CommandResults
             inputValue={inputValue}
             onCopy={text => commandBarRef.current?.setValue(text)}
           />
