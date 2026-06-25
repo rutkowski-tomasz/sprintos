@@ -14,7 +14,7 @@ export function NextSprint() {
   return (
     <div className="h-full flex flex-col">
       <ViewHeader viewName="Next Sprint" sprintKey={key} tasks={tasks} />
-      <div className="flex-1 overflow-auto overscroll-contain">
+      <div className="flex-1 overflow-auto overscroll-contain pb-safe-nav">
         <TaskList tasks={tasks} />
       </div>
     </div>

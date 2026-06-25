@@ -24,7 +24,7 @@ export function BottomBar() {
   }, [])
 
   return (
-    <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`} style={{ position: 'relative' }}>
+    <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`}>
       {searchFocused && (
         <div className="absolute bottom-full left-0 right-0 px-3.5 mb-2">
           <Suggestions

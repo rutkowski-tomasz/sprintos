@@ -26,12 +26,12 @@ interface SuggestionRowProps {
 
 function SuggestionRow({ task, onCopy }: SuggestionRowProps) {
   return (
-    <div className="flex items-center gap-3 px-4 py-3 border-b border-border last:border-0">
+    <div className="flex items-center gap-3 px-4 py-3 border-b border-white/8 last:border-0">
       <span className="text-lg w-6 text-center leading-none shrink-0">{task.emoji ?? ''}</span>
 
       <div className="flex-1 min-w-0">
-        <p className="text-sm truncate">{task.name}</p>
-        <p className="text-[11px] text-muted-foreground/50 mt-0.5">{timeAgo(task.updatedAt)}</p>
+        <p className="text-sm text-white/90 truncate">{task.name}</p>
+        <p className="text-[11px] text-white/40 mt-0.5">{timeAgo(task.updatedAt)}</p>
       </div>
 
       <span className={`text-xs px-2.5 py-0.5 rounded-full border shrink-0 ${STATUS_BADGE[task.status]}`}>
@@ -40,7 +40,7 @@ function SuggestionRow({ task, onCopy }: SuggestionRowProps) {
 
       <button
         type="button"
-        className="shrink-0 p-1.5 rounded-md text-muted-foreground/40 hover:text-muted-foreground hover:bg-accent/50 transition-colors"
+        className="shrink-0 p-1.5 rounded-md text-white/35 hover:text-white/80 hover:bg-white/10 transition-colors"
         onMouseDown={e => {
           e.preventDefault()
           onCopy(task.name)
@@ -67,12 +67,12 @@ export function Suggestions({ inputValue, onCopy }: SuggestionsProps) {
 
   return (
     <motion.div
-      className="rounded-xl border border-border bg-background overflow-hidden shadow-xl"
+      className="bn-suggestions rounded-xl overflow-hidden"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
     >
-      <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-muted-foreground/40 uppercase">
+      <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
         Suggestions
       </p>
       {tasks.map(task => (

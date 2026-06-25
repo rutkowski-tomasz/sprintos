@@ -44,7 +44,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const phVisibleRef = useRef(true)
   const [inputValue, setInputValue] = useState('')
-  const [isFocused, setIsFocused] = useState(false)
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -126,19 +125,15 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     return () => { if (phTimerRef.current) clearInterval(phTimerRef.current) }
   }, [startCycle])
 
-  const focusInput = useCallback(() => inputRef.current?.focus(), [])
-
   const onFocus = () => {
     if (phTimerRef.current) clearInterval(phTimerRef.current)
     phVisibleRef.current = false
     if (phRef.current) phRef.current.style.opacity = '0'
-    setIsFocused(true)
     onFocusChange(true)
   }
 
   const onBlur = () => {
     onFocusChange(false)
-    setIsFocused(false)
     if (!inputValue) {
       phVisibleRef.current = true
       if (phRef.current) phRef.current.style.opacity = ''
@@ -179,7 +174,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         <input
           ref={inputRef}
           type="text"
-          className="bn-search-input-hidden"
+          className="bn-search-input"
           value={inputValue}
           onChange={onChange}
           onFocus={onFocus}
@@ -193,16 +188,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           spellCheck={false}
           aria-label="Search or add task"
         />
-        <div
-          className="bn-search-input"
-          role="textbox"
-          aria-multiline="false"
-          aria-label="Search or add task"
-          onClick={focusInput}
-        >
-          {inputValue}
-          {isFocused && <span className="bn-caret" aria-hidden="true" />}
-        </div>
         <div ref={phRef} className="bn-placeholder" aria-hidden="true" />
       </div>
 
