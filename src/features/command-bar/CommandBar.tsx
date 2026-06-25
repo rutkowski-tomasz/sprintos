@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { parseTaskInput } from './taskInputParser'
 import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
 import { useSession } from '@/features/auth/useSession'
-import { addTask } from '@/features/tasks/taskActions'
+import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
 import type { Goal } from '@/types'
 
 const ROUTE_PLACEHOLDER: Record<string, string> = {
@@ -135,11 +135,20 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     }
   }, [onFocusChange, inputValue, setPlaceholderVisible, startCycle])
 
+  const similarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.currentTarget.value
     setInputValue(val)
     onInputChange?.(val)
     setPlaceholderVisible(!val)
+
+    if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
+    if (val.trim()) {
+      similarTimerRef.current = setTimeout(async () => {
+        await findSimilarTask(val.trim())
+      }, 400)
+    }
   }, [onInputChange, setPlaceholderVisible])
 
   const onClearMouseDown = useCallback((e: React.MouseEvent) => {

@@ -56,6 +56,14 @@ export async function flushQueue() {
   }
 }
 
+function deserializeTask(raw: Record<string, unknown>): Task {
+  const embedding = raw.embedding
+  return {
+    ...raw,
+    embedding: embedding ? JSON.parse(embedding as string) : null,
+  } as Task
+}
+
 async function bootstrap() {
   if (!navigator.onLine) return
 
@@ -65,7 +73,7 @@ async function bootstrap() {
   ])
 
   if (goals) await db.goals.bulkPut(goals as Goal[])
-  if (tasks) await db.tasks.bulkPut(tasks as Task[])
+  if (tasks) await db.tasks.bulkPut(tasks.map(deserializeTask))
 
   await flushQueue()
 }
@@ -83,7 +91,7 @@ export function setupSync() {
     })
     .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, async (payload) => {
       if (payload.eventType === 'DELETE') await db.tasks.delete((payload.old as Task).id)
-      else await db.tasks.put(payload.new as Task)
+      else await db.tasks.put(deserializeTask(payload.new as Record<string, unknown>))
     })
     .subscribe()
 
