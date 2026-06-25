@@ -38,6 +38,7 @@ export interface Task {
   createdAt: string
   updatedAt: string
   deletedAt: string | null
+  embedding: number[] | null
 }
 
 export interface SyncQueueItem {

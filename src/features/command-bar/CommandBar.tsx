@@ -2,11 +2,11 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { flushQueue } from '@/features/sync/sync'
 import { parseTaskInput } from './taskInputParser'
 import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
 import { useSession } from '@/features/auth/useSession'
-import { TaskStatus, type Goal, type Task } from '@/types'
+import { addTask } from '@/features/tasks/taskActions'
+import type { Goal } from '@/types'
 
 const ROUTE_PLACEHOLDER: Record<string, string> = {
   '/current': 'Add to current sprint...',
@@ -66,28 +66,19 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const submit = useCallback(async (): Promise<boolean> => {
     if (!inputValue.trim() || !session) return false
     const parsed = parseTaskInput(inputValue, goals)
-    const now = new Date().toISOString()
-    const task: Task = {
-      id: crypto.randomUUID(),
+    if (!parsed.name) return false
+    await addTask({
       userId: session.user.id,
       sprint: sprintForPath(location.pathname),
       goalId: parsed.goalId,
-      name: parsed.name || 'Untitled',
+      name: parsed.name,
       emoji: parsed.emoji,
-      status: parsed.status ?? TaskStatus.TODO,
+      status: parsed.status,
       eventDate: parsed.eventDate,
       snooze: parsed.snooze,
-      description: null,
       sourceUrl: parsed.sourceUrl,
       duration: parsed.duration,
-      version: 1,
-      createdAt: now,
-      updatedAt: now,
-      deletedAt: null,
-    }
-    await db.tasks.add(task)
-    await db.sync_queue.add({ operation: 'insert', table: 'tasks', payload: task })
-    flushQueue()
+    })
     return true
   }, [inputValue, session, goals, location.pathname])
 
