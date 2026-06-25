@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
@@ -16,8 +16,13 @@ const ROUTE_PLACEHOLDER: Record<string, string> = {
 
 const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
 
+export interface CommandBarHandle {
+  setValue: (text: string) => void
+}
+
 interface CommandBarProps {
   onFocusChange: (focused: boolean) => void
+  onInputChange?: (value: string) => void
 }
 
 function sprintForPath(pathname: string): string | null {
@@ -27,7 +32,10 @@ function sprintForPath(pathname: string): string | null {
   return null
 }
 
-export function CommandBar({ onFocusChange }: CommandBarProps) {
+export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function CommandBar(
+  { onFocusChange, onInputChange },
+  ref,
+) {
   const location = useLocation()
   const { session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -43,6 +51,15 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
     [],
     [] as Goal[],
   )
+
+  useImperativeHandle(ref, () => ({
+    setValue: (text: string) => {
+      setInputValue(text)
+      onInputChange?.(text)
+      if (phRef.current) phRef.current.style.opacity = text ? '0' : ''
+      inputRef.current?.focus()
+    },
+  }))
 
   const submit = useCallback(async (): Promise<boolean> => {
     if (!inputValue.trim() || !session) return false
@@ -132,12 +149,14 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.currentTarget.value
     setInputValue(val)
+    onInputChange?.(val)
     if (phRef.current) phRef.current.style.opacity = val ? '0' : ''
   }
 
   const onClearMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
+    onInputChange?.('')
     if (phRef.current) phRef.current.style.opacity = ''
     inputRef.current?.focus()
   }
@@ -146,12 +165,13 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
     const ok = await submit()
     if (ok) {
       setInputValue('')
+      onInputChange?.('')
       if (phRef.current) phRef.current.style.opacity = ''
       phVisibleRef.current = true
       startCycle()
       inputRef.current?.focus()
     }
-  }, [submit, startCycle])
+  }, [submit, startCycle, onInputChange])
 
   return (
     <div className="bn-search-bar">
@@ -206,4 +226,4 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
       </button>
     </div>
   )
-}
+})
