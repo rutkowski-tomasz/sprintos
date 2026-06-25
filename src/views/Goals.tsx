@@ -1,4 +1,4 @@
-import { ViewHeader } from '@/components/layout/ViewHeader'
+import { ViewHeader } from '@/features/navigation/ViewHeader'
 
 export function Goals() {
   return (

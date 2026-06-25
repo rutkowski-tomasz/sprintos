@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { db } from './lib/db'
 import { supabase } from './lib/supabase'
-import { setupSync } from './lib/sync'
+import { setupSync } from './features/sync/sync'
 
 db.open()
 

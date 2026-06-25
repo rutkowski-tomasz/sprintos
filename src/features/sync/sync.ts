@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
-import { sprintKey, compareSprintKeys } from '@/lib/sprintEngine'
-import { syncFlushState } from '@/lib/syncStatus'
+import { sprintKey, compareSprintKeys } from '@/features/sprints/sprintEngine'
+import { syncFlushState } from './syncStatus'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 async function rollover(now: Date) {
@@ -42,9 +42,11 @@ export async function flushQueue() {
       if (item.operation === 'insert') {
         result = await supabase.from(item.table).insert(item.payload)
       } else if (item.operation === 'update') {
-        result = await supabase.from(item.table).update(item.payload).eq('id', item.payload['id'])
+        const p = item.payload as { id: string }
+        result = await supabase.from(item.table).update(item.payload).eq('id', p.id)
       } else if (item.operation === 'delete') {
-        result = await supabase.from(item.table).delete().eq('id', item.payload['id'])
+        const p = item.payload as { id: string }
+        result = await supabase.from(item.table).delete().eq('id', p.id)
       }
       if (result && !result.error) await db.sync_queue.delete(item.id!)
     }

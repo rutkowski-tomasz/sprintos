@@ -2,10 +2,10 @@ import { useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { flushQueue } from '@/lib/sync'
-import { parseTaskInput } from '@/lib/parser'
-import { sprintKey, sprintKeyOffset } from '@/lib/sprintEngine'
-import { useSession } from '@/hooks/useSession'
+import { flushQueue } from '@/features/sync/sync'
+import { parseTaskInput } from './parser'
+import { sprintKey, sprintKeyOffset } from '@/features/sprints/sprintEngine'
+import { useSession } from '@/features/auth/useSession'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 function sprintForPath(pathname: string): string | null {
@@ -55,7 +55,7 @@ export function useTaskCreator(value: string) {
     await db.sync_queue.add({
       operation: 'insert',
       table: 'tasks',
-      payload: task as unknown as Record<string, unknown>,
+      payload: task,
     })
     flushQueue()
     return true

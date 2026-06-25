@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import { Navigate, Route, Routes, useLocation, useRoutes } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
-import { AuthPage } from '@/components/AuthPage'
-import { ProtectedRoute } from '@/components/ProtectedRoute'
-import { Sidebar } from '@/components/layout/Sidebar'
-import { BottomNav } from '@/components/layout/BottomNav'
+import { AuthPage } from '@/features/auth/AuthPage'
+import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
+import { Sidebar } from '@/features/navigation/Sidebar'
+import { BottomBar } from '@/features/navigation/BottomBar'
 import { CurrentSprint } from '@/views/CurrentSprint'
 import { NextSprint } from '@/views/NextSprint'
 import { Backlog } from '@/views/Backlog'
@@ -60,7 +60,7 @@ function AppShell() {
         <main className="flex-1 relative overflow-hidden min-h-0">
           <AnimatedContent />
         </main>
-        <BottomNav />
+        <BottomBar />
       </div>
     </div>
   )

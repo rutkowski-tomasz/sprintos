@@ -1,28 +1,9 @@
-import { useLiveQuery } from 'dexie-react-hooks'
-import { ViewHeader } from '@/components/layout/ViewHeader'
-import { TaskListMobile } from '@/components/tasks/TaskListMobile'
-import { TaskTable } from '@/components/tasks/TaskTable'
-import { db } from '@/lib/db'
-import { TaskStatus, type Task } from '@/types'
+import { ViewHeader } from '@/features/navigation/ViewHeader'
 
 export function Backlog() {
-  const tasks = useLiveQuery(
-    () => db.tasks.filter(t => t.deletedAt === null && t.status < TaskStatus.DONE).toArray(),
-    [],
-    [] as Task[],
-  )
-
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col overflow-auto">
       <ViewHeader viewName="Backlog" />
-      <div className="flex-1 overflow-auto overscroll-contain p-4 flex flex-col gap-4">
-        <div className="md:hidden -mx-4">
-          <TaskListMobile tasks={tasks ?? []} />
-        </div>
-        <div className="hidden md:block">
-          <TaskTable tasks={tasks ?? []} />
-        </div>
-      </div>
     </div>
   )
 }

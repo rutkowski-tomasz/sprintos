@@ -1,5 +1,5 @@
 import { db } from '@/lib/db'
-import { flushQueue } from '@/lib/sync'
+import { flushQueue } from '@/features/sync/sync'
 import type { Task } from '@/types'
 
 export async function updateTask(id: string, patch: Partial<Task>): Promise<void> {
@@ -10,7 +10,7 @@ export async function updateTask(id: string, patch: Partial<Task>): Promise<void
   await db.sync_queue.add({
     operation: 'update',
     table: 'tasks',
-    payload: updated as unknown as Record<string, unknown>,
+    payload: updated,
   })
   flushQueue()
 }
@@ -39,7 +39,7 @@ export async function duplicateTask(id: string): Promise<void> {
   await db.sync_queue.add({
     operation: 'insert',
     table: 'tasks',
-    payload: copy as unknown as Record<string, unknown>,
+    payload: copy,
   })
   flushQueue()
 }

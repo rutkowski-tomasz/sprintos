@@ -44,5 +44,5 @@ export interface SyncQueueItem {
   id?: number
   operation: 'insert' | 'update' | 'delete'
   table: string
-  payload: Record<string, unknown>
+  payload: object
 }

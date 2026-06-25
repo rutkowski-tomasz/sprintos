@@ -10,8 +10,8 @@ import {
   generateSprintKeys,
   sprintDateRange,
   sprintKeyOffset,
-} from '@/lib/sprintEngine'
-import { updateTask } from '@/lib/taskActions'
+} from './sprintEngine'
+import { updateTask } from '@/features/tasks/taskActions'
 import type { Task } from '@/types'
 
 const BADGE_CLASS: Record<string, string> = {
@@ -82,7 +82,6 @@ function buildOptions(
     const pa = LABEL_PRIORITY[classifySprintKey(a, now)]
     const pb = LABEL_PRIORITY[classifySprintKey(b, now)]
     if (pa !== pb) return pa - pb
-    // future: nearest first; past: most recent first
     return classifySprintKey(a, now) === 'past'
       ? compareSprintKeys(b, a)
       : compareSprintKeys(a, b)

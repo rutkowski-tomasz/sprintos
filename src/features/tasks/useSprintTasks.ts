@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { sprintKey, sprintKeyOffset, type SprintLabel } from '@/lib/sprintEngine'
+import { sprintKey, sprintKeyOffset, type SprintLabel } from '@/features/sprints/sprintEngine'
 import { TaskStatus, type Task } from '@/types'
 
 const STATUS_ORDER: Record<number, number> = {

@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { Zap, CalendarDays, List, Target, LogOut } from 'lucide-react'
-import { Logo } from '@/components/Logo'
+import { Logo } from './Logo'
 import { supabase } from '@/lib/supabase'
 
 const NAV = [

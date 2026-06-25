@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { motion } from 'motion/react'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
-import { Logo } from '@/components/Logo'
+import { Logo } from '@/features/navigation/Logo'
 import googleLogo from '@/assets/google.svg'
 
 type Mode = 'sign-in' | 'sign-up'

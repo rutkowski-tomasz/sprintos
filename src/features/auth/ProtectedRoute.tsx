@@ -1,5 +1,5 @@
 import { Navigate } from 'react-router-dom'
-import { useSession } from '@/hooks/useSession'
+import { useSession } from './useSession'
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useSession()
