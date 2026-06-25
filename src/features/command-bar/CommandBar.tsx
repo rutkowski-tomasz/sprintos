@@ -30,12 +30,13 @@ function sprintForPath(pathname: string): string | null {
 export function CommandBar({ onFocusChange }: CommandBarProps) {
   const location = useLocation()
   const { session } = useSession()
-  const inputRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const phRef = useRef<HTMLDivElement>(null)
   const phIdxRef = useRef(0)
   const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const phVisibleRef = useRef(true)
   const [inputValue, setInputValue] = useState('')
+  const [isFocused, setIsFocused] = useState(false)
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -108,15 +109,19 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
     return () => { if (phTimerRef.current) clearInterval(phTimerRef.current) }
   }, [startCycle])
 
+  const focusInput = useCallback(() => inputRef.current?.focus(), [])
+
   const onFocus = () => {
     if (phTimerRef.current) clearInterval(phTimerRef.current)
     phVisibleRef.current = false
     if (phRef.current) phRef.current.style.opacity = '0'
+    setIsFocused(true)
     onFocusChange(true)
   }
 
   const onBlur = () => {
     onFocusChange(false)
+    setIsFocused(false)
     if (!inputValue) {
       phVisibleRef.current = true
       if (phRef.current) phRef.current.style.opacity = ''
@@ -124,8 +129,8 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
     }
   }
 
-  const onInput = (e: React.FormEvent<HTMLDivElement>) => {
-    const val = (e.currentTarget as HTMLDivElement).textContent ?? ''
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.currentTarget.value
     setInputValue(val)
     if (phRef.current) phRef.current.style.opacity = val ? '0' : ''
   }
@@ -133,15 +138,14 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
   const onClearMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
-    if (inputRef.current) inputRef.current.textContent = ''
     if (phRef.current) phRef.current.style.opacity = ''
+    inputRef.current?.focus()
   }
 
   const handleSubmit = useCallback(async () => {
     const ok = await submit()
     if (ok) {
       setInputValue('')
-      if (inputRef.current) inputRef.current.textContent = ''
       if (phRef.current) phRef.current.style.opacity = ''
       phVisibleRef.current = true
       startCycle()
@@ -152,22 +156,33 @@ export function CommandBar({ onFocusChange }: CommandBarProps) {
   return (
     <div className="bn-search-bar">
       <div className="bn-search-area">
-        <div
+        <input
           ref={inputRef}
-          className="bn-search-input"
-          contentEditable
-          inputMode="search"
-          autoCapitalize="sentences"
-          spellCheck={false}
-          aria-label="Search or add task"
-          role="textbox"
-          aria-multiline="false"
-          suppressContentEditableWarning
+          type="text"
+          className="bn-search-input-hidden"
+          value={inputValue}
+          onChange={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
-          onInput={onInput}
           onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
+          inputMode="text"
+          enterKeyHint="done"
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          aria-label="Search or add task"
         />
+        <div
+          className="bn-search-input"
+          role="textbox"
+          aria-multiline="false"
+          aria-label="Search or add task"
+          onClick={focusInput}
+        >
+          {inputValue}
+          {isFocused && <span className="bn-caret" aria-hidden="true" />}
+        </div>
         <div ref={phRef} className="bn-placeholder" aria-hidden="true" />
       </div>
 
