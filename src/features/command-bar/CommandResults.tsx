@@ -1,16 +1,38 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
+import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
 import type { Goal } from '@/types'
-import { Suggestion } from './Suggestion'
-import { TaskPreview } from './TaskPreview'
+import { TaskStatus } from '@/types'
+import { TaskRow } from './TaskRow'
+import { parseTaskInput } from './taskInputParser'
+import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprints/sprintEngine'
 
 interface CommandResultsProps {
   inputValue: string
   onCopy: (text: string) => void
 }
 
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const hours = Math.floor(diff / 3_600_000)
+  if (hours < 1) return 'just now'
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.floor(diff / 86_400_000)
+  return `${days}d ago`
+}
+
+function sprintLabelForPath(pathname: string): string | null {
+  const now = new Date()
+  if (pathname === '/current') return `Sprint ${formatSprintKey(sprintKey(now), now)}`
+  if (pathname === '/next') return `Sprint ${formatSprintKey(sprintKeyOffset(now, 1), now)}`
+  if (pathname === '/backlog') return 'Backlog'
+  return null
+}
+
 export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
+  const location = useLocation()
+
   const tasks = useLiveQuery(async () => {
     const all = await db.tasks.filter(t => t.deletedAt === null).toArray()
     all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -30,6 +52,8 @@ export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
 
   if (!tasks?.length && !showPreview) return null
 
+  const parsed = showPreview ? parseTaskInput(inputValue, goals ?? []) : null
+
   return (
     <motion.div
       className="bn-suggestions rounded-xl"
@@ -41,14 +65,27 @@ export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
         Results
       </p>
       {tasks?.map(task => (
-        <Suggestion key={task.id} task={task} onCopy={onCopy} />
+        <TaskRow
+          key={task.id}
+          emoji={task.emoji ?? undefined}
+          name={task.name}
+          subtitle={timeAgo(task.updatedAt)}
+          status={task.status}
+          onCopy={onCopy}
+        />
       ))}
-      {showPreview && (
+      {parsed && (
         <>
           <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
             Task Preview
           </p>
-          <TaskPreview inputValue={inputValue} goals={goals ?? []} />
+          <TaskRow
+            emoji={parsed.emoji ?? undefined}
+            name={parsed.name || 'Untitled'}
+            subtitle={sprintLabelForPath(location.pathname) ?? undefined}
+            status={parsed.status ?? TaskStatus.TODO}
+            isPreview
+          />
         </>
       )}
     </motion.div>
