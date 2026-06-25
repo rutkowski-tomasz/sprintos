@@ -39,10 +39,9 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const location = useLocation()
   const { session } = useSession()
   const inputRef = useRef<HTMLInputElement>(null)
-  const phRef = useRef<HTMLDivElement>(null)
-  const phIdxRef = useRef(0)
-  const phTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const phVisibleRef = useRef(true)
+  const placeholderRef = useRef<HTMLDivElement>(null)
+  const placeholderIndexRef = useRef(0)
+  const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [inputValue, setInputValue] = useState('')
 
   const goals = useLiveQuery(
@@ -51,11 +50,15 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     [] as Goal[],
   )
 
+  const setPlaceholderVisible = useCallback((visible: boolean) => {
+    if (placeholderRef.current) placeholderRef.current.style.opacity = visible ? '' : '0'
+  }, [])
+
   useImperativeHandle(ref, () => ({
     setValue: (text: string) => {
       setInputValue(text)
       onInputChange?.(text)
-      if (phRef.current) phRef.current.style.opacity = text ? '0' : ''
+      setPlaceholderVisible(!text)
       inputRef.current?.focus()
     },
   }))
@@ -94,16 +97,18 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   )
 
   const showPlaceholder = useCallback((text: string, animate: boolean) => {
-    const el = phRef.current
-    if (!el || !phVisibleRef.current) return
+    const el = placeholderRef.current
+    if (!el || el.style.opacity === '0') return
     if (animate && el.textContent) {
       el.classList.remove('ph-enter')
       el.classList.add('ph-exit')
       el.addEventListener('animationend', () => {
-        el.textContent = text
-        el.classList.remove('ph-exit')
-        el.classList.add('ph-enter')
-        el.addEventListener('animationend', () => el.classList.remove('ph-enter'), { once: true })
+        const ph = placeholderRef.current
+        if (!ph || ph.style.opacity === '0') return
+        ph.textContent = text
+        ph.classList.remove('ph-exit')
+        ph.classList.add('ph-enter')
+        ph.addEventListener('animationend', () => ph.classList.remove('ph-enter'), { once: true })
       }, { once: true })
     } else {
       el.textContent = text
@@ -111,62 +116,59 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   }, [])
 
   const startCycle = useCallback(() => {
-    showPlaceholder(placeholders[phIdxRef.current], false)
-    phTimerRef.current = setInterval(() => {
-      phIdxRef.current = (phIdxRef.current + 1) % placeholders.length
-      showPlaceholder(placeholders[phIdxRef.current], true)
+    showPlaceholder(placeholders[placeholderIndexRef.current], false)
+    placeholderTimerRef.current = setInterval(() => {
+      placeholderIndexRef.current = (placeholderIndexRef.current + 1) % placeholders.length
+      showPlaceholder(placeholders[placeholderIndexRef.current], true)
     }, 3000)
   }, [showPlaceholder, placeholders])
 
   useEffect(() => {
-    if (phTimerRef.current) clearInterval(phTimerRef.current)
-    phIdxRef.current = 0
+    if (placeholderTimerRef.current) clearInterval(placeholderTimerRef.current)
+    placeholderIndexRef.current = 0
     startCycle()
-    return () => { if (phTimerRef.current) clearInterval(phTimerRef.current) }
+    return () => { if (placeholderTimerRef.current) clearInterval(placeholderTimerRef.current) }
   }, [startCycle])
 
-  const onFocus = () => {
-    if (phTimerRef.current) clearInterval(phTimerRef.current)
-    phVisibleRef.current = false
-    if (phRef.current) phRef.current.style.opacity = '0'
+  const onFocus = useCallback(() => {
+    if (placeholderTimerRef.current) clearInterval(placeholderTimerRef.current)
+    setPlaceholderVisible(false)
     onFocusChange(true)
-  }
+  }, [setPlaceholderVisible, onFocusChange])
 
-  const onBlur = () => {
+  const onBlur = useCallback(() => {
     onFocusChange(false)
     if (!inputValue) {
-      phVisibleRef.current = true
-      if (phRef.current) phRef.current.style.opacity = ''
+      setPlaceholderVisible(true)
       startCycle()
     }
-  }
+  }, [onFocusChange, inputValue, setPlaceholderVisible, startCycle])
 
-  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.currentTarget.value
     setInputValue(val)
     onInputChange?.(val)
-    if (phRef.current) phRef.current.style.opacity = val ? '0' : ''
-  }
+    setPlaceholderVisible(!val)
+  }, [onInputChange, setPlaceholderVisible])
 
-  const onClearMouseDown = (e: React.MouseEvent) => {
+  const onClearMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
     onInputChange?.('')
-    if (phRef.current) phRef.current.style.opacity = ''
+    setPlaceholderVisible(true)
     inputRef.current?.focus()
-  }
+  }, [onInputChange, setPlaceholderVisible])
 
   const handleSubmit = useCallback(async () => {
     const ok = await submit()
     if (ok) {
       setInputValue('')
       onInputChange?.('')
-      if (phRef.current) phRef.current.style.opacity = ''
-      phVisibleRef.current = true
+      setPlaceholderVisible(true)
       startCycle()
       inputRef.current?.focus()
     }
-  }, [submit, startCycle, onInputChange])
+  }, [submit, startCycle, onInputChange, setPlaceholderVisible])
 
   return (
     <div className="bn-search-bar">
@@ -188,7 +190,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           spellCheck={false}
           aria-label="Search or add task"
         />
-        <div ref={phRef} className="bn-placeholder" aria-hidden="true" />
+        <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
       </div>
 
       <button
