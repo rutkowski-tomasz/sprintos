@@ -1,14 +1,17 @@
+import type { ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'motion/react'
 import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
 import { TaskStatus, type Task } from '@/types'
 import { TaskRow } from './TaskRow'
-import type { TaskChip } from './TaskRow'
 import type { ParseResult } from './taskInputParser'
 import { CommandSuggestion } from './CommandSuggestion'
 import type { SuggestionItem } from './CommandSuggestion'
-import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprints/sprintEngine'
+import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprint/sprintDef'
+import { PropertyChip } from '@/features/properties/PropertyChip'
+import { CHIP_ORDER, type ChipProperty } from '@/features/properties/registry'
+import { Chip } from '@/features/properties/Chip'
 
 interface CommandResultsProps {
   inputValue: string
@@ -27,40 +30,30 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  const opts: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }
-  if (d.getHours() || d.getMinutes()) {
-    opts.hour = 'numeric'
-    opts.minute = '2-digit'
-  }
-  return d.toLocaleDateString('en-US', opts)
+const TASK_CHIP_VALUE: Record<ChipProperty, (t: Task) => string | number | null> = {
+  eventDate: t => t.eventDate,
+  duration: t => t.duration,
 }
 
-function formatDuration(secs: number): string {
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  if (h && m) return `${h}h ${m}m`
-  if (h) return `${h}h`
-  return `${m}m`
+const PREVIEW_CHIP: Record<ChipProperty, { value: (p: ParseResult) => string | number | null; empty: string }> = {
+  eventDate: { value: p => p.eventDate?.value ?? null, empty: 'No date' },
+  duration: { value: p => p.duration?.value ?? null, empty: 'No duration' },
 }
 
-function buildTaskChips(task: Task): TaskChip[] {
-  const chips: TaskChip[] = []
-  if (task.eventDate) chips.push({ label: formatDate(task.eventDate), color: '#818cf8' })
-  if (task.duration) chips.push({ label: formatDuration(task.duration), color: '#2dd4bf' })
-  return chips
+function buildTaskChips(task: Task): ReactNode[] {
+  return CHIP_ORDER.flatMap(key => {
+    const value = TASK_CHIP_VALUE[key](task)
+    return value ? [<PropertyChip key={key} property={key} value={value as never} />] : []
+  })
 }
 
-function buildPreviewChips(parsed: ParseResult): TaskChip[] {
-  return [
-    parsed.eventDate
-      ? { label: formatDate(parsed.eventDate.value), color: '#818cf8' }
-      : { label: 'No date' },
-    parsed.duration
-      ? { label: formatDuration(parsed.duration.value), color: '#2dd4bf' }
-      : { label: 'No duration' },
-  ]
+function buildPreviewChips(parsed: ParseResult): ReactNode[] {
+  return CHIP_ORDER.map(key => {
+    const value = PREVIEW_CHIP[key].value(parsed)
+    return value != null
+      ? <PropertyChip key={key} property={key} value={value as never} />
+      : <Chip key={key}>{PREVIEW_CHIP[key].empty}</Chip>
+  })
 }
 
 function taskSubtitle(task: Task): string {

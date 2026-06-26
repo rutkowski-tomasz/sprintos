@@ -10,7 +10,7 @@ import {
   generateSprintKeys,
   sprintDateRange,
   sprintKeyOffset,
-} from './sprintEngine'
+} from './sprintDef'
 import { updateTask } from '@/features/tasks/taskActions'
 import type { Task } from '@/types'
 

@@ -1,7 +1,7 @@
 import { ViewHeader } from '@/features/navigation/ViewHeader'
 import { TaskList } from '@/features/tasks/TaskList'
 import { useSprintTasks } from '@/features/tasks/useSprintTasks'
-import { sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
+import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
 
 export function NextSprint() {
   const key = sprintKeyOffset(new Date(), 1)

@@ -4,7 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { parse } from './taskInputParser'
 import type { ParseResult } from './taskInputParser'
-import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
+import { sprintKey, sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
+import { PROPERTY_COLORS } from '@/features/properties/registry'
 import { useSession } from '@/features/auth/useSession'
 import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
 import { searchEmojis } from './emojiSearch'
@@ -19,12 +20,12 @@ const ROUTE_PLACEHOLDER: Record<string, string> = {
 const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
 
 const SPAN_COLORS: Record<string, string> = {
-  date: '#818cf8',
-  duration: '#2dd4bf',
-  emoji: '#fff',
-  status: '#fb923c',
-  goal: '#4ade80',
-  url: '#60a5fa',
+  date: PROPERTY_COLORS.eventDate,
+  duration: PROPERTY_COLORS.duration,
+  emoji: PROPERTY_COLORS.emoji,
+  status: PROPERTY_COLORS.status,
+  goal: PROPERTY_COLORS.goal,
+  url: PROPERTY_COLORS.url,
 }
 
 export interface CommandBarHandle {

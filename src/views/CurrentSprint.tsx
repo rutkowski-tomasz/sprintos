@@ -1,7 +1,7 @@
 import { ViewHeader } from '@/features/navigation/ViewHeader'
 import { TaskList } from '@/features/tasks/TaskList'
 import { useSprintTasks } from '@/features/tasks/useSprintTasks'
-import { sprintKey } from '@/features/properties/sprints/sprintEngine'
+import { sprintKey } from '@/features/properties/sprint/sprintDef'
 
 export function CurrentSprint() {
   const key = sprintKey(new Date())

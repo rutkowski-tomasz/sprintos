@@ -7,7 +7,7 @@ import {
   sprintDateRange,
   sprintKey,
   sprintKeyOffset,
-} from './sprintEngine'
+} from './sprintDef'
 
 // Reference: 2026-06-19 is a Friday.
 // Sprint cycle: Saturday–Friday.

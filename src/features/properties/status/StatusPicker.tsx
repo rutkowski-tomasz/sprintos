@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { updateTask } from '@/features/tasks/taskActions'
 import { TaskStatus, type Task } from '@/types'
-import { STATUS_LABEL, STATUS_BADGE, ALL_STATUSES } from './TaskStatus'
+import { STATUS_LABEL, STATUS_BADGE, ALL_STATUSES } from './statusDef'
 
 const DROPDOWN_H = 280
 

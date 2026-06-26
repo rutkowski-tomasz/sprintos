@@ -1,18 +1,14 @@
+import type { ReactNode } from 'react'
 import { ArrowDownLeft, Plus } from 'lucide-react'
 import type { TaskStatus } from '@/types'
-import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/TaskStatus'
-
-export interface TaskChip {
-  label: string
-  color?: string
-}
+import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/statusDef'
 
 interface TaskRowProps {
   emoji?: string
   name: string
   subtitle?: string
   status: TaskStatus
-  chips?: TaskChip[]
+  chips?: ReactNode[]
   isPreview?: boolean
   onCopy?: (text: string) => void
   onSubmit?: () => void
@@ -31,16 +27,7 @@ export function TaskRow({ emoji, name, subtitle, status, chips, isPreview, onCop
         {chips && chips.length > 0 && (
           <div className="flex gap-1.5 mt-1.5 overflow-x-auto">
             {chips.map((chip, i) => (
-              <span
-                key={i}
-                className="text-[11px] px-2 py-0.5 rounded-md border"
-                style={chip.color
-                  ? { color: chip.color, borderColor: `${chip.color}40`, backgroundColor: `${chip.color}12` }
-                  : { color: 'rgba(255,255,255,0.28)', borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'transparent' }
-                }
-              >
-                {chip.label}
-              </span>
+              <span key={i} className="shrink-0">{chip}</span>
             ))}
           </div>
         )}

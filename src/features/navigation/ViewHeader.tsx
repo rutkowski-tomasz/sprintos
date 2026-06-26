@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/features/sync/useSyncStatus'
-import { sprintDateRange } from '@/features/properties/sprints/sprintEngine'
+import { sprintDateRange } from '@/features/properties/sprint/sprintDef'
 import { TaskStatus, type Task } from '@/types'
 
 interface Props {

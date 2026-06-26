@@ -5,7 +5,7 @@ import { Duration } from '@/features/properties/duration/Duration'
 import { EventDate } from '@/features/properties/event-date/EventDate'
 import { Snooze } from '@/features/properties/snooze/Snooze'
 import { TaskStatus, type Goal, type Task } from '@/types'
-import { SprintPicker } from '@/features/properties/sprints/SprintPicker'
+import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 
 const DONE_THRESHOLD = 80
