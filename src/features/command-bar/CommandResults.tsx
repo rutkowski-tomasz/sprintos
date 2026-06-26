@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
 import { TaskStatus } from '@/types'
 import { TaskRow } from './TaskRow'
+import type { TaskChip } from './TaskRow'
 import type { ParseResult } from './taskInputParser'
 import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprints/sprintEngine'
 
@@ -11,6 +12,7 @@ interface CommandResultsProps {
   inputValue: string
   parsed: ParseResult | null
   onCopy: (text: string) => void
+  onSubmit: () => void
 }
 
 function timeAgo(dateStr: string): string {
@@ -22,6 +24,35 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+function formatDate(iso: string): string {
+  const d = new Date(iso)
+  const opts: Intl.DateTimeFormatOptions = { weekday: 'short', month: 'short', day: 'numeric' }
+  if (d.getHours() || d.getMinutes()) {
+    opts.hour = 'numeric'
+    opts.minute = '2-digit'
+  }
+  return d.toLocaleDateString('en-US', opts)
+}
+
+function formatDuration(secs: number): string {
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  if (h && m) return `${h}h ${m}m`
+  if (h) return `${h}h`
+  return `${m}m`
+}
+
+function buildPreviewChips(parsed: ParseResult): TaskChip[] {
+  return [
+    parsed.eventDate
+      ? { label: formatDate(parsed.eventDate.value), color: '#818cf8' }
+      : { label: 'No date' },
+    parsed.duration
+      ? { label: formatDuration(parsed.duration.value), color: '#2dd4bf' }
+      : { label: 'No duration' },
+  ]
+}
+
 function sprintLabelForPath(pathname: string): string | null {
   const now = new Date()
   if (pathname === '/current') return `Sprint ${formatSprintKey(sprintKey(now), now)}`
@@ -30,7 +61,7 @@ function sprintLabelForPath(pathname: string): string | null {
   return null
 }
 
-export function CommandResults({ inputValue, parsed, onCopy }: CommandResultsProps) {
+export function CommandResults({ inputValue, parsed, onCopy, onSubmit }: CommandResultsProps) {
   const location = useLocation()
 
   const tasks = useLiveQuery(async () => {
@@ -74,7 +105,9 @@ export function CommandResults({ inputValue, parsed, onCopy }: CommandResultsPro
             name={parsed.title || 'Untitled'}
             subtitle={sprintLabelForPath(location.pathname) ?? undefined}
             status={parsed.status?.value ?? TaskStatus.TODO}
+            chips={buildPreviewChips(parsed)}
             isPreview
+            onSubmit={onSubmit}
           />
         </>
       )}

@@ -33,6 +33,7 @@ export function BottomBar() {
             inputValue={inputValue}
             parsed={parsedResult}
             onCopy={text => commandBarRef.current?.setValue(text)}
+            onSubmit={() => commandBarRef.current?.submit()}
           />
         </div>
       )}

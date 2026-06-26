@@ -28,6 +28,7 @@ const SPAN_COLORS: Record<string, string> = {
 
 export interface CommandBarHandle {
   setValue: (text: string) => void
+  submit: () => Promise<void>
 }
 
 interface CommandBarProps {
@@ -113,6 +114,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       }
       inputRef.current?.focus()
     },
+    submit: handleSubmit,
   }))
 
   const submit = useCallback(async (): Promise<boolean> => {
