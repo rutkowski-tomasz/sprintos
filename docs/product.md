@@ -77,6 +77,20 @@ Full form always available as a tooltip. Omit context that matches today:
 
 ---
 
+## Further Research
+
+### Embedding Model Upgrade
+
+Current emoji/task search uses a local embedding model. Candidate upgrade:
+
+| Model | Source | Size | Dims | Context | Notes |
+|-------|--------|------|------|---------|-------|
+| `google/EmbeddingGemma` | `onnx-community` | ~200 MB | 768 | 2048 tokens | Multilingual (100+ langs), highest quality |
+
+Worth evaluating for improved multilingual accuracy in task title search and emoji matching.
+
+---
+
 ## Command Bar
 
 The command bar is a persistent input at the bottom of the screen. On mobile, it occupies ~80% of the bottom bar width; the left ~20% is the hamburger menu. It is the single entry point for both search and task creation — no mode toggle exists.

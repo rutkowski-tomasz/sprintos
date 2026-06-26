@@ -63,6 +63,13 @@ function buildPreviewChips(parsed: ParseResult): TaskChip[] {
   ]
 }
 
+function taskSubtitle(task: Task): string {
+  const parts: string[] = []
+  if (task.sprint) parts.push(`Sprint ${formatSprintKey(task.sprint, new Date())}`)
+  parts.push(timeAgo(task.updatedAt))
+  return parts.join(' · ')
+}
+
 function sprintLabelForPath(pathname: string): string | null {
   const now = new Date()
   if (pathname === '/current') return `Sprint ${formatSprintKey(sprintKey(now), now)}`
@@ -107,7 +114,7 @@ export function CommandResults({ inputValue, parsed, suggestions, onCopy, onSubm
                 <TaskRow
                   emoji={task.emoji ?? undefined}
                   name={task.name}
-                  subtitle={timeAgo(task.updatedAt)}
+                  subtitle={taskSubtitle(task)}
                   status={task.status}
                   chips={buildTaskChips(task)}
                   onCopy={onCopy}

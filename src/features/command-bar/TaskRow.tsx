@@ -29,7 +29,7 @@ export function TaskRow({ emoji, name, subtitle, status, chips, isPreview, onCop
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-white/90 truncate">{name}</p>
         {chips && chips.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 mt-1.5">
+          <div className="flex gap-1.5 mt-1.5 overflow-x-auto">
             {chips.map((chip, i) => (
               <span
                 key={i}
