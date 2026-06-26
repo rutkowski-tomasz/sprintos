@@ -2,14 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { motion } from 'motion/react'
 import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
-import type { Goal } from '@/types'
 import { TaskStatus } from '@/types'
 import { TaskRow } from './TaskRow'
-import { parseTaskInput } from './taskInputParser'
+import type { ParseResult } from './taskInputParser'
 import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprints/sprintEngine'
 
 interface CommandResultsProps {
   inputValue: string
+  parsed: ParseResult | null
   onCopy: (text: string) => void
 }
 
@@ -30,7 +30,7 @@ function sprintLabelForPath(pathname: string): string | null {
   return null
 }
 
-export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
+export function CommandResults({ inputValue, parsed, onCopy }: CommandResultsProps) {
   const location = useLocation()
 
   const tasks = useLiveQuery(async () => {
@@ -42,17 +42,7 @@ export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
     return all.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5)
   }, [inputValue])
 
-  const goals = useLiveQuery(
-    () => db.goals.filter(g => g.deletedAt === null).toArray(),
-    [],
-    [] as Goal[],
-  )
-
-  const showPreview = inputValue.trim().length > 0
-
-  if (!tasks?.length && !showPreview) return null
-
-  const parsed = showPreview ? parseTaskInput(inputValue, goals ?? []) : null
+  if (!tasks?.length && !parsed) return null
 
   return (
     <motion.div
@@ -80,10 +70,10 @@ export function CommandResults({ inputValue, onCopy }: CommandResultsProps) {
             Task Preview
           </p>
           <TaskRow
-            emoji={parsed.emoji ?? undefined}
-            name={parsed.name || 'Untitled'}
+            emoji={parsed.emoji?.value ?? undefined}
+            name={parsed.title || 'Untitled'}
             subtitle={sprintLabelForPath(location.pathname) ?? undefined}
-            status={parsed.status ?? TaskStatus.TODO}
+            status={parsed.status?.value ?? TaskStatus.TODO}
             isPreview
           />
         </>

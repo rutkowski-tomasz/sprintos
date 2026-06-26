@@ -2,7 +2,8 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRe
 import { useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { parseTaskInput } from './taskInputParser'
+import { parse } from './taskInputParser'
+import type { ParseResult } from './taskInputParser'
 import { sprintKey, sprintKeyOffset } from '@/features/properties/sprints/sprintEngine'
 import { useSession } from '@/features/auth/useSession'
 import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
@@ -16,6 +17,15 @@ const ROUTE_PLACEHOLDER: Record<string, string> = {
 
 const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
 
+const SPAN_COLORS: Record<string, string> = {
+  date: '#818cf8',
+  duration: '#2dd4bf',
+  emoji: '#fff',
+  status: '#fb923c',
+  goal: '#4ade80',
+  url: '#60a5fa',
+}
+
 export interface CommandBarHandle {
   setValue: (text: string) => void
 }
@@ -23,6 +33,7 @@ export interface CommandBarHandle {
 interface CommandBarProps {
   onFocusChange: (focused: boolean) => void
   onInputChange?: (value: string) => void
+  onParsedChange?: (parsed: ParseResult | null) => void
 }
 
 function sprintForPath(pathname: string): string | null {
@@ -32,8 +43,38 @@ function sprintForPath(pathname: string): string | null {
   return null
 }
 
+function findGoalForInput(input: string, goals: Goal[]): Goal | null {
+  const m = /#(\S+)/i.exec(input)
+  if (!m) return null
+  const firstWord = m[1].toLowerCase()
+  return goals.find(g => g.name.split(' ')[0].toLowerCase() === firstWord) ?? null
+}
+
+function buildHighlightSegments(input: string, parsed: ParseResult) {
+  const spans = [
+    parsed.emoji && { start: parsed.emoji.start, end: parsed.emoji.end, type: 'emoji' },
+    parsed.eventDate && { start: parsed.eventDate.start, end: parsed.eventDate.end, type: 'date' },
+    parsed.duration && { start: parsed.duration.start, end: parsed.duration.end, type: 'duration' },
+    parsed.status && { start: parsed.status.start, end: parsed.status.end, type: 'status' },
+    parsed.goalId && { start: parsed.goalId.start, end: parsed.goalId.end, type: 'goal' },
+    parsed.sourceUrl && { start: parsed.sourceUrl.start, end: parsed.sourceUrl.end, type: 'url' },
+  ].filter(Boolean) as Array<{ start: number; end: number; type: string }>
+
+  spans.sort((a, b) => a.start - b.start)
+
+  const segs: Array<{ text: string; color: string; underline: boolean }> = []
+  let pos = 0
+  for (const span of spans) {
+    if (span.start > pos) segs.push({ text: input.slice(pos, span.start), color: '#fff', underline: false })
+    segs.push({ text: input.slice(span.start, span.end), color: SPAN_COLORS[span.type], underline: true })
+    pos = span.end
+  }
+  if (pos < input.length) segs.push({ text: input.slice(pos), color: '#fff', underline: false })
+  return segs
+}
+
 export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function CommandBar(
-  { onFocusChange, onInputChange },
+  { onFocusChange, onInputChange, onParsedChange },
   ref,
 ) {
   const location = useLocation()
@@ -44,6 +85,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [inputValue, setInputValue] = useState('')
   const [suggestedEmoji, setSuggestedEmoji] = useState<string | null>(null)
+  const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -60,25 +102,35 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       setInputValue(text)
       onInputChange?.(text)
       setPlaceholderVisible(!text)
+      if (text) {
+        const goal = findGoalForInput(text, goals)
+        const p = parse(text, new Date(), goal?.id, goal?.name)
+        setParsedResult(p)
+        onParsedChange?.(p)
+      } else {
+        setParsedResult(null)
+        onParsedChange?.(null)
+      }
       inputRef.current?.focus()
     },
   }))
 
   const submit = useCallback(async (): Promise<boolean> => {
     if (!inputValue.trim() || !session) return false
-    const parsed = parseTaskInput(inputValue, goals)
-    if (!parsed.name) return false
+    const goal = findGoalForInput(inputValue, goals)
+    const parsed = parse(inputValue, new Date(), goal?.id, goal?.name)
+    if (!parsed.title) return false
     await addTask({
       userId: session.user.id,
       sprint: sprintForPath(location.pathname),
-      goalId: parsed.goalId,
-      name: parsed.name,
-      emoji: parsed.emoji,
-      status: parsed.status ?? TaskStatus.TODO,
-      eventDate: parsed.eventDate,
-      snooze: parsed.snooze,
-      sourceUrl: parsed.sourceUrl,
-      duration: parsed.duration,
+      goalId: parsed.goalId?.value ?? null,
+      name: parsed.title,
+      emoji: parsed.emoji?.value ?? null,
+      status: parsed.status?.value ?? TaskStatus.TODO,
+      eventDate: parsed.eventDate?.value ?? null,
+      snooze: null,
+      sourceUrl: parsed.sourceUrl?.value ?? null,
+      duration: parsed.duration?.value ?? null,
     })
     return true
   }, [inputValue, session, goals, location.pathname])
@@ -144,8 +196,13 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     onInputChange?.(val)
     setPlaceholderVisible(!val)
 
+    const goal = findGoalForInput(val, goals)
+    const parsed = parse(val, new Date(), goal?.id, goal?.name)
+    const next = val ? parsed : null
+    setParsedResult(next)
+    onParsedChange?.(next)
+
     if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
-    const parsed = parseTaskInput(val, goals)
     if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
         const task = await findSimilarTask(val.trim())
@@ -161,9 +218,11 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     setInputValue('')
     onInputChange?.('')
     setSuggestedEmoji(null)
+    setParsedResult(null)
+    onParsedChange?.(null)
     setPlaceholderVisible(true)
     inputRef.current?.focus()
-  }, [onInputChange, setPlaceholderVisible])
+  }, [onInputChange, onParsedChange, setPlaceholderVisible])
 
   const handleSubmit = useCallback(async () => {
     const ok = await submit()
@@ -171,11 +230,15 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       setInputValue('')
       onInputChange?.('')
       setSuggestedEmoji(null)
+      setParsedResult(null)
+      onParsedChange?.(null)
       setPlaceholderVisible(true)
       startCycle()
       inputRef.current?.focus()
     }
-  }, [submit, startCycle, onInputChange, setPlaceholderVisible])
+  }, [submit, startCycle, onInputChange, onParsedChange, setPlaceholderVisible])
+
+  const highlightSegments = parsedResult ? buildHighlightSegments(inputValue, parsedResult) : null
 
   return (
     <div className="bn-search-bar">
@@ -197,6 +260,23 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           spellCheck={false}
           aria-label="Search or add task"
         />
+        {highlightSegments && (
+          <div className="bn-highlight-overlay" aria-hidden="true">
+            {highlightSegments.map((seg, i) => (
+              <span
+                key={i}
+                style={{
+                  color: seg.color,
+                  textDecoration: seg.underline ? 'underline' : 'none',
+                  textDecorationColor: seg.color,
+                  textUnderlineOffset: '3px',
+                }}
+              >
+                {seg.text}
+              </span>
+            ))}
+          </div>
+        )}
         <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
       </div>
 
@@ -209,6 +289,8 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
             const next = `${suggestedEmoji} ${inputValue}`
             setInputValue(next)
             onInputChange?.(next)
+            const goal = findGoalForInput(next, goals)
+            setParsedResult(parse(next, new Date(), goal?.id, goal?.name))
             setSuggestedEmoji(null)
             inputRef.current?.focus()
           }}

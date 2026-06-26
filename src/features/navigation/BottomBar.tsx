@@ -2,11 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { NavMenu } from './NavMenu'
 import { CommandBar, type CommandBarHandle } from '@/features/command-bar/CommandBar'
 import { CommandResults } from '@/features/command-bar/CommandResults'
+import type { ParseResult } from '@/features/command-bar/taskInputParser'
 import './BottomBar.css'
 
 export function BottomBar() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
   const commandBarRef = useRef<CommandBarHandle>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -29,6 +31,7 @@ export function BottomBar() {
         <div className="absolute bottom-full left-0 right-0 px-3.5 mb-1">
           <CommandResults
             inputValue={inputValue}
+            parsed={parsedResult}
             onCopy={text => commandBarRef.current?.setValue(text)}
           />
         </div>
@@ -38,6 +41,7 @@ export function BottomBar() {
         ref={commandBarRef}
         onFocusChange={setSearchFocused}
         onInputChange={setInputValue}
+        onParsedChange={setParsedResult}
       />
     </div>
   )
