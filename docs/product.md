@@ -13,6 +13,13 @@ Personal, single-user productivity tool built around **"Inbox Zero for Tasks"** 
 
 All reads/writes execute instantly against local IndexedDB. A background sync queue pushes mutations to the cloud when online. Pending mutations survive force-close and sync on next launch.
 
+### Sync & Data Rules
+
+- **IDs**: Client-generated UUID v7 (time-ordered). Created locally before any network sync.
+- **Conflicts**: Records carry a `version` integer. On mismatch, the local queue drops the update and pulls the latest server state.
+- **Queue collapsing**: Multiple offline edits to the same entity collapse into one update with the latest local state.
+- **Soft deletes**: All entities use `deletedAt`. All records require `createdAt` and `updatedAt`.
+
 ## Sprint Cycle
 
 Sprints run **Saturday–Friday** (7 days). The current sprint, previous, next, and all past/future sprints are derived from the current date — no sprint entities are created or stored.
@@ -33,11 +40,14 @@ Each task carries a `sprint` field: a normalized key like `"26 Q2 11"` (11th wee
 
 ### Task
 - **Core**: emoji, title, status, assigned sprint key, goal link
-- **Time**: `eventDate` (hard deadline/appointment), `snoozeDate` (visibility toggle)
-- **Context**: Markdown description, source URL, duration
+- **Time**: `eventDate` (hard deadline/appointment), `snooze` (visibility toggle)
+- **Context**: Markdown description, source URL, duration (seconds)
+- `snooze` is either an ISO date string or `"-{seconds}"` (offset relative to `eventDate`, e.g. `"-86400"` = −1 day before it)
+- When `eventDate` changes, any `snooze` starting with `"-"` is recalculated against the new date. Absolute ISO snooze values are unaffected.
+- Resolved snooze must always precede `eventDate`. `@-Nd/h` tokens require `eventDate` — blocked in UI if missing.
 
 ### Goal
-Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, linked tasks. Goal names are unique — enforced at the data model level. No two goals can share the same name.
+Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, linked tasks. Goal names are unique. Deleting a Goal nullifies `goalId` on all linked tasks.
 
 ## Views
 

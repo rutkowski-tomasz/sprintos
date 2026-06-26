@@ -1,17 +1,7 @@
 # CLAUDE.md
 
-## Rules
-
-- Docs: Record only non-default, non-obvious, non-standard behaviors. Omit anything a competent developer would assume. Keep entries short and direct.
-- Code comments: None. Names and structure carry meaning.
-- README: Scannable, targeting humans.
-- Package manager: Always use `pnpm`.
-- Docs sync: If any implementation decision differs from `docs/product.md`, update that file before finishing the task.
-
-## Project Docs
-
-| File | Contents |
-|------|----------|
-| `docs/product.md` | Vision, stack decisions, sprint cycle, entities, views, and all UX rules (input parsing, gestures, animations, native-feel requirements) |
-| `docs/data_model.md` | Schema definitions, field types, indexes, sync/conflict strategy, and business logic rules |
-| `docs/roadmap.md` | Phased implementation plan — 26 tasks across 5 phases from POC to AI completions |
+- Only document non-obvious, non-standard behaviors. Keep entries short and direct.
+- Never write code comments. Names and structure carry meaning.
+- READMEs are scannable and target humans.
+- Always use `pnpm`.
+- `docs/product.md` is the single source of truth for product decisions (vision, stack, sync rules, sprint cycle, entities, views, UX rules). Update it before finishing any task where the implementation differs from what it describes.
