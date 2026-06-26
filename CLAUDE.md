@@ -2,11 +2,11 @@
 
 ## Rules
 
-**Docs**: Record only non-default, non-obvious, non-standard behaviors. Omit anything a competent developer would assume. Keep entries short and direct — verbose input from the user does not mean verbose output in docs or code.
-
-**Code comments**: None. Names and structure carry meaning; comments do not belong in the output.
-
-**README**: Scannable, targeting humans.
+- Docs: Record only non-default, non-obvious, non-standard behaviors. Omit anything a competent developer would assume. Keep entries short and direct.
+- Code comments: None. Names and structure carry meaning.
+- README: Scannable, targeting humans.
+- Package manager: Always use `pnpm`.
+- Docs sync: If any implementation decision differs from `docs/product.md`, update that file before finishing the task.
 
 ## Project Docs
 
