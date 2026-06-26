@@ -37,7 +37,7 @@ Each task carries a `sprint` field: a normalized key like `"26 Q2 11"` (11th wee
 - **Context**: Markdown description, source URL, duration
 
 ### Goal
-Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, linked tasks.
+Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, linked tasks. Goal names are unique — enforced at the data model level. No two goals can share the same name.
 
 ## Views
 
@@ -65,33 +65,77 @@ Full form always available as a tooltip. Omit context that matches today:
 - Subtle sync indicator in the header (non-blocking)
 - Keyboard shortcuts explicitly visible in the UI
 
-### Task Entry
-- **Desktop**: New Task opens a bottom row. Fuzzy completions suggested from existing task names and goal names; Tab to accept, Enter to save and open the next row.
-- **Mobile**: Accessory toolbar for acceptance; Return saves and keeps input active.
+---
 
-### Natural Language Parsing
+## Command Bar
 
-The raw input string is never modified while the user types. Instead, each recognised token is **color-coded in place** and a small badge floats above it showing the resolved value (e.g. `Mon` → `18 Jun`, `2h` → `7 200s`, `#write` → `Writing`). On Enter the string is decomposed: unparsed words become the title, everything else goes to its field. To edit a field after saving, interact with that column directly — the raw string is not re-shown.
+The command bar is a persistent input at the bottom of the screen. On mobile, it occupies ~80% of the bottom bar width; the left ~20% is the hamburger menu. It is the single entry point for both search and task creation — no mode toggle exists.
 
-**Parsed tokens**
+### Layout (mobile, bottom of screen)
+```
+[ ☰ ] [ command bar input                    ]
+```
 
-| Token | Field | Example → Resolved |
-|-------|-------|--------------------|
-| Leading emoji | `emoji` | `🏋️ Gym Mon` → emoji: 🏋️ |
-| Date / time (see formats below) | `eventDate` | `1st June 12:00` → ISO datetime |
-| Status keyword (see list below) | `status` | `progress` → IN_PROGRESS |
-| `@Mon`, `@tmrw`, `@1st June` | `snooze` (absolute ISO date) | hidden until that date; `@Mon` resolves to the *next* Monday |
-| `@1d`, `@2h` | `snooze` (relative to now, ISO date) | hidden for that duration from now |
-| `@-1d`, `@-2h` | `snooze` (relative to event, stored as `"-{seconds}"`) | hidden until N before `eventDate`; requires `eventDate` — blocked if missing |
-| `30m`, `1h`, `1h30m`, `1.5h` | `duration` (seconds) | `1h30m` → 5 400 |
-| `#prefix` | `goalId` | fuzzy-matched against existing goal names |
-| Bare URL | `sourceUrl` | stripped from title automatically |
+Above the input (stacked from bottom up):
+1. Suggestion row
+2. Preview panel
+3. Task list / search results
 
-Sprint assignment is **context-driven** — new tasks inherit the sprint key of the active view. No parsing token needed. The Planning view is an exception: new tasks default to unassigned (`sprint = null`) so they appear in the unassigned bucket.
+---
 
-**General rule**: a newly created task must always appear in the view it was created from. It inherits whatever filters that view implies (sprint, goal, status, etc.).
+### Search
 
-**Supported date formats**
+- Typing with no parsed tokens performs live task search by title.
+- Filtering is sprint-based: results can be scoped to current sprint, next sprint, or backlog via chips or swipe-filters.
+- Advanced field-based search (e.g. `eventDate > X`) is not supported.
+
+---
+
+### Task Creation
+
+#### Input behavior
+
+- The command bar is always a raw text input. No chips or block elements inside it.
+- The parser runs continuously as the user types. It never modifies the raw text.
+- Recognized tokens are highlighted in place (colored background or text color).
+- The parser is greedy: once it starts matching a token it tries to extend it (e.g. `Monday` waits for a following time before committing).
+- Token commit triggers: user starts a clearly different token type, types `#`, or submits (Enter).
+- No element jumps position. No text is rewritten or reordered.
+
+#### State model
+
+A parallel shadow object holds resolved references alongside the raw string:
+
+```ts
+{
+  raw: string,
+  resolved: {
+    goalId: string | null,
+    eventDate: string | null,
+    duration: number | null,   // seconds
+    emoji: string | null,
+    status: Status | null,
+  }
+}
+```
+
+On submit: title is derived from the raw string minus all confirmed tokens (gaps collapsed). Goal comes from the shadow field, not re-parsed from the string.
+
+#### Title
+
+- Title = all input text not claimed by a parsed token, joined in original order with gaps collapsed.
+- Example: `"workout Monday 17:00 leg/fullbody"` where `Monday 17:00` is parsed → title: `"workout leg/fullbody"`.
+
+#### Emoji
+
+- Detected anywhere in the input, not just leading position.
+- Extracted for the data model but not moved visually — stays at the typed position.
+- No dedicated slot. No jumping behavior.
+
+#### Event date
+
+- Parsed from bare date/time patterns. No prefix token required.
+- Supported formats:
 
 | Format | Example |
 |--------|---------|
@@ -100,7 +144,22 @@ Sprint assignment is **context-driven** — new tasks inherit the sprint key of 
 | DD.MM HH:MM | `01.06 12:00` |
 | Relative | `today 12:00`, `tmrw 13`, `tomorrow 18:19` |
 
-**Supported status tokens** (case-insensitive)
+- Parser waits to commit — `Monday` stays highlighted but uncommitted while a time could still follow.
+- Commits when the next input is clearly a different token type or on submit.
+- Ambiguity rule: a bare number extends a date token only if it appears immediately after a day word with nothing else between them. `Monday 17` → extends. `Monday clean 17` → `Monday` commits as date, `17` is title text.
+
+#### Duration
+
+- Parsed from bare duration patterns: `30m`, `1h`, `1h30m`, `1.5h`. No prefix required.
+- Commits immediately on recognition.
+
+#### Snooze
+
+- Not supported in the creation input. Snooze is an editorial action applied after a task exists (swipe left → quick-snooze menu).
+
+#### Status
+
+- Parsed from reserved keywords (case-insensitive):
 
 | Token(s) | Status |
 |----------|--------|
@@ -109,6 +168,49 @@ Sprint assignment is **context-driven** — new tasks inherit the sprint key of 
 | `progress`, `in progress` | IN_PROGRESS |
 | `done` | DONE |
 | `archive` | ARCHIVED |
+
+#### Sprint
+
+- Never parsed from input. Always inherited from the active view context.
+- Planning view exception: new tasks default to unassigned (`sprint = null`).
+
+#### Goal
+
+- Requires `#` prefix. Goal names overlap with title words and cannot be auto-detected.
+- Typing `#` opens a goal search dropdown, replacing the suggestion row.
+- Search is fuzzy and mid-word — user does not need to start from the first word.
+- Goal names are unique — exact string match always maps to exactly one goal.
+- On selection: `#searchterm` in the input is replaced with `#CanonicalGoalName`, highlighted as confirmed. The goal ID is written to the shadow field.
+- If the user backtracks into the `#` token: shadow field is cleared, text becomes muted, dropdown reopens.
+- If the edited text exactly matches a goal name: shadow field is auto-restored, text re-colors. No manual re-selection needed. Auto-confirm fires only when no goal with a longer matching name exists in the dropdown.
+- If `#something` is submitted with no selection: goal is null, `#something` absorbed into title with `#` stripped.
+
+---
+
+### Preview Panel
+
+- Appears as soon as any text is typed. Hidden only when the bar is empty.
+- Two rows:
+  - **Title row** — live resolved title
+  - **Property strip** — every supported field shown always
+
+- Empty fields display: `No emoji`, `No date`, `No goal`, `No duration`
+- Fields shown in priority order, strip scrolls horizontally. Fixed height — never reflows layout.
+- Status and sprint excluded from strip (status defaults to To-Do, sprint is context-driven).
+
+---
+
+### Suggestion Row
+
+- Sits above the keyboard, below the preview. Fixed height, horizontal scroll.
+- Default chips (unfilled fields only): emoji suggestion (if similar past task found) · `📅 Date` · `⏱ Duration` · `🎯 Goal`
+- When `#` is typed, suggestion row is replaced by the goal search dropdown.
+- Accepting a suggestion inserts its raw token text into the input at cursor position. Parser picks it up naturally.
+- A field's chip is removed from the row once that field is filled.
+
+---
+
+## UX Rules (continued)
 
 ### Snooze
 - Global **Show Snoozed** toggle. Snoozed tasks appear ghosted (reduced opacity).
