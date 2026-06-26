@@ -45,7 +45,7 @@
   align-items: center;
   gap: 6px;
   min-height: 48px;
-  border-radius: 24px;
+  border-radius: 16px;
   padding: 5px 14px 5px 20px;
   background: var(--bn-glass-bg);
   backdrop-filter: blur(28px) saturate(180%);
@@ -85,20 +85,27 @@
   font-weight: 400;
   letter-spacing: -0.01em;
   padding: 5px 0;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
 }
 
 .bn-highlight-overlay {
   position: absolute;
   inset: 0;
-  display: flex;
-  align-items: center;
   pointer-events: none;
   overflow: hidden;
   font-size: 16px;
   font-family: inherit;
   font-weight: 400;
   letter-spacing: -0.01em;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.5;
   padding: 5px 0;
   color: #fff;
 }

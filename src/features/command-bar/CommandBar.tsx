@@ -35,6 +35,7 @@ interface CommandBarProps {
   onFocusChange: (focused: boolean) => void
   onInputChange?: (value: string) => void
   onParsedChange?: (parsed: ParseResult | null) => void
+  onSuggestionsChange?: (emoji: string | null) => void
 }
 
 function sprintForPath(pathname: string): string | null {
@@ -75,12 +76,12 @@ function buildHighlightSegments(input: string, parsed: ParseResult) {
 }
 
 export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function CommandBar(
-  { onFocusChange, onInputChange, onParsedChange },
+  { onFocusChange, onInputChange, onParsedChange, onSuggestionsChange },
   ref,
 ) {
   const location = useLocation()
   const { session } = useSession()
-  const inputRef = useRef<HTMLInputElement>(null)
+  const inputRef = useRef<HTMLTextAreaElement>(null)
   const placeholderRef = useRef<HTMLDivElement>(null)
   const placeholderIndexRef = useRef(0)
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -103,6 +104,9 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       setInputValue(text)
       onInputChange?.(text)
       setPlaceholderVisible(!text)
+      if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
+      setSuggestedEmoji(null)
+      onSuggestionsChange?.(null)
       if (text) {
         const goal = findGoalForInput(text, goals)
         const p = parse(text, new Date(), goal?.id, goal?.name)
@@ -112,7 +116,9 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         setParsedResult(null)
         onParsedChange?.(null)
       }
-      inputRef.current?.focus()
+      const el = inputRef.current
+      if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` }
+      el?.focus()
     },
     submit: handleSubmit,
   }))
@@ -192,11 +198,15 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
 
   const similarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const val = e.currentTarget.value
     setInputValue(val)
     onInputChange?.(val)
     setPlaceholderVisible(!val)
+
+    const el = e.currentTarget
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
 
     const goal = findGoalForInput(val, goals)
     const parsed = parse(val, new Date(), goal?.id, goal?.name)
@@ -208,23 +218,28 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
         const task = await findSimilarTask(val.trim())
-        setSuggestedEmoji(task?.emoji ?? null)
+        const emoji = task?.emoji ?? null
+        setSuggestedEmoji(emoji)
+        onSuggestionsChange?.(emoji)
       }, 400)
     } else {
       setSuggestedEmoji(null)
+      onSuggestionsChange?.(null)
     }
-  }, [onInputChange, setPlaceholderVisible, goals])
+  }, [onInputChange, onSuggestionsChange, setPlaceholderVisible, goals])
 
   const onClearMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     setInputValue('')
     onInputChange?.('')
     setSuggestedEmoji(null)
+    onSuggestionsChange?.(null)
     setParsedResult(null)
     onParsedChange?.(null)
     setPlaceholderVisible(true)
-    inputRef.current?.focus()
-  }, [onInputChange, onParsedChange, setPlaceholderVisible])
+    const el = inputRef.current
+    if (el) { el.style.height = 'auto'; el.focus() }
+  }, [onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible])
 
   const handleSubmit = useCallback(async () => {
     const ok = await submit()
@@ -232,22 +247,24 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       setInputValue('')
       onInputChange?.('')
       setSuggestedEmoji(null)
+      onSuggestionsChange?.(null)
       setParsedResult(null)
       onParsedChange?.(null)
       setPlaceholderVisible(true)
       startCycle()
-      inputRef.current?.focus()
+      const el = inputRef.current
+      if (el) { el.style.height = 'auto'; el.focus() }
     }
-  }, [submit, startCycle, onInputChange, onParsedChange, setPlaceholderVisible])
+  }, [submit, startCycle, onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible])
 
   const highlightSegments = parsedResult ? buildHighlightSegments(inputValue, parsedResult) : null
 
   return (
     <div className="bn-search-bar">
       <div className="bn-search-area">
-        <input
+        <textarea
           ref={inputRef}
-          type="text"
+          rows={1}
           className="bn-search-input"
           value={inputValue}
           onChange={onChange}
@@ -282,26 +299,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
       </div>
 
-      {suggestedEmoji && (
-        <button
-          type="button"
-          className="mx-3 mb-2 self-start px-2.5 py-1 rounded-md border border-dashed border-white/30 bg-white/5 text-base leading-none hover:bg-white/10 transition-colors"
-          onMouseDown={e => {
-            e.preventDefault()
-            const next = `${suggestedEmoji} ${inputValue}`
-            setInputValue(next)
-            onInputChange?.(next)
-            const goal = findGoalForInput(next, goals)
-            setParsedResult(parse(next, new Date(), goal?.id, goal?.name))
-            setSuggestedEmoji(null)
-            inputRef.current?.focus()
-          }}
-          aria-label={`Suggest emoji ${suggestedEmoji}`}
-        >
-          {suggestedEmoji}
-        </button>
-      )}
-
       <button
         className={`bn-clear${inputValue ? ' bn-clear-visible' : ''}`}
         aria-label="Clear input"
@@ -313,8 +310,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           <line x1="18" y1="6" x2="6" y2="18"/>
         </svg>
       </button>
-
-
     </div>
   )
 })

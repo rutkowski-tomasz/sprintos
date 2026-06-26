@@ -1,16 +1,19 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { motion } from 'motion/react'
+import { motion, AnimatePresence } from 'motion/react'
 import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
-import { TaskStatus } from '@/types'
+import { TaskStatus, type Task } from '@/types'
 import { TaskRow } from './TaskRow'
 import type { TaskChip } from './TaskRow'
 import type { ParseResult } from './taskInputParser'
+import { CommandSuggestion } from './CommandSuggestion'
+import type { SuggestionItem } from './CommandSuggestion'
 import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprints/sprintEngine'
 
 interface CommandResultsProps {
   inputValue: string
   parsed: ParseResult | null
+  suggestions: SuggestionItem[]
   onCopy: (text: string) => void
   onSubmit: () => void
 }
@@ -42,6 +45,13 @@ function formatDuration(secs: number): string {
   return `${m}m`
 }
 
+function buildTaskChips(task: Task): TaskChip[] {
+  const chips: TaskChip[] = []
+  if (task.eventDate) chips.push({ label: formatDate(task.eventDate), color: '#818cf8' })
+  if (task.duration) chips.push({ label: formatDuration(task.duration), color: '#2dd4bf' })
+  return chips
+}
+
 function buildPreviewChips(parsed: ParseResult): TaskChip[] {
   return [
     parsed.eventDate
@@ -61,7 +71,9 @@ function sprintLabelForPath(pathname: string): string | null {
   return null
 }
 
-export function CommandResults({ inputValue, parsed, onCopy, onSubmit }: CommandResultsProps) {
+const ROW_ANIM = { initial: { opacity: 0, y: -8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 }, transition: { type: 'spring' as const, stiffness: 420, damping: 36 } }
+
+export function CommandResults({ inputValue, parsed, suggestions, onCopy, onSubmit }: CommandResultsProps) {
   const location = useLocation()
 
   const tasks = useLiveQuery(async () => {
@@ -73,7 +85,9 @@ export function CommandResults({ inputValue, parsed, onCopy, onSubmit }: Command
     return all.filter(t => t.name.toLowerCase().includes(q)).slice(0, 5)
   }, [inputValue])
 
-  if (!tasks?.length && !parsed) return null
+  if (!tasks?.length && !parsed && !suggestions.length) return null
+
+  const tasksLabel = inputValue.trim() ? 'Matching Tasks' : 'Recent Tasks'
 
   return (
     <motion.div
@@ -82,19 +96,27 @@ export function CommandResults({ inputValue, parsed, onCopy, onSubmit }: Command
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 420, damping: 36 }}
     >
-      <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
-        Results
-      </p>
-      {tasks?.map(task => (
-        <TaskRow
-          key={task.id}
-          emoji={task.emoji ?? undefined}
-          name={task.name}
-          subtitle={timeAgo(task.updatedAt)}
-          status={task.status}
-          onCopy={onCopy}
-        />
-      ))}
+      {tasks && tasks.length > 0 && (
+        <>
+          <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
+            {tasksLabel}
+          </p>
+          <AnimatePresence initial={false}>
+            {tasks.map(task => (
+              <motion.div key={task.id} {...ROW_ANIM}>
+                <TaskRow
+                  emoji={task.emoji ?? undefined}
+                  name={task.name}
+                  subtitle={timeAgo(task.updatedAt)}
+                  status={task.status}
+                  chips={buildTaskChips(task)}
+                  onCopy={onCopy}
+                />
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </>
+      )}
       {parsed && (
         <>
           <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
@@ -111,6 +133,12 @@ export function CommandResults({ inputValue, parsed, onCopy, onSubmit }: Command
           />
         </>
       )}
+      {suggestions.length > 0 && (
+        <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
+          Suggestions
+        </p>
+      )}
+      <CommandSuggestion items={suggestions} />
     </motion.div>
   )
 }

@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { TaskRow } from './TaskRow'
@@ -23,9 +24,20 @@ export function TaskList({ tasks }: TaskListProps) {
 
   return (
     <div className="border-t border-border">
-      {tasks.map(task => (
-        <TaskRow key={task.id} task={task} goalMap={goalMap} />
-      ))}
+      <AnimatePresence initial={false}>
+        {tasks.map(task => (
+          <motion.div
+            key={task.id}
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0, marginTop: 0 }}
+            transition={{ type: 'spring', stiffness: 420, damping: 36 }}
+            style={{ overflow: 'hidden' }}
+          >
+            <TaskRow task={task} goalMap={goalMap} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   )
 }
