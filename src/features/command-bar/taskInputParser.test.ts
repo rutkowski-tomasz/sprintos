@@ -57,6 +57,12 @@ describe('parse', () => {
       expect(r.emoji?.value).toBe('🏋️')
       expect(r.title).toBe('Workout 🔥')
     })
+
+    it('E6: emoji variant — colored emoji', () => {
+      const input = '💪🏻 Workout'
+      const r = parse(input, WED)
+      expect(r.emoji?.value).toBe('💪🏻')
+    })
   })
 
   // ─── Event date ─────────────────────────────────────────────────────────────
