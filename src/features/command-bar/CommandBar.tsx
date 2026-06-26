@@ -218,12 +218,10 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
     if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
-        const [task, martEmojis] = await Promise.all([
-          findSimilarTask(val.trim()),
-          searchEmojis(parsed.title ?? val.trim()),
-        ])
+        const task = await findSimilarTask(val.trim())
         const taskEmoji = task?.emoji ?? null
-        const combined = [...new Set([...(taskEmoji ? [taskEmoji] : []), ...martEmojis])]
+        const libEmojis = searchEmojis(parsed.title ?? val.trim())
+        const combined = [...new Set([...(taskEmoji ? [taskEmoji] : []), ...libEmojis])]
         setSuggestedEmojis(combined)
         onSuggestionsChange?.(combined)
       }, 400)
