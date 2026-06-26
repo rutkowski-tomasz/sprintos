@@ -86,7 +86,6 @@ function bumpYearIfPast(y: number, mo: number, day: number, now: Date): number {
   return y
 }
 
-const TIME_RE = /^(\d{1,2})[:.](d{2})$/
 const TIME_RE2 = /^(\d{1,2})[:.](\d{2})$/
 
 function parseTime(text: string): { h: number; m: number } | null {

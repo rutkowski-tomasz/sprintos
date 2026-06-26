@@ -126,7 +126,7 @@ export function CommandResults({ inputValue, parsed, suggestions, onCopy, onSubm
             emoji={parsed.emoji?.value ?? undefined}
             name={parsed.title || 'Untitled'}
             subtitle={sprintLabelForPath(location.pathname) ?? undefined}
-            status={parsed.status?.value ?? TaskStatus.TODO}
+            status={(parsed.status?.value ?? TaskStatus.TODO) as TaskStatus}
             chips={buildPreviewChips(parsed)}
             isPreview
             onSubmit={onSubmit}

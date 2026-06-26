@@ -87,7 +87,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const placeholderIndexRef = useRef(0)
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [inputValue, setInputValue] = useState('')
-  const [suggestedEmojis, setSuggestedEmojis] = useState<string[]>([])
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
 
   const goals = useLiveQuery(
@@ -106,7 +105,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       onInputChange?.(text)
       setPlaceholderVisible(!text)
       if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
-      setSuggestedEmojis([])
       onSuggestionsChange?.([])
       if (text) {
         const goal = findGoalForInput(text, goals)
@@ -135,7 +133,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       goalId: parsed.goalId?.value ?? null,
       name: parsed.title,
       emoji: parsed.emoji?.value ?? null,
-      status: parsed.status?.value ?? TaskStatus.TODO,
+      status: (parsed.status?.value ?? TaskStatus.TODO) as TaskStatus,
       eventDate: parsed.eventDate?.value ?? null,
       snooze: null,
       sourceUrl: parsed.sourceUrl?.value ?? null,
@@ -222,11 +220,9 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         const taskEmoji = task?.emoji ?? null
         const libEmojis = searchEmojis(parsed.title ?? val.trim())
         const combined = [...new Set([...(taskEmoji ? [taskEmoji] : []), ...libEmojis])]
-        setSuggestedEmojis(combined)
         onSuggestionsChange?.(combined)
       }, 400)
     } else {
-      setSuggestedEmojis([])
       onSuggestionsChange?.([])
     }
   }, [onInputChange, onSuggestionsChange, setPlaceholderVisible, goals])
@@ -235,7 +231,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     e.preventDefault()
     setInputValue('')
     onInputChange?.('')
-    setSuggestedEmojis([])
     onSuggestionsChange?.([])
     setParsedResult(null)
     onParsedChange?.(null)
@@ -249,7 +244,6 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (ok) {
       setInputValue('')
       onInputChange?.('')
-      setSuggestedEmojis([])
       onSuggestionsChange?.([])
       setParsedResult(null)
       onParsedChange?.(null)
