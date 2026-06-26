@@ -10,7 +10,7 @@ export function BottomBar() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
-  const [suggestedEmoji, setSuggestedEmoji] = useState<string | null>(null)
+  const [suggestedEmojis, setSuggestedEmojis] = useState<string[]>([])
   const commandBarRef = useRef<CommandBarHandle>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
@@ -27,9 +27,10 @@ export function BottomBar() {
     return () => vv.removeEventListener('resize', update)
   }, [])
 
-  const suggestions: SuggestionItem[] = suggestedEmoji
-    ? [{ label: suggestedEmoji, onApply: () => commandBarRef.current?.setValue(`${suggestedEmoji} ${inputValue}`) }]
-    : []
+  const suggestions: SuggestionItem[] = suggestedEmojis.map(emoji => ({
+    label: emoji,
+    onApply: () => commandBarRef.current?.setValue(`${emoji} ${inputValue}`),
+  }))
 
   return (
     <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`}>
@@ -50,7 +51,7 @@ export function BottomBar() {
         onFocusChange={setSearchFocused}
         onInputChange={setInputValue}
         onParsedChange={setParsedResult}
-        onSuggestionsChange={setSuggestedEmoji}
+        onSuggestionsChange={setSuggestedEmojis}
       />
     </div>
   )
