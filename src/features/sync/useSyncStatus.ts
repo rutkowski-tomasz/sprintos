@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
-import { syncFlushState } from './syncStatus'
+import { syncFlushState } from './flushState'
 
 export type SyncStatus = 'synced' | 'sending' | 'queued'
 

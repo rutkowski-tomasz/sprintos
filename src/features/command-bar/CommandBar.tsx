@@ -5,7 +5,7 @@ import { db } from '@/lib/db'
 import { parse } from './taskInputParser'
 import type { ParseResult } from './taskInputParser'
 import { sprintKey, sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
-import { PROPERTY_COLORS } from '@/features/properties/registry'
+import { buildHighlightSegments } from './highlight'
 import { useSession } from '@/features/auth/useSession'
 import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
 import { searchEmojis } from './emojiSearch'
@@ -18,15 +18,6 @@ const ROUTE_PLACEHOLDER: Record<string, string> = {
 }
 
 const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
-
-const SPAN_COLORS: Record<string, string> = {
-  date: PROPERTY_COLORS.eventDate,
-  duration: PROPERTY_COLORS.duration,
-  emoji: PROPERTY_COLORS.emoji,
-  status: PROPERTY_COLORS.status,
-  goal: PROPERTY_COLORS.goal,
-  url: PROPERTY_COLORS.url,
-}
 
 export interface CommandBarHandle {
   setValue: (text: string) => void
@@ -52,29 +43,6 @@ function findGoalForInput(input: string, goals: Goal[]): Goal | null {
   if (!m) return null
   const firstWord = m[1].toLowerCase()
   return goals.find(g => g.name.split(' ')[0].toLowerCase() === firstWord) ?? null
-}
-
-function buildHighlightSegments(input: string, parsed: ParseResult) {
-  const spans = [
-    parsed.emoji && { start: parsed.emoji.start, end: parsed.emoji.end, type: 'emoji' },
-    parsed.eventDate && { start: parsed.eventDate.start, end: parsed.eventDate.end, type: 'date' },
-    parsed.duration && { start: parsed.duration.start, end: parsed.duration.end, type: 'duration' },
-    parsed.status && { start: parsed.status.start, end: parsed.status.end, type: 'status' },
-    parsed.goalId && { start: parsed.goalId.start, end: parsed.goalId.end, type: 'goal' },
-    parsed.sourceUrl && { start: parsed.sourceUrl.start, end: parsed.sourceUrl.end, type: 'url' },
-  ].filter(Boolean) as Array<{ start: number; end: number; type: string }>
-
-  spans.sort((a, b) => a.start - b.start)
-
-  const segs: Array<{ text: string; color: string; underline: boolean }> = []
-  let pos = 0
-  for (const span of spans) {
-    if (span.start > pos) segs.push({ text: input.slice(pos, span.start), color: '#fff', underline: false })
-    segs.push({ text: input.slice(span.start, span.end), color: SPAN_COLORS[span.type], underline: true })
-    pos = span.end
-  }
-  if (pos < input.length) segs.push({ text: input.slice(pos), color: '#fff', underline: false })
-  return segs
 }
 
 export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function CommandBar(

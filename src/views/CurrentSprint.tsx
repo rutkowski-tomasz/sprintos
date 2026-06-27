@@ -5,11 +5,9 @@ import { sprintKey } from '@/features/properties/sprint/sprintDef'
 
 export function CurrentSprint() {
   const key = sprintKey(new Date())
-  const result = useSprintTasks(key)
+  const tasks = useSprintTasks(key)
 
-  if (!result) return null
-
-  const { tasks } = result
+  if (!tasks) return null
 
   return (
     <div className="h-full flex flex-col">

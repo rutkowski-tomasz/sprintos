@@ -2,11 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { TaskStatus, type Task } from '@/types'
 
-export interface SprintTasksResult {
-  tasks: Task[]
-}
-
-export function useSprintTasks(sprintKey: string): SprintTasksResult | undefined {
+export function useSprintTasks(sprintKey: string): Task[] | undefined {
   return useLiveQuery(async () => {
     const tasks = await db.tasks
       .where('sprint')
@@ -16,6 +12,6 @@ export function useSprintTasks(sprintKey: string): SprintTasksResult | undefined
 
     tasks.sort((a, b) => b.status - a.status)
 
-    return { tasks }
+    return tasks
   }, [sprintKey])
 }

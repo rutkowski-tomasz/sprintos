@@ -1,8 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
-import { Check } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+import { SearchableDropdown } from '@/components/ui/searchable-dropdown'
 import {
   classifySprintKey,
   compareSprintKeys,
@@ -34,7 +32,7 @@ type SprintOption =
   | { type: 'none' }
   | { type: 'sprint'; key: string; display: string; badge: string; dateRange: string }
 
-function fmtDate(d: Date, now: Date): string {
+function formatShortDate(d: Date, now: Date): string {
   const day = d.getDate()
   const month = d.toLocaleString('en', { month: 'short' })
   const yr = d.getFullYear() !== now.getFullYear() ? ` '${String(d.getFullYear()).slice(-2)}` : ''
@@ -49,7 +47,7 @@ function toOption(key: string, now: Date): SprintOption & { type: 'sprint' } {
     key,
     display: formatSprintKey(key, now),
     badge,
-    dateRange: `${fmtDate(start, now)} – ${fmtDate(end, now)}`,
+    dateRange: `${formatShortDate(start, now)} – ${formatShortDate(end, now)}`,
   }
 }
 
@@ -95,14 +93,7 @@ export function SprintPicker({ task }: { task: Task }) {
   const now = useMemo(() => new Date(), [])
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const [highlighted, setHighlighted] = useState(0)
-  const [dropPos, setDropPos] = useState({ top: 0, left: 0, minWidth: 280 })
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const dropRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
-  const hlRef = useRef(0)
-  hlRef.current = highlighted
 
   const allKeys = useMemo(() => generateSprintKeys(now, 1, 1), [now])
   const options = useMemo(
@@ -110,74 +101,13 @@ export function SprintPicker({ task }: { task: Task }) {
     [task.sprint, search, now, allKeys],
   )
 
-  useEffect(() => { setHighlighted(0) }, [search])
-
-  useEffect(() => {
-    if (!open) return
-    const rect = triggerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const top = window.innerHeight - rect.bottom >= DROPDOWN_H
-      ? rect.bottom + 4
-      : rect.top - DROPDOWN_H - 4
-    const minWidth = Math.max(rect.width, 300)
-    const left = rect.left + minWidth > window.innerWidth
-      ? Math.max(0, rect.right - minWidth)
-      : rect.left
-    setDropPos({ top, left, minWidth })
-    const idx = task.sprint
-      ? options.findIndex(o => o.type === 'sprint' && o.key === task.sprint)
-      : 0
-    setHighlighted(idx >= 0 ? idx : 0)
-    setTimeout(() => inputRef.current?.focus(), 0)
-  }, [open]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    itemRefs.current[highlighted]?.scrollIntoView({ block: 'nearest' })
-  }, [highlighted])
-
-  useEffect(() => {
-    if (!open) return
-    function onDown(e: MouseEvent) {
-      const t = e.target as Node
-      if (!triggerRef.current?.contains(t) && !dropRef.current?.contains(t)) close()
-    }
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const el = dropRef.current
-    if (!el) return
-    function onKey(e: KeyboardEvent) {
-      e.stopPropagation()
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setHighlighted(h => Math.min(h + 1, options.length - 1))
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setHighlighted(h => Math.max(h - 1, 0))
-      } else if (e.key === 'Enter') {
-        e.preventDefault()
-        const opt = options[hlRef.current]
-        if (opt) pick(opt.type === 'none' ? null : opt.key)
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        close()
-      }
-    }
-    el.addEventListener('keydown', onKey)
-    return () => el.removeEventListener('keydown', onKey)
-  }, [open, options]) // eslint-disable-line react-hooks/exhaustive-deps
-
   function close() {
     setOpen(false)
     setSearch('')
-    setHighlighted(0)
   }
 
-  function pick(key: string | null) {
-    void updateTask(task.id, { sprint: key })
+  function pick(option: SprintOption) {
+    void updateTask(task.id, { sprint: option.type === 'none' ? null : option.key })
     close()
   }
 
@@ -193,56 +123,33 @@ export function SprintPicker({ task }: { task: Task }) {
         {label ?? <span className="text-muted-foreground/30">—</span>}
       </button>
 
-      {open && createPortal(
-        <div
-          ref={dropRef}
-          style={{ position: 'fixed', top: dropPos.top, left: dropPos.left, minWidth: dropPos.minWidth, zIndex: 50 }}
-          className="bg-popover border border-border rounded-md shadow-lg overflow-hidden flex flex-col"
-        >
-          <div className="p-2 border-b border-border">
-            <Input
-              ref={inputRef}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search sprints…"
-              className="h-7 text-sm"
-            />
-          </div>
-          <div className="max-h-60 overflow-y-auto py-1">
-            {options.map((opt, idx) => {
-              const isCurrent = opt.type === 'none'
-                ? task.sprint === null
-                : task.sprint === opt.key
-              return (
-                <div
-                  key={opt.type === 'none' ? '__none__' : opt.key}
-                  ref={el => { itemRefs.current[idx] = el }}
-                  className={`px-3 py-2 cursor-pointer flex items-center gap-2 ${highlighted === idx ? 'bg-accent' : 'hover:bg-accent/50'}`}
-                  onMouseEnter={() => setHighlighted(idx)}
-                  onClick={() => pick(opt.type === 'none' ? null : opt.key)}
-                >
-                  <div className="w-3 shrink-0">
-                    {isCurrent && <Check size={12} />}
-                  </div>
-                  {opt.type === 'none' ? (
-                    <span className="text-sm text-muted-foreground">Backlog</span>
-                  ) : (
-                    <>
-                      <span className="text-sm font-medium w-16 shrink-0">{opt.display}</span>
-                      <Badge className={`${BADGE_CLASS[opt.badge]} text-[10px] shrink-0`}>
-                        {BADGE_TEXT[opt.badge]}
-                      </Badge>
-                      <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap pl-3">
-                        {opt.dateRange}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-        </div>,
-        document.body,
+      {open && (
+        <SearchableDropdown
+          triggerRef={triggerRef}
+          options={options}
+          getKey={option => option.type === 'none' ? '__none__' : option.key}
+          isSelected={option => option.type === 'none' ? task.sprint === null : task.sprint === option.key}
+          onPick={pick}
+          onClose={close}
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search sprints…"
+          height={DROPDOWN_H}
+          minWidth={300}
+          renderOption={option => option.type === 'none' ? (
+            <span className="text-sm text-muted-foreground">Backlog</span>
+          ) : (
+            <>
+              <span className="text-sm font-medium w-16 shrink-0">{option.display}</span>
+              <Badge className={`${BADGE_CLASS[option.badge]} text-[10px] shrink-0`}>
+                {BADGE_TEXT[option.badge]}
+              </Badge>
+              <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap pl-3">
+                {option.dateRange}
+              </span>
+            </>
+          )}
+        />
       )}
     </>
   )

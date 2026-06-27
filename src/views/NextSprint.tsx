@@ -5,11 +5,9 @@ import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
 
 export function NextSprint() {
   const key = sprintKeyOffset(new Date(), 1)
-  const result = useSprintTasks(key)
+  const tasks = useSprintTasks(key)
 
-  if (!result) return null
-
-  const { tasks } = result
+  if (!tasks) return null
 
   return (
     <div className="h-full flex flex-col">

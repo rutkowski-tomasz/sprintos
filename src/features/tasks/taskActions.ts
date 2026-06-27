@@ -1,6 +1,6 @@
 import { db } from '@/lib/db'
 import { flushQueue } from '@/features/sync/sync'
-import { embed } from '@/features/command-bar/embedder'
+import { embed } from '@/lib/embedder'
 import { TaskStatus, type Task } from '@/types'
 
 export async function addTask(fields: Pick<Task, 'userId' | 'sprint' | 'goalId' | 'name' | 'emoji' | 'status' | 'eventDate' | 'snooze' | 'sourceUrl' | 'duration'>): Promise<void> {

@@ -3,7 +3,7 @@ import { ArrowDownLeft, Plus } from 'lucide-react'
 import type { TaskStatus } from '@/types'
 import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/statusDef'
 
-interface TaskRowProps {
+interface TaskResultRowProps {
   emoji?: string
   name: string
   subtitle?: string
@@ -14,7 +14,7 @@ interface TaskRowProps {
   onSubmit?: () => void
 }
 
-export function TaskRow({ emoji, name, subtitle, status, chips, isPreview, onCopy, onSubmit }: TaskRowProps) {
+export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview, onCopy, onSubmit }: TaskResultRowProps) {
   const hasChips = chips && chips.length > 0
   return (
     <div className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''}`}>

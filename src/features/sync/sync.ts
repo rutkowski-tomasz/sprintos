@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { supabase } from '@/lib/supabase'
 import { sprintKey, compareSprintKeys } from '@/features/properties/sprint/sprintDef'
-import { syncFlushState } from './syncStatus'
+import { syncFlushState } from './flushState'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 async function rollover(now: Date) {

@@ -4,13 +4,13 @@ import { useSyncStatus } from '@/features/sync/useSyncStatus'
 import { sprintDateRange } from '@/features/properties/sprint/sprintDef'
 import { TaskStatus, type Task } from '@/types'
 
-interface Props {
+interface ViewHeaderProps {
   viewName: string
   sprintKey?: string
   tasks?: Task[]
 }
 
-function fmtRange(start: Date, end: Date): string {
+function formatDateRange(start: Date, end: Date): string {
   const startDay = start.toLocaleString('en', { weekday: 'short' })
   const endDay = end.toLocaleString('en', { weekday: 'short' })
   const startMonth = start.toLocaleString('en', { month: 'short' })
@@ -28,14 +28,14 @@ const SYNC_LABELS = { synced: 'Synced', sending: 'Sending', queued: 'In Queue' }
 const SYNC_COLOR = { synced: 'text-green-400', sending: 'text-amber-400', queued: 'text-amber-400' } as const
 const SYNC_DOT = { synced: 'bg-green-400', sending: 'bg-amber-400', queued: 'bg-amber-400' } as const
 
-export function ViewHeader({ viewName, sprintKey, tasks }: Props) {
+export function ViewHeader({ viewName, sprintKey, tasks }: ViewHeaderProps) {
   const syncStatus = useSyncStatus()
   const sprintNum = sprintKey?.match(/(\d+)$/)?.[1]
 
   const dateRange = useMemo(() => {
     if (!sprintKey) return undefined
     const { start, end } = sprintDateRange(sprintKey)
-    return fmtRange(start, end)
+    return formatDateRange(start, end)
   }, [sprintKey])
 
   const inProgress = tasks?.filter(t => t.status === TaskStatus.IN_PROGRESS).length ?? 0

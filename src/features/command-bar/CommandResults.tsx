@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react'
 import { useLocation } from 'react-router-dom'
 import { db } from '@/lib/db'
 import { TaskStatus, type Task } from '@/types'
-import { TaskRow } from './TaskRow'
+import { TaskResultRow } from './TaskResultRow'
 import type { ParseResult } from './taskInputParser'
 import { CommandSuggestion } from './CommandSuggestion'
 import type { SuggestionItem } from './CommandSuggestion'
@@ -30,29 +30,28 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-const TASK_CHIP_VALUE: Record<ChipProperty, (t: Task) => string | number | null> = {
-  eventDate: t => t.eventDate,
-  duration: t => t.duration,
-}
-
-const PREVIEW_CHIP: Record<ChipProperty, { value: (p: ParseResult) => string | number | null; empty: string }> = {
-  eventDate: { value: p => p.eventDate?.value ?? null, empty: 'No date' },
-  duration: { value: p => p.duration?.value ?? null, empty: 'No duration' },
+const CHIP_SOURCES: Record<ChipProperty, {
+  fromTask: (t: Task) => string | number | null
+  fromParsed: (p: ParseResult) => string | number | null
+  emptyLabel: string
+}> = {
+  eventDate: { fromTask: t => t.eventDate, fromParsed: p => p.eventDate?.value ?? null, emptyLabel: 'No date' },
+  duration: { fromTask: t => t.duration, fromParsed: p => p.duration?.value ?? null, emptyLabel: 'No duration' },
 }
 
 function buildTaskChips(task: Task): ReactNode[] {
   return CHIP_ORDER.flatMap(key => {
-    const value = TASK_CHIP_VALUE[key](task)
+    const value = CHIP_SOURCES[key].fromTask(task)
     return value ? [<PropertyChip key={key} property={key} value={value as never} />] : []
   })
 }
 
 function buildPreviewChips(parsed: ParseResult): ReactNode[] {
   return CHIP_ORDER.map(key => {
-    const value = PREVIEW_CHIP[key].value(parsed)
+    const value = CHIP_SOURCES[key].fromParsed(parsed)
     return value != null
       ? <PropertyChip key={key} property={key} value={value as never} />
-      : <Chip key={key}>{PREVIEW_CHIP[key].empty}</Chip>
+      : <Chip key={key}>{CHIP_SOURCES[key].emptyLabel}</Chip>
   })
 }
 
@@ -104,7 +103,7 @@ export function CommandResults({ inputValue, parsed, suggestions, onCopy, onSubm
           <AnimatePresence initial={false}>
             {tasks.map(task => (
               <motion.div key={task.id} {...ROW_ANIM}>
-                <TaskRow
+                <TaskResultRow
                   emoji={task.emoji ?? undefined}
                   name={task.name}
                   subtitle={taskSubtitle(task)}
@@ -122,7 +121,7 @@ export function CommandResults({ inputValue, parsed, suggestions, onCopy, onSubm
           <p className="px-4 pt-3 pb-1 text-[10px] font-semibold tracking-widest text-white/40 uppercase">
             Task Preview
           </p>
-          <TaskRow
+          <TaskResultRow
             emoji={parsed.emoji?.value ?? undefined}
             name={parsed.title || 'Untitled'}
             subtitle={sprintLabelForPath(location.pathname) ?? undefined}

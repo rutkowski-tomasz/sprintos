@@ -34,14 +34,14 @@ export function sprintKeyOffset(now: Date, weekOffset: number): string {
   return sprintKey(sat)
 }
 
-function keyOrd(key: string): number {
+function sprintKeyOrdinal(key: string): number {
   const m = key.match(/^(\d+) Q(\d) (\d+)$/)
   if (!m) return 0
   return parseInt(m[1]) * 1000 + parseInt(m[2]) * 100 + parseInt(m[3])
 }
 
 export function compareSprintKeys(a: string, b: string): number {
-  return keyOrd(a) - keyOrd(b)
+  return sprintKeyOrdinal(a) - sprintKeyOrdinal(b)
 }
 
 export function classifySprintKey(key: string, now: Date): SprintLabel {
@@ -49,7 +49,7 @@ export function classifySprintKey(key: string, now: Date): SprintLabel {
   if (key === current) return 'current'
   if (key === sprintKeyOffset(now, 1)) return 'next'
   if (key === sprintKeyOffset(now, -1)) return 'previous'
-  return keyOrd(key) < keyOrd(current) ? 'past' : 'future'
+  return sprintKeyOrdinal(key) < sprintKeyOrdinal(current) ? 'past' : 'future'
 }
 
 export function formatSprintKey(key: string, now: Date): string {
