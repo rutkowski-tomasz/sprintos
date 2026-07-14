@@ -4,17 +4,24 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { parse } from './taskInputParser'
 import type { ParseResult } from './taskInputParser'
-import { sprintKey, sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
+import { sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
 import { buildHighlightSegments } from './highlight'
 import { useSession } from '@/features/auth/useSession'
 import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
 import { searchEmojis } from './emojiSearch'
 import { TaskStatus, type Goal } from '@/types'
 
-const ROUTE_PLACEHOLDER: Record<string, string> = {
-  '/current': 'Add to current sprint...',
-  '/next': 'Add to next sprint...',
-  '/backlog': 'Add to backlog...',
+const SPRINT_PARAM_PLACEHOLDER: Record<string, string> = {
+  current: 'Add to current sprint...',
+  next: 'Add to next sprint...',
+  previous: 'Add to previous sprint...',
+}
+
+function placeholderForPath(pathname: string): string | null {
+  if (pathname === '/backlog') return 'Add to backlog...'
+  const m = pathname.match(/^\/sprint\/(.+)$/)
+  if (!m) return null
+  return SPRINT_PARAM_PLACEHOLDER[m[1]] ?? 'Add to sprint...'
 }
 
 const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"]
@@ -32,10 +39,9 @@ interface CommandBarProps {
 }
 
 function sprintForPath(pathname: string): string | null {
-  const now = new Date()
-  if (pathname === '/current') return sprintKey(now)
-  if (pathname === '/next') return sprintKeyOffset(now, 1)
-  return null
+  const m = pathname.match(/^\/sprint\/(.+)$/)
+  if (!m) return null
+  return sprintKeyFromRouteParam(m[1], new Date())
 }
 
 function findGoalForInput(input: string, goals: Goal[]): Goal | null {
@@ -112,7 +118,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   }, [inputValue, session, goals, location.pathname])
 
   const placeholders = useMemo(
-    () => [...BASE_PLACEHOLDERS, ROUTE_PLACEHOLDER[location.pathname] ?? 'Add task...'],
+    () => [...BASE_PLACEHOLDERS, placeholderForPath(location.pathname) ?? 'Add task...'],
     [location.pathname],
   )
 

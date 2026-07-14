@@ -8,7 +8,7 @@ import { TaskResultRow } from './TaskResultRow'
 import type { ParseResult } from './taskInputParser'
 import { CommandSuggestion } from './CommandSuggestion'
 import type { SuggestionItem } from './CommandSuggestion'
-import { sprintKey, sprintKeyOffset, formatSprintKey } from '@/features/properties/sprint/sprintDef'
+import { sprintKeyFromRouteParam, formatSprintKey } from '@/features/properties/sprint/sprintDef'
 import { PropertyChip } from '@/features/properties/PropertyChip'
 import { CHIP_ORDER, type ChipProperty } from '@/features/properties/registry'
 import { Chip } from '@/features/properties/Chip'
@@ -63,11 +63,11 @@ function taskSubtitle(task: Task): string {
 }
 
 function sprintLabelForPath(pathname: string): string | null {
-  const now = new Date()
-  if (pathname === '/current') return `Sprint ${formatSprintKey(sprintKey(now), now)}`
-  if (pathname === '/next') return `Sprint ${formatSprintKey(sprintKeyOffset(now, 1), now)}`
   if (pathname === '/backlog') return 'Backlog'
-  return null
+  const m = pathname.match(/^\/sprint\/(.+)$/)
+  if (!m) return null
+  const now = new Date()
+  return `Sprint ${formatSprintKey(sprintKeyFromRouteParam(m[1], now), now)}`
 }
 
 const ROW_ANIM = { initial: { opacity: 0, y: -8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 }, transition: { type: 'spring' as const, stiffness: 420, damping: 36 } }

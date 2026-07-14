@@ -5,20 +5,18 @@ import { AuthPage } from '@/features/auth/AuthPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { Sidebar } from '@/features/navigation/Sidebar'
 import { BottomBar } from '@/features/navigation/BottomBar'
-import { CurrentSprint } from '@/views/CurrentSprint'
-import { NextSprint } from '@/views/NextSprint'
+import { SprintView } from '@/views/SprintView'
 import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
 
-const ROUTE_ORDER = ['/current', '/next', '/backlog']
+const ROUTE_ORDER = ['/sprint/current', '/sprint/next', '/backlog']
 
 const VIEW_ROUTES = [
-  { path: '/current', element: <CurrentSprint /> },
-  { path: '/next', element: <NextSprint /> },
+  { path: '/sprint/:key', element: <SprintView /> },
   { path: '/backlog', element: <Backlog /> },
   { path: '/goals', element: <Goals /> },
-  { path: '/', element: <Navigate to="/current" replace /> },
-  { path: '*', element: <Navigate to="/current" replace /> },
+  { path: '/', element: <Navigate to="/sprint/current" replace /> },
+  { path: '*', element: <Navigate to="/sprint/current" replace /> },
 ]
 
 function AnimatedContent() {

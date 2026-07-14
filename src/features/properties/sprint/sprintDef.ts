@@ -78,6 +78,15 @@ export function sprintDateRange(key: string): { start: Date; end: Date } {
   return { start, end }
 }
 
+export function sprintKeyFromRouteParam(param: string, now: Date): string {
+  if (param === 'current') return sprintKey(now)
+  if (param === 'next') return sprintKeyOffset(now, 1)
+  if (param === 'previous') return sprintKeyOffset(now, -1)
+  const m = param.match(/^(\d+)-Q(\d)-(\d+)$/)
+  if (!m) return sprintKey(now)
+  return `${parseInt(m[1])} Q${parseInt(m[2])} ${parseInt(m[3])}`
+}
+
 export function generateSprintKeys(now: Date, yearsBefore = 1, yearsAfter = 1): string[] {
   const keys: string[] = []
   const year = now.getFullYear()

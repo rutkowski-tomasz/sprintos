@@ -240,13 +240,13 @@ export function NavMenu() {
           <div className="bn-sep" />
 
           <div className="bn-tiles">
-            <div className="bn-tile" data-route="current" onClick={() => doNavigate('current')}>
+            <div className="bn-tile" data-route="sprint/current" onClick={() => doNavigate('sprint/current')}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
               </svg>
               Current
             </div>
-            <div className="bn-tile" data-route="next" onClick={() => doNavigate('next')}>
+            <div className="bn-tile" data-route="sprint/next" onClick={() => doNavigate('sprint/next')}>
               <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="10"/>
                 <polyline points="12 8 16 12 12 16"/>

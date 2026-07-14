@@ -4,8 +4,8 @@ import { Logo } from './Logo'
 import { supabase } from '@/lib/supabase'
 
 const NAV = [
-  { to: '/current', label: 'Current sprint', icon: Zap },
-  { to: '/next', label: 'Next sprint', icon: CalendarDays },
+  { to: '/sprint/current', label: 'Current sprint', icon: Zap },
+  { to: '/sprint/next', label: 'Next sprint', icon: CalendarDays },
   { to: '/backlog', label: 'Backlog', icon: List },
   { to: '/goals', label: 'Goals', icon: Target },
 ]
