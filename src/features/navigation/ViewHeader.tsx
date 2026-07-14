@@ -49,6 +49,28 @@ function daysLeftInSprint(end: Date, now: Date): number {
   return Math.max(0, Math.ceil((endOfDay.getTime() - now.getTime()) / MS_PER_DAY))
 }
 
+function daysBetween(from: Date, to: Date): number {
+  return Math.round((startOfDay(to).getTime() - startOfDay(from).getTime()) / MS_PER_DAY)
+}
+
+function formatRelativeDays(days: number): string {
+  if (days < 14) {
+    return days === 1 ? '1 day' : `${days} days`
+  }
+  const weeks = Math.round(days / 7)
+  return weeks === 1 ? '1 week' : `${weeks} weeks`
+}
+
+function sprintTimingText(label: SprintLabel, start: Date, end: Date, now: Date): string {
+  if (label === 'current') {
+    return `${daysLeftInSprint(end, now)}d left`
+  }
+  if (label === 'next' || label === 'future') {
+    return `in ${formatRelativeDays(daysBetween(now, start))}`
+  }
+  return `${formatRelativeDays(daysBetween(end, now))} ago`
+}
+
 function sprintDays(start: Date): Date[] {
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(start)
@@ -57,16 +79,13 @@ function sprintDays(start: Date): Date[] {
   })
 }
 
-function SprintStatusBadge({ label }: { label: SprintLabel }) {
-  if (label === 'current') {
-    return (
-      <div className="flex items-center gap-1 self-start rounded-full border border-purple-400 bg-purple-500/10 px-2.5 py-0.5 shrink-0">
-        <span className="size-1 rounded-full bg-purple-300" />
-        <span className="text-[8px] font-bold tracking-widest uppercase text-purple-300">Current</span>
-      </div>
-    )
-  }
-  return <SprintStatusText label={label} />
+function SprintCurrentBadge() {
+  return (
+    <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-purple-400 bg-purple-500/10 shrink-0">
+      <span className="size-1 rounded-full bg-purple-300 shrink-0" />
+      <span className="text-[9px] font-bold tracking-widest uppercase text-purple-300 leading-none">Current</span>
+    </div>
+  )
 }
 
 function SprintStatusText({ label }: { label: SprintLabel }) {
@@ -126,8 +145,20 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
     return Math.min(1, Math.max(0, sy / COLLAPSE_RANGE))
   })
   const height = useTransform(collapseT, t => EXPANDED_HEIGHT - t * COLLAPSE_RANGE)
-  const expandedOpacity = useTransform(collapseT, [0, 0.6], [1, 0])
-  const collapsedOpacity = useTransform(collapseT, [0.5, 1], [0, 1])
+  const accentBarOpacity = useTransform(collapseT, [0, 0.4], [1, 0])
+  const numberGroupGap = useTransform(collapseT, [0, 0.35], [8, 0])
+  const verticalLabelOpacity = useTransform(collapseT, [0, 0.35], [1, 0])
+  const verticalLabelWidth = useTransform(collapseT, [0, 0.35], [14, 0])
+  const horizontalLabelOpacity = useTransform(collapseT, [0, 0.35], [0, 1])
+  const horizontalLabelWidth = useTransform(collapseT, [0, 0.35], [0, 50])
+  const numberFontSize = useTransform(collapseT, [0, 1], [72, 12])
+  const numberFontWeight = useTransform(collapseT, [0, 1], [900, 700])
+  const dividerHeight = useTransform(height, h => Math.max(h - 32, 0))
+  const rowOuterGap = useTransform(collapseT, [0, 0.4], [12, 6])
+  const dayTrackOpacity = useTransform(collapseT, [0, 0.3], [1, 0])
+  const dayTrackHeight = useTransform(collapseT, [0, 0.45], [26, 0])
+  const trailingRowGap = useTransform(collapseT, [0, 0.45], [20, 0])
+  const daysLeftOpacity = useTransform(collapseT, [0.5, 0.85], [0, 1])
 
   const syncIndicator = syncStatus !== 'synced' && (
     <div className="flex items-center gap-1.5 shrink-0">
@@ -150,7 +181,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const sprintNum = sprintKey.match(/(\d+)$/)?.[1]?.padStart(2, '0')
   const label = classifySprintKey(sprintKey, now)
   const { start, end } = sprintDateRange(sprintKey)
-  const daysLeft = daysLeftInSprint(end, now)
+  const timingText = sprintTimingText(label, start, end, now)
 
   return (
     <div className="relative shrink-0" style={{ height: COLLAPSED_HEIGHT }}>
@@ -158,36 +189,45 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
         style={{ height }}
         className="absolute top-0 left-0 right-0 z-10 overflow-hidden border-b border-border bg-background"
       >
-        <motion.div style={{ opacity: expandedOpacity }} className="absolute inset-0 flex items-center gap-3 px-4">
-          <span className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-muted-foreground [writing-mode:vertical-rl] rotate-180 leading-none">
+        <motion.span style={{ opacity: accentBarOpacity }} className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />
+        <motion.div style={{ gap: rowOuterGap }} className="flex h-full items-center px-4">
+          <div className="flex items-center shrink-0">
+            <motion.span
+              style={{ opacity: verticalLabelOpacity, width: verticalLabelWidth, marginRight: numberGroupGap }}
+              className="overflow-hidden text-[10px] font-bold tracking-widest uppercase text-muted-foreground [writing-mode:vertical-rl] rotate-180 leading-none"
+            >
               SPRINT
-            </span>
-            <span className="text-7xl font-black leading-none tabular-nums">{sprintNum}</span>
+            </motion.span>
+            <motion.span
+              style={{ opacity: horizontalLabelOpacity, width: horizontalLabelWidth }}
+              className="overflow-hidden whitespace-nowrap text-xs font-bold tracking-wide uppercase leading-none text-muted-foreground"
+            >
+              SPRINT
+            </motion.span>
+            <motion.span
+              style={{ fontSize: numberFontSize, fontWeight: numberFontWeight }}
+              className="leading-none tabular-nums"
+            >
+              {sprintNum}
+            </motion.span>
           </div>
-          <div className="w-px self-stretch bg-border shrink-0" />
-          <div className="flex flex-1 flex-col gap-5 min-w-0">
-            <div className="flex items-center justify-between gap-2">
-              <SprintStatusBadge label={label} />
-              {syncIndicator}
-            </div>
-            <DayTrack start={start} now={now} />
-          </div>
-        </motion.div>
 
-        <motion.div
-          style={{ opacity: collapsedOpacity, height: COLLAPSED_HEIGHT }}
-          className="absolute bottom-0 left-0 right-0 flex items-center gap-2.5 px-4"
-        >
-          <div className="flex items-center gap-1.5 rounded-full border-2 border-purple-500/70 px-2.5 py-1 shrink-0">
-            <span className="size-1.5 rounded-full bg-purple-400" />
-            <span className="text-xs font-bold tracking-wide">SPRINT {sprintNum}</span>
+          <motion.div style={{ height: dividerHeight }} className="w-px self-center bg-border shrink-0" />
+
+          <div className="relative flex-1 min-w-0 flex flex-col justify-center">
+            <div className="flex items-center gap-2">
+              {label === 'current' ? <SprintCurrentBadge /> : <SprintStatusText label={label} />}
+              <div className="flex-1" />
+              {syncIndicator}
+              <motion.span style={{ opacity: daysLeftOpacity }} className="text-xs text-muted-foreground shrink-0">
+                {timingText}
+              </motion.span>
+            </div>
+
+            <motion.div style={{ opacity: dayTrackOpacity, height: dayTrackHeight, marginTop: trailingRowGap }} className="overflow-hidden">
+              <DayTrack start={start} now={now} />
+            </motion.div>
           </div>
-          <SprintStatusText label={label} />
-          <div className="flex-1" />
-          {syncIndicator}
-          <span className="text-xs text-muted-foreground shrink-0">{daysLeft}d left</span>
         </motion.div>
       </motion.div>
     </div>
