@@ -1,4 +1,5 @@
-import { ViewHeader } from '@/features/navigation/ViewHeader'
+import { useRef } from 'react'
+import { ViewHeader, SPRINT_HEADER_INSET } from '@/features/navigation/ViewHeader'
 import { TaskList } from '@/features/tasks/TaskList'
 import { useSprintTasks } from '@/features/tasks/useSprintTasks'
 import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
@@ -6,14 +7,20 @@ import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
 export function NextSprint() {
   const key = sprintKeyOffset(new Date(), 1)
   const tasks = useSprintTasks(key)
+  const scrollRef = useRef<HTMLDivElement>(null)
 
   if (!tasks) return null
 
   return (
     <div className="h-full flex flex-col">
-      <ViewHeader viewName="Next Sprint" sprintKey={key} tasks={tasks} />
-      <div className="flex-1 overflow-auto overscroll-contain pb-safe-nav">
+      <ViewHeader viewName="Next Sprint" sprintKey={key} scrollContainerRef={scrollRef} />
+      <div
+        ref={scrollRef}
+        className="flex-1 overflow-auto overscroll-contain pb-safe-nav"
+        style={{ paddingTop: SPRINT_HEADER_INSET }}
+      >
         <TaskList tasks={tasks} />
+        <div className="h-24" />
       </div>
     </div>
   )
