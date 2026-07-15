@@ -33,7 +33,6 @@
   align-items: flex-end;
   gap: 8px;
   -webkit-tap-highlight-color: transparent;
-  will-change: transform;
   transition: padding-bottom 0.15s ease;
 }
 

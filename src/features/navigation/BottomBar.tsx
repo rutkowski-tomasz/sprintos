@@ -29,6 +29,7 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
     if (!el) return
     const update = () => {
       const inset = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height))
+      el.style.willChange = inset > 0 ? 'transform' : ''
       el.style.transform = inset > 0 ? `translateY(-${inset}px)` : ''
     }
     update()
