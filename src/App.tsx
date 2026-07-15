@@ -15,6 +15,7 @@ const ROUTE_ORDER = ['/sprint/current', '/sprint/next', '/backlog']
 
 const VIEW_ROUTES = [
   { path: '/sprint/:key', element: <SprintView /> },
+  { path: '/sprint/:key/:taskId', element: <SprintView /> },
   { path: '/backlog', element: <Backlog /> },
   { path: '/goals', element: <Goals /> },
   { path: '/', element: <Navigate to="/sprint/current" replace /> },
@@ -25,7 +26,8 @@ function AnimatedContent() {
   const location = useLocation()
   const element = useRoutes(VIEW_ROUTES, location)
 
-  const currentIdx = ROUTE_ORDER.indexOf(location.pathname)
+  const tabRootPath = ROUTE_ORDER.find(r => location.pathname === r || location.pathname.startsWith(`${r}/`)) ?? location.pathname
+  const currentIdx = ROUTE_ORDER.indexOf(tabRootPath)
   const prevIdxRef = useRef(currentIdx)
   const dirRef = useRef(0)
 
@@ -39,7 +41,7 @@ function AnimatedContent() {
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
-        key={location.pathname}
+        key={tabRootPath}
         initial={{ x: `${d * 25}%`, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: `${d * -25}%`, opacity: 0 }}

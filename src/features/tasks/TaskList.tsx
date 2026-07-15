@@ -1,13 +1,19 @@
 import { useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { useNavigate } from 'react-router-dom'
+import { ArrowLeft, ListChecks, ArrowRightLeft } from 'lucide-react'
 import { db } from '@/lib/db'
+import { Button } from '@/components/ui/button'
 import { TaskRow } from './TaskRow'
+import { MassStatusSheet } from './MassStatusSheet'
+import { MassMoveSheet } from './MassMoveSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 interface TaskListProps {
   tasks: Task[]
+  basePath: string
 }
 
 const STATUS_RANK: Record<TaskStatus, number> = {
@@ -27,7 +33,8 @@ function compareTasks(a: Task, b: Task): number {
   return 0
 }
 
-export function TaskList({ tasks }: TaskListProps) {
+export function TaskList({ tasks, basePath }: TaskListProps) {
+  const navigate = useNavigate()
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
     [],
@@ -35,6 +42,11 @@ export function TaskList({ tasks }: TaskListProps) {
   )
   const [showSnoozed, setShowSnoozed] = useState(false)
   const now = useMemo(() => new Date(), [])
+
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [massStatusOpen, setMassStatusOpen] = useState(false)
+  const [massMoveOpen, setMassMoveOpen] = useState(false)
 
   const goalMap = useMemo(() => new Map(goals.map(g => [g.id, g])), [goals])
 
@@ -53,12 +65,53 @@ export function TaskList({ tasks }: TaskListProps) {
     }
   }, [tasks, showSnoozed, now])
 
+  function enterSelectMode(id: string) {
+    setSelectMode(true)
+    setSelectedIds(new Set([id]))
+  }
+
+  function exitSelectMode() {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
+  function toggleSelect(id: string) {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedIds(next)
+    if (next.size === 0) setSelectMode(false)
+  }
+
+  function selectAll() {
+    setSelectedIds(new Set(visibleTasks.map(t => t.id)))
+  }
+
+  function openDetail(task: Task) {
+    navigate(`${basePath}/${task.id}`)
+  }
+
+  const allSelected = selectedIds.size > 0 && visibleTasks.every(t => selectedIds.has(t.id))
+  const selectedIdList = useMemo(() => Array.from(selectedIds), [selectedIds])
+
   if (!tasks.length) {
     return <p className="text-sm text-muted-foreground text-center py-8">No tasks.</p>
   }
 
   return (
     <div className="border-t border-border">
+      {selectMode && (
+        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background px-3 py-2">
+          <Button variant="ghost" size="icon-sm" onClick={exitSelectMode}>
+            <ArrowLeft />
+          </Button>
+          <span className="text-sm font-medium flex-1">{selectedIds.size} selected</span>
+          <Button variant="ghost" size="sm" onClick={allSelected ? exitSelectMode : selectAll}>
+            {allSelected ? 'Deselect all' : 'Select all'}
+          </Button>
+        </div>
+      )}
+
       <AnimatePresence initial={false}>
         {visibleTasks.map(task => {
           const snoozed = snoozedIds.has(task.id)
@@ -71,7 +124,16 @@ export function TaskList({ tasks }: TaskListProps) {
               transition={{ type: 'spring', stiffness: 420, damping: 36 }}
               style={{ overflow: 'hidden' }}
             >
-              <TaskRow task={task} goalMap={goalMap} now={now} />
+              <TaskRow
+                task={task}
+                goalMap={goalMap}
+                now={now}
+                selectMode={selectMode}
+                selected={selectedIds.has(task.id)}
+                onToggleSelect={toggleSelect}
+                onLongPress={enterSelectMode}
+                onOpenDetail={openDetail}
+              />
             </motion.div>
           )
         })}
@@ -84,6 +146,22 @@ export function TaskList({ tasks }: TaskListProps) {
           {showSnoozed ? `Hide snoozed tasks (${snoozedIds.size})` : `Show snoozed tasks (${snoozedIds.size})`}
         </button>
       )}
+
+      {selectMode && selectedIds.size > 0 && (
+        <div className="sticky bottom-0 z-20 flex items-center gap-2 border-t border-border bg-background px-3 py-2">
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setMassStatusOpen(true)}>
+            <ListChecks />
+            Change status
+          </Button>
+          <Button variant="outline" size="sm" className="flex-1" onClick={() => setMassMoveOpen(true)}>
+            <ArrowRightLeft />
+            Move
+          </Button>
+        </div>
+      )}
+
+      <MassStatusSheet taskIds={selectedIdList} open={massStatusOpen} onOpenChange={setMassStatusOpen} onDone={exitSelectMode} />
+      <MassMoveSheet taskIds={selectedIdList} open={massMoveOpen} onOpenChange={setMassMoveOpen} onDone={exitSelectMode} />
     </div>
   )
 }

@@ -263,6 +263,21 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 ### Mobile Gestures
 - **Swipe right**: Opens a bottom sheet to change status (all statuses listed, current one checked)
 - **Swipe left**: Opens the quick-snooze bottom sheet
+- **Tap** a row: opens the task detail page
+- **Hold** a row: enters multi-select mode with that row selected
+
+### Task Detail
+- A routed page (`/sprint/:key/:taskId`), not a modal — deep-linkable, back button and swipe-from-left-edge both navigate to the list.
+- Slides in from the right; the underlying tab (sprint/backlog) does not re-transition or remount when opening/closing it.
+- Shows every property, including `sourceUrl` and `description` (not shown on the list row). All fields auto-save on blur except pickers (status, sprint), which save immediately.
+- Description has no input border — it fills the remaining vertical space like a notes field.
+- The Snooze field opens `RescheduleSheet` in `snoozeOnly` mode: snooze options only, no sprint-move options (sprint has its own picker on the same page).
+
+### Multi-Select (Mobile)
+- Long-press (~500ms, canceled by ~10px of movement) enters select mode; the pressed row shows a weaker highlight while the hold is registering, full highlight once selected.
+- Select-mode toolbar (top): back button (exits select mode), selection count, Select all / Deselect all toggle.
+- Deselecting the last selected row exits select mode automatically, same as the back button.
+- Mass actions (bottom bar, shown while ≥1 selected): **Change status** and **Move** (sprint/backlog), applied to every selected task.
 
 ### Animation & Native Feel
 

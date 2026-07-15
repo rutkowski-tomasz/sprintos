@@ -37,6 +37,10 @@ export async function updateTask(id: string, patch: Partial<Task>): Promise<void
   flushQueue()
 }
 
+export async function updateTasks(ids: string[], patch: Partial<Task>): Promise<void> {
+  await Promise.all(ids.map(id => updateTask(id, patch)))
+}
+
 export async function deleteTask(id: string): Promise<void> {
   await db.tasks.delete(id)
   await db.sync_queue.add({

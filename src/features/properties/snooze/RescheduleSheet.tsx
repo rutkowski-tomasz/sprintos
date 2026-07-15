@@ -17,6 +17,7 @@ interface RescheduleSheetProps {
   task: Task
   open: boolean
   onOpenChange: (open: boolean) => void
+  snoozeOnly?: boolean
 }
 
 function SprintMoveNote({ date, task, now }: { date: Date; task: Task; now: Date }) {
@@ -30,7 +31,7 @@ function SprintMoveNote({ date, task, now }: { date: Date; task: Task; now: Date
   )
 }
 
-export function RescheduleSheet({ task, open, onOpenChange }: RescheduleSheetProps) {
+export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }: RescheduleSheetProps) {
   const now = useMemo(() => new Date(), [open])
   const [customDateTime, setCustomDateTime] = useState(() => defaultCustomDateTime(new Date()))
 
@@ -44,14 +45,14 @@ export function RescheduleSheet({ task, open, onOpenChange }: RescheduleSheetPro
 
   function apply(date: Date) {
     const targetKey = sprintKey(date)
-    const sprintPatch = task.sprint && targetKey !== task.sprint ? { sprint: targetKey } : {}
+    const sprintPatch = !snoozeOnly && task.sprint && targetKey !== task.sprint ? { sprint: targetKey } : {}
     void updateTask(task.id, { snooze: date.toISOString(), ...sprintPatch })
     onOpenChange(false)
   }
 
   function applyCustom(date: Date) {
     const targetKey = sprintKey(date)
-    if (targetKey === sprintKey(now)) {
+    if (snoozeOnly || targetKey === sprintKey(now)) {
       void updateTask(task.id, { snooze: date.toISOString() })
     } else {
       void updateTask(task.id, { sprint: targetKey, snooze: null })
@@ -75,20 +76,22 @@ export function RescheduleSheet({ task, open, onOpenChange }: RescheduleSheetPro
   const moveOptions = snoozeOptions.filter(option => option.movesSprint)
   const pureSnoozeOptions = snoozeOptions.filter(option => !option.movesSprint)
 
-  const customLabel = customDateObj
-    ? isWithinCurrentSprint(customDateObj, now)
-      ? 'Snooze'
-      : `Move to Sprint ${formatSprintKey(sprintKey(customDateObj), now)}`
-    : 'Set snooze'
+  const customLabel = snoozeOnly
+    ? 'Snooze'
+    : customDateObj
+      ? isWithinCurrentSprint(customDateObj, now)
+        ? 'Snooze'
+        : `Move to Sprint ${formatSprintKey(sprintKey(customDateObj), now)}`
+      : 'Set snooze'
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom">
         <SheetHeader>
-          <SheetTitle>Reschedule</SheetTitle>
+          <SheetTitle>{snoozeOnly ? 'Snooze' : 'Reschedule'}</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-1 px-4 pb-2">
-          <span className="px-3 pt-1 text-xs font-medium text-muted-foreground">Snooze</span>
+          {!snoozeOnly && <span className="px-3 pt-1 text-xs font-medium text-muted-foreground">Snooze</span>}
           {pureSnoozeOptions.map(option => {
             const date = option.getDate(now)
             return (
@@ -104,44 +107,48 @@ export function RescheduleSheet({ task, open, onOpenChange }: RescheduleSheetPro
                     <span className="text-xs text-muted-foreground">{formatSnoozeOptionDate(date)}</span>
                   </span>
                 </span>
-                <SprintMoveNote date={date} task={task} now={now} />
+                {!snoozeOnly && <SprintMoveNote date={date} task={task} now={now} />}
               </button>
             )
           })}
 
-          <span className="px-3 pt-3 text-xs font-medium text-muted-foreground">Move to sprint</span>
-          {moveOptions.map(option => {
-            const date = option.getDate(now)
-            return (
+          {!snoozeOnly && (
+            <>
+              <span className="px-3 pt-3 text-xs font-medium text-muted-foreground">Move to sprint</span>
+              {moveOptions.map(option => {
+                const date = option.getDate(now)
+                return (
+                  <button
+                    key={option.key}
+                    onClick={() => apply(date)}
+                    className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+                      <span className="flex flex-col">
+                        <span>{option.label}</span>
+                        <span className="text-xs text-muted-foreground">
+                          Sprint {formatSprintKey(sprintKey(date), now)}
+                        </span>
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
               <button
-                key={option.key}
-                onClick={() => apply(date)}
+                onClick={moveToBacklog}
                 className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
               >
                 <span className="flex items-center gap-2.5">
                   <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
                   <span className="flex flex-col">
-                    <span>{option.label}</span>
-                    <span className="text-xs text-muted-foreground">
-                      Sprint {formatSprintKey(sprintKey(date), now)}
-                    </span>
+                    <span>Backlog</span>
+                    <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>
                   </span>
                 </span>
               </button>
-            )
-          })}
-          <button
-            onClick={moveToBacklog}
-            className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
-          >
-            <span className="flex items-center gap-2.5">
-              <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
-              <span className="flex flex-col">
-                <span>Backlog</span>
-                <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>
-              </span>
-            </span>
-          </button>
+            </>
+          )}
 
           {task.snooze && (
             <button
