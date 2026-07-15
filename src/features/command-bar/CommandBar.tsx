@@ -33,6 +33,7 @@ export interface CommandBarHandle {
   setValue: (text: string) => void
   submit: () => Promise<void>
   focus: () => void
+  close: () => void
 }
 
 interface CommandBarProps {
@@ -107,6 +108,17 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     },
     submit: handleSubmit,
     focus: () => inputRef.current?.focus(),
+    close: () => {
+      setInputValue('')
+      onInputChange?.('')
+      setParsedResult(null)
+      onParsedChange?.(null)
+      onSuggestionsChange?.(EMPTY_SUGGESTIONS)
+      setPlaceholderVisible(true)
+      startCycle()
+      const el = inputRef.current
+      if (el) { el.style.height = 'auto'; el.blur() }
+    },
   }))
 
   const submit = useCallback(async (): Promise<boolean> => {
@@ -266,6 +278,11 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   }, [submit, startCycle, onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible])
 
   const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      inputRef.current?.blur()
+      return
+    }
     if (isCommandMode) {
       if (e.key === 'ArrowDown' && commandMatches.length > 0) {
         e.preventDefault()

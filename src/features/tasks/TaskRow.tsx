@@ -134,12 +134,12 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-sm truncate flex-1 min-w-0">{task.name}</p>
-            {task.eventDate && <EventDateChip date={task.eventDate} now={now} />}
             <SnoozeChip task={task} now={now} />
           </div>
 
-          {(task.duration || goal || task.sourceUrl || task.description) && (
+          {(task.eventDate || task.duration || goal || task.sourceUrl || task.description) && (
             <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {task.eventDate && <EventDateChip date={task.eventDate} now={now} />}
               {task.duration && <DurationChip seconds={task.duration} />}
               {goal && <GoalChip goal={goal} />}
               <SourceUrlChip url={task.sourceUrl} />

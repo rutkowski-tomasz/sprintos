@@ -6,6 +6,15 @@ export const SPRINT_COLOR = '#f472b6'
 const EXACT_RE = /^(\d{2})q(\d)(\d{1,2})$/i
 const QUARTER_WEEK_RE = /^q(\d)(\d{1,2})$/i
 const WEEK_RE = /^s(\d{1,2})$/i
+const KEYWORD_RE = /^s(next|previous|current|future|past)$/i
+
+const KEYWORD_OFFSET: Record<string, number> = {
+  current: 0,
+  next: 1,
+  previous: -1,
+  future: 2,
+  past: -2,
+}
 
 const SEARCH_WEEKS_AHEAD = 60
 
@@ -31,6 +40,13 @@ export const sprintParser: PropertyParser = {
   parse(tokens: Token[], { now }: ParseContext): ParseHit | null {
     for (let i = 0; i < tokens.length; i++) {
       const text = tokens[i].text
+
+      const keyword = KEYWORD_RE.exec(text)
+      if (keyword) {
+        const offset = KEYWORD_OFFSET[keyword[1].toLowerCase()]
+        const value = sprintKeyOffset(now, offset)
+        return { consume: [i], start: tokens[i].start, end: tokens[i].end, value }
+      }
 
       const exact = EXACT_RE.exec(text)
       if (exact) {

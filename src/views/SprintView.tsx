@@ -26,7 +26,7 @@ export function SprintView() {
         className="flex-1 overflow-auto overscroll-contain pb-safe-nav"
         style={{ paddingTop: SPRINT_HEADER_INSET }}
       >
-        <TaskList tasks={tasks} basePath={basePath} />
+        <TaskList tasks={tasks} basePath={basePath} scrollContainerRef={scrollRef} />
         <div className="h-24" />
       </div>
       <AnimatePresence>

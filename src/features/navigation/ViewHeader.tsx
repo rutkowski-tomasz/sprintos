@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, type RefObject } from 'react'
+import { useMemo, type RefObject } from 'react'
 import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/features/sync/useSyncStatus'
 import {
@@ -10,6 +11,7 @@ import {
   type SprintLabel,
 } from '@/features/properties/sprint/sprintDef'
 import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
+import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSED_HEIGHT, COLLAPSE_RANGE } from './sprintHeaderCollapse'
 
 interface ViewHeaderProps {
   viewName: string
@@ -18,9 +20,6 @@ interface ViewHeaderProps {
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
-const EXPANDED_HEIGHT = 112
-const COLLAPSED_HEIGHT = 56
-const COLLAPSE_RANGE = EXPANDED_HEIGHT - COLLAPSED_HEIGHT
 
 export const SPRINT_HEADER_INSET = EXPANDED_HEIGHT - COLLAPSED_HEIGHT
 
@@ -123,8 +122,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const syncStatus = useSyncStatus()
   const navigate = useNavigate()
   const now = useMemo(() => new Date(), [])
-  const fallbackRef = useRef<HTMLDivElement>(null)
-  const collapseT = useMotionValue(0)
+  const collapseT = useSprintCollapseT(scrollContainerRef)
   const dragX = useMotionValue(0)
 
   const handleDragEnd = (_e: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
@@ -137,21 +135,13 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
     animate(dragX, 0, { type: 'spring', stiffness: 500, damping: 40 })
   }
 
-  useEffect(() => {
-    const el = scrollContainerRef?.current ?? fallbackRef.current
-    if (!el) return
+  const prevIndicatorOpacity = useTransform(dragX, [0, SWIPE_OFFSET_THRESHOLD], [0, 1])
+  const nextIndicatorOpacity = useTransform(dragX, [-SWIPE_OFFSET_THRESHOLD, 0], [1, 0])
+  const prevIndicatorScale = useTransform(dragX, [0, SWIPE_OFFSET_THRESHOLD], [0.5, 1])
+  const nextIndicatorScale = useTransform(dragX, [-SWIPE_OFFSET_THRESHOLD, 0], [1, 0.5])
+  const prevIndicatorColor = useTransform(dragX, [0, SWIPE_OFFSET_THRESHOLD], ['rgba(255,255,255,0.25)', '#a855f7'])
+  const nextIndicatorColor = useTransform(dragX, [-SWIPE_OFFSET_THRESHOLD, 0], ['#a855f7', 'rgba(255,255,255,0.25)'])
 
-    const updateCollapse = () => {
-      const sy = Math.max(0, el.scrollTop)
-      const maxScroll = el.scrollHeight - el.clientHeight
-      const atBottom = maxScroll > 0 && sy >= maxScroll - 0.5
-      collapseT.set(atBottom ? 1 : Math.min(1, sy / COLLAPSE_RANGE))
-    }
-
-    updateCollapse()
-    el.addEventListener('scroll', updateCollapse, { passive: true })
-    return () => el.removeEventListener('scroll', updateCollapse)
-  }, [scrollContainerRef, collapseT])
   const height = useTransform(collapseT, t => EXPANDED_HEIGHT - t * COLLAPSE_RANGE)
   const accentBarOpacity = useTransform(collapseT, [0, 0.4], [1, 0])
   const numberGroupGap = useTransform(collapseT, [0, 0.35], [8, 0])
@@ -191,8 +181,33 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const { start, end } = sprintDateRange(sprintKey)
   const timingText = sprintTimingText(label, start, end, now)
 
+  const prevTargetNum = sprintKeyAdjacent(sprintKey, -1).match(/(\d+)$/)?.[1]?.padStart(2, '0')
+  const nextTargetNum = sprintKeyAdjacent(sprintKey, 1).match(/(\d+)$/)?.[1]?.padStart(2, '0')
+
   return (
     <div className="relative shrink-0" style={{ height: COLLAPSED_HEIGHT }}>
+      <motion.div
+        style={{ opacity: prevIndicatorOpacity, scale: prevIndicatorScale, color: prevIndicatorColor }}
+        className="absolute inset-y-0 left-0 z-0 flex items-center gap-1.5 pl-5"
+        aria-hidden="true"
+      >
+        <ChevronLeft size={18} strokeWidth={2.5} />
+        <span className="text-[11px] font-medium whitespace-nowrap">Go to</span>
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-current whitespace-nowrap">
+          Sprint {prevTargetNum}
+        </span>
+      </motion.div>
+      <motion.div
+        style={{ opacity: nextIndicatorOpacity, scale: nextIndicatorScale, color: nextIndicatorColor }}
+        className="absolute inset-y-0 right-0 z-0 flex items-center justify-end gap-1.5 pr-5"
+        aria-hidden="true"
+      >
+        <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-current whitespace-nowrap">
+          Sprint {nextTargetNum}
+        </span>
+        <span className="text-[11px] font-medium whitespace-nowrap">Go to</span>
+        <ChevronRight size={18} strokeWidth={2.5} />
+      </motion.div>
       <motion.div
         style={{ height, x: dragX }}
         drag="x"

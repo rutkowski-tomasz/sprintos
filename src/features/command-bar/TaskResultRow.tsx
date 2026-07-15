@@ -12,12 +12,16 @@ interface TaskResultRowProps {
   isPreview?: boolean
   onCopy?: (text: string) => void
   onSubmit?: () => void
+  onOpen?: () => void
 }
 
-export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview, onCopy, onSubmit }: TaskResultRowProps) {
+export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview, onCopy, onSubmit, onOpen }: TaskResultRowProps) {
   const hasChips = chips && chips.length > 0
   return (
-    <div className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''}`}>
+    <div
+      onClick={onOpen}
+      className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''} ${onOpen ? 'cursor-pointer active:bg-white/5' : ''}`}
+    >
       <div className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm leading-none ${emoji ? 'bg-white/5' : 'bg-muted'}${hasChips ? ' mt-0.5' : ''}`}>
         {emoji ?? ''}
       </div>
@@ -44,7 +48,8 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
         <button
           type="button"
           className="shrink-0 p-1.5 text-white/35 self-center hover:text-white/70 transition-colors"
-          onMouseDown={e => { e.preventDefault(); onSubmit?.() }}
+          onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onSubmit?.() }}
+          onClick={e => e.stopPropagation()}
           aria-label="Add task"
         >
           <Plus size={16} />
@@ -53,7 +58,8 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
         <button
           type="button"
           className="shrink-0 p-1.5 rounded-md text-white/35 hover:text-white/80 hover:bg-white/10 transition-colors self-center"
-          onMouseDown={e => { e.preventDefault(); onCopy?.(name) }}
+          onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onCopy?.(name) }}
+          onClick={e => e.stopPropagation()}
           aria-label="Copy to input"
         >
           <ArrowDownLeft size={16} />

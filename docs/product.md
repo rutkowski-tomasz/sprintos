@@ -102,6 +102,7 @@ The command bar is a persistent input at the bottom of the screen. On mobile, it
 
 While the command bar is focused:
 - **Matching/recent tasks** take over the full page content area (not a floating overlay) — replacing the current view for the duration of the search.
+- Tapping a matching-task row navigates to that task's detail page (`/sprint/<key>/<taskId>` for sprint-assigned tasks) and closes the search. The trailing icon button (copy-to-input arrow) still copies the title into the command bar for a similar new task, and stops the row's navigation.
 - **Task preview** (the task about to be created, plus the emoji/duration suggestion row) stays as a floating card anchored just above the input, matching the old overlay style. It is collapsible/expandable via a header toggle, so the user can dismiss it to search undistracted without losing their typed input.
 
 ---
@@ -194,8 +195,10 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 
 #### Sprint
 
-- Never parsed from input. Always inherited from the active view context.
+- Defaults to the active view context; a recognized sprint token in the input overrides it.
 - Planning view exception: new tasks default to unassigned (`sprint = null`).
+- Token formats: `S01` (week-only, resolves to the nearest current-or-future sprint with that week number), `Q203` (quarter+week, same nearest-upcoming resolution), `26Q103` (exact year+quarter+week). Case-insensitive.
+- Keyword shorthand: `scurrent`, `snext`, `sprevious`, `sfuture` (two sprints ahead), `spast` (two sprints behind) — resolved relative to today, same offsets as the `/current` `/next` `/previous` `/future` `/past` commands.
 
 #### Goal
 
@@ -273,7 +276,7 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 - **Swipe left**: Opens the quick-snooze bottom sheet
 - **Tap** a row: opens the task detail page
 - **Hold** a row: enters multi-select mode with that row selected
-- **Swipe the sprint header right → left**: navigate to the next sprint; **left → right**: navigate to the previous sprint. Drag under the distance/velocity threshold snaps back with no navigation.
+- **Swipe the sprint header right → left**: navigate to the next sprint; **left → right**: navigate to the previous sprint. While dragging, a chevron plus "Go to Sprint NN" label fades in on the revealed edge, brightening from muted gray to purple as the drag crosses the threshold. Drag under the distance/velocity threshold snaps back with no navigation.
 
 ### Task Detail
 - A routed page (`/sprint/:key/:taskId`), not a modal — deep-linkable, back button and swipe-from-left-edge both navigate to the list.

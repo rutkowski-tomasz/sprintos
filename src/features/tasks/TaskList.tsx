@@ -1,19 +1,22 @@
-import { useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import { useMemo, useState, type RefObject } from 'react'
+import { AnimatePresence, motion, useTransform } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ListChecks, ArrowRightLeft } from 'lucide-react'
 import { db } from '@/lib/db'
+import { useNow } from '@/lib/useNow'
 import { Button } from '@/components/ui/button'
 import { TaskRow } from './TaskRow'
 import { MassStatusSheet } from './MassStatusSheet'
 import { MassMoveSheet } from './MassMoveSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
+import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSE_RANGE } from '@/features/navigation/sprintHeaderCollapse'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 interface TaskListProps {
   tasks: Task[]
   basePath: string
+  scrollContainerRef?: RefObject<HTMLDivElement | null>
 }
 
 const STATUS_RANK: Record<TaskStatus, number> = {
@@ -33,7 +36,7 @@ function compareTasks(a: Task, b: Task): number {
   return 0
 }
 
-export function TaskList({ tasks, basePath }: TaskListProps) {
+export function TaskList({ tasks, basePath, scrollContainerRef }: TaskListProps) {
   const navigate = useNavigate()
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -41,7 +44,9 @@ export function TaskList({ tasks, basePath }: TaskListProps) {
     [] as Goal[],
   )
   const [showSnoozed, setShowSnoozed] = useState(false)
-  const now = useMemo(() => new Date(), [])
+  const now = useNow()
+  const collapseT = useSprintCollapseT(scrollContainerRef)
+  const toolbarTop = useTransform(collapseT, t => EXPANDED_HEIGHT - t * COLLAPSE_RANGE)
 
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -101,33 +106,41 @@ export function TaskList({ tasks, basePath }: TaskListProps) {
   return (
     <div className="border-t border-border">
       {selectMode && (
-        <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background px-3 py-2">
-          <Button variant="ghost" size="icon-sm" onClick={exitSelectMode}>
-            <ArrowLeft />
-          </Button>
-          <span className="text-sm font-medium flex-1">{selectedIds.size} selected</span>
-          <Button variant="ghost" size="sm" onClick={allSelected ? exitSelectMode : selectAll}>
-            {allSelected ? 'Deselect all' : 'Select all'}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={selectedIds.size === 0}
-            aria-label="Change status"
-            onClick={() => setMassStatusOpen(true)}
+        <>
+          <div className="flex items-center gap-2 border-b border-border px-3 py-2 opacity-0 pointer-events-none" aria-hidden="true">
+            <Button variant="ghost" size="icon-sm"><ArrowLeft /></Button>
+          </div>
+          <motion.div
+            style={{ top: toolbarTop }}
+            className="absolute left-0 right-0 z-20 flex items-center gap-2 border-b border-border bg-background px-3 py-2"
           >
-            <ListChecks />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={selectedIds.size === 0}
-            aria-label="Move"
-            onClick={() => setMassMoveOpen(true)}
-          >
-            <ArrowRightLeft />
-          </Button>
-        </div>
+            <Button variant="ghost" size="icon-sm" onClick={exitSelectMode}>
+              <ArrowLeft />
+            </Button>
+            <span className="text-sm font-medium flex-1">{selectedIds.size} selected</span>
+            <Button variant="ghost" size="sm" onClick={allSelected ? exitSelectMode : selectAll}>
+              {allSelected ? 'Deselect all' : 'Select all'}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={selectedIds.size === 0}
+              aria-label="Change status"
+              onClick={() => setMassStatusOpen(true)}
+            >
+              <ListChecks />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={selectedIds.size === 0}
+              aria-label="Move"
+              onClick={() => setMassMoveOpen(true)}
+            >
+              <ArrowRightLeft />
+            </Button>
+          </motion.div>
+        </>
       )}
 
       <AnimatePresence initial={false}>

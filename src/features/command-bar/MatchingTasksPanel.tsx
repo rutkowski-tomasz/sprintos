@@ -9,6 +9,7 @@ import { formatSprintKey } from '@/features/properties/sprint/sprintDef'
 interface MatchingTasksPanelProps {
   inputValue: string
   onCopy: (text: string) => void
+  onOpen: (task: Task) => void
 }
 
 function timeAgo(dateStr: string): string {
@@ -29,7 +30,7 @@ function taskSubtitle(task: Task): string {
 
 const ROW_ANIM = { initial: { opacity: 0, y: -8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 }, transition: { type: 'spring' as const, stiffness: 420, damping: 36 } }
 
-export function MatchingTasksPanel({ inputValue, onCopy }: MatchingTasksPanelProps) {
+export function MatchingTasksPanel({ inputValue, onCopy, onOpen }: MatchingTasksPanelProps) {
   const tasks = useLiveQuery(async () => {
     const all = await db.tasks.filter(t => t.deletedAt === null).toArray()
     all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -64,6 +65,7 @@ export function MatchingTasksPanel({ inputValue, onCopy }: MatchingTasksPanelPro
                   status={task.status}
                   chips={buildTaskChips(task)}
                   onCopy={onCopy}
+                  onOpen={() => onOpen(task)}
                 />
               </motion.div>
             ))}

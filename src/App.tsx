@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Navigate, Route, Routes, useLocation, useRoutes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate, useRoutes } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
@@ -10,6 +10,7 @@ import { MatchingTasksPanel } from '@/features/command-bar/MatchingTasksPanel'
 import { SprintView } from '@/views/SprintView'
 import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
+import type { Task } from '@/types'
 
 const ROUTE_ORDER = ['/sprint/current', '/sprint/next', '/backlog']
 
@@ -58,6 +59,14 @@ function AppShell() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const commandBarRef = useRef<CommandBarHandle>(null)
+  const navigate = useNavigate()
+
+  function openTaskDetail(task: Task) {
+    const path = task.sprint ? `/sprint/${task.sprint.replace(/ /g, '-')}/${task.id}` : '/backlog'
+    navigate(path)
+    setSearchFocused(false)
+    commandBarRef.current?.close()
+  }
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -81,6 +90,7 @@ function AppShell() {
               <MatchingTasksPanel
                 inputValue={inputValue}
                 onCopy={text => commandBarRef.current?.setValue(text)}
+                onOpen={openTaskDetail}
               />
             )}
           </AnimatePresence>
