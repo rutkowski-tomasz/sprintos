@@ -61,7 +61,7 @@ function AppShell() {
     <div className="flex h-dvh">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-        <main className="flex-1 relative overflow-hidden min-h-0">
+        <main className="flex-1 relative overflow-hidden min-h-0 pt-safe">
           <AnimatedContent />
           <AnimatePresence>
             {searchFocused && (
