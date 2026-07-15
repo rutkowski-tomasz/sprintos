@@ -6,7 +6,7 @@ import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/statusD
 interface TaskResultRowProps {
   emoji?: string
   name: string
-  subtitle?: string
+  subtitle?: ReactNode
   status: TaskStatus
   chips?: ReactNode[]
   isPreview?: boolean
@@ -41,7 +41,7 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
         <span className={`text-xs px-2.5 py-0.5 rounded-full border ${STATUS_BADGE[status]}`}>
           {STATUS_LABEL[status]}
         </span>
-        {subtitle && <p className="text-[11px] text-white/40">{subtitle}</p>}
+        {subtitle && <div className="text-[11px] text-white/40">{subtitle}</div>}
       </div>
 
       {isPreview ? (

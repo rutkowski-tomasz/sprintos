@@ -8,12 +8,12 @@ export const SPRINT_LABEL_TEXT: Record<SprintLabel, string> = {
   past: 'Past',
 }
 
-export const SPRINT_LABEL_BADGE_CLASS: Record<SprintLabel, string> = {
-  current: 'bg-blue-500/15 text-blue-400 border-transparent',
-  next: 'bg-purple-500/15 text-purple-400 border-transparent',
-  future: 'bg-zinc-500/15 text-zinc-400 border-transparent',
-  previous: 'bg-amber-500/15 text-amber-400 border-transparent',
-  past: 'bg-zinc-400/10 text-zinc-500 border-transparent',
+export const SPRINT_LABEL_COLOR: Record<SprintLabel, string> = {
+  current: '#60a5fa',
+  next: '#c084fc',
+  previous: '#fbbf24',
+  future: '#a1a1aa',
+  past: '#71717a',
 }
 
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
@@ -92,6 +92,11 @@ export function sprintDateRange(key: string): { start: Date; end: Date } {
   const end = new Date(start)
   end.setDate(end.getDate() + 6)
   return { start, end }
+}
+
+export function sprintWeekNumber(key: string): string {
+  const m = key.match(/^(\d+) Q(\d) (\d+)$/)
+  return m ? m[3].padStart(2, '0') : key
 }
 
 export function sprintKeyAdjacent(key: string, weekOffset: number): string {

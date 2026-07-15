@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
 import { ChevronDown } from 'lucide-react'
@@ -8,7 +8,8 @@ import type { ParseResult } from './taskInputParser'
 import { CommandSuggestion } from './CommandSuggestion'
 import type { SuggestionItem } from './CommandSuggestion'
 import { buildPreviewChips } from './taskChips'
-import { sprintKeyFromRouteParam, formatSprintKey } from '@/features/properties/sprint/sprintDef'
+import { sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
+import { SprintChip } from '@/features/properties/sprint/SprintChip'
 
 interface TaskPreviewCardProps {
   parsed: ParseResult
@@ -16,13 +17,13 @@ interface TaskPreviewCardProps {
   onSubmit: () => void
 }
 
-function sprintLabel(pathname: string, parsedSprintKey?: string): string | null {
+function sprintPreview(pathname: string, parsedSprintKey?: string): ReactNode | null {
   const now = new Date()
-  if (parsedSprintKey) return `Sprint ${formatSprintKey(parsedSprintKey, now)}`
-  if (pathname === '/backlog') return 'Backlog'
+  if (parsedSprintKey) return <SprintChip sprint={parsedSprintKey} now={now} />
+  if (pathname === '/backlog') return <SprintChip sprint={null} now={now} />
   const m = pathname.match(/^\/sprint\/(.+)$/)
   if (!m) return null
-  return `Sprint ${formatSprintKey(sprintKeyFromRouteParam(m[1], now), now)}`
+  return <SprintChip sprint={sprintKeyFromRouteParam(m[1], now)} now={now} />
 }
 
 export function TaskPreviewCard({ parsed, suggestions, onSubmit }: TaskPreviewCardProps) {
@@ -59,7 +60,7 @@ export function TaskPreviewCard({ parsed, suggestions, onSubmit }: TaskPreviewCa
             <TaskResultRow
               emoji={parsed.emoji?.value ?? undefined}
               name={parsed.title || 'Untitled'}
-              subtitle={sprintLabel(location.pathname, parsed.sprintKey?.value) ?? undefined}
+              subtitle={sprintPreview(location.pathname, parsed.sprintKey?.value) ?? undefined}
               status={(parsed.status?.value ?? TaskStatus.TODO) as TaskStatus}
               chips={buildPreviewChips(parsed)}
               isPreview

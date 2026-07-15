@@ -1,17 +1,12 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Moon, ArrowRight } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { updateTask } from '@/features/tasks/taskActions'
 import type { Task } from '@/types'
 import { defaultCustomDateTime, isWithinCurrentSprint, SNOOZE_OPTIONS, formatSnoozeOptionDate } from './snoozeDef'
-import {
-  classifySprintKey,
-  formatSprintKey,
-  sprintKey,
-  SPRINT_LABEL_BADGE_CLASS,
-} from '@/features/properties/sprint/sprintDef'
+import { sprintKey } from '@/features/properties/sprint/sprintDef'
+import { SprintChip } from '@/features/properties/sprint/SprintChip'
 
 interface RescheduleSheetProps {
   task: Task
@@ -23,11 +18,11 @@ interface RescheduleSheetProps {
 function SprintMoveNote({ date, task, now }: { date: Date; task: Task; now: Date }) {
   const targetKey = sprintKey(date)
   if (!task.sprint || targetKey === task.sprint) return null
-  const badge = classifySprintKey(targetKey, now)
   return (
-    <Badge className={`${SPRINT_LABEL_BADGE_CLASS[badge]} text-[10px] shrink-0`}>
-      Moves to Sprint {formatSprintKey(targetKey, now)}
-    </Badge>
+    <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground shrink-0">
+      Moves to
+      <SprintChip sprint={targetKey} now={now} />
+    </span>
   )
 }
 
@@ -76,12 +71,12 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
   const moveOptions = snoozeOptions.filter(option => option.movesSprint)
   const pureSnoozeOptions = snoozeOptions.filter(option => !option.movesSprint)
 
-  const customLabel = snoozeOnly
+  const customLabel: ReactNode = snoozeOnly
     ? 'Snooze'
     : customDateObj
       ? isWithinCurrentSprint(customDateObj, now)
         ? 'Snooze'
-        : `Move to Sprint ${formatSprintKey(sprintKey(customDateObj), now)}`
+        : <span className="flex items-center gap-1.5">Move to <SprintChip sprint={sprintKey(customDateObj)} now={now} /></span>
       : 'Set snooze'
 
   return (
@@ -125,11 +120,9 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                   >
                     <span className="flex items-center gap-2.5">
                       <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
-                      <span className="flex flex-col">
+                      <span className="flex flex-col gap-0.5">
                         <span>{option.label}</span>
-                        <span className="text-xs text-muted-foreground">
-                          Sprint {formatSprintKey(sprintKey(date), now)}
-                        </span>
+                        <SprintChip sprint={sprintKey(date)} now={now} />
                       </span>
                     </span>
                   </button>
@@ -141,8 +134,8 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
               >
                 <span className="flex items-center gap-2.5">
                   <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col">
-                    <span>Backlog</span>
+                  <span className="flex flex-col gap-0.5">
+                    <SprintChip sprint={null} now={now} />
                     <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>
                   </span>
                 </span>

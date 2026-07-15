@@ -68,6 +68,10 @@ Full form always available as a tooltip. Omit context that matches today:
 | `26 Q3` | `Q3` | `Q3` |
 | `26 Q2 11` | `Q2 11` | `11` |
 
+### Sprint Chip
+
+Every on-screen reference to a task's `sprint` renders through `SprintChip` (`src/features/properties/sprint/SprintChip.tsx`) — no other component formats a sprint value directly. Format: `Sprint {display} · {relative label}` (e.g. `Sprint 01 · current`, `Sprint Q2 01 · future`, `Sprint 27 Q1 01 · future`), relative label lowercase (`current` / `next` / `future` / `previous` / `past`). If `sprint` is `null`, renders a `muted` chip reading `Backlog`. Color is keyed by relative label via `SPRINT_LABEL_COLOR` (`sprintDef.ts`) — the same map colors the `ViewHeader` hero's `SprintBadge`, so the two visual treatments always agree. The `ViewHeader` hero (giant week number, vertical "SPRINT" label, swipe indicators) is a distinct, intentionally larger navigational treatment and does not use `SprintChip`, but shares its underlying `formatSprintKey`/`classifySprintKey`/`sprintWeekNumber` parsing so the data never drifts.
+
 ## UX Rules
 
 ### General
@@ -251,9 +255,9 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 - Snoozed tasks are fully interactive while visible — no need to un-snooze before acting.
 - The "Reschedule" sheet (`RescheduleSheet`, swipe left) covers two distinct actions grouped under headers with a leading icon (moon for snooze, arrow for sprint move): **Snooze** (hide until a time, same sprint) and **Move to sprint** (reassign the task's `sprint`).
 - Snooze options: Evening (18:00), Tomorrow (08:00), Day after tomorrow (08:00). Each is only offered while its resolved date stays within the current sprint — once it would cross into the next sprint, it's dropped in favor of the move options below.
-- Move options: Next sprint / Future sprint (Saturday 08:00 of the following/following-following sprint; subtext shows the target sprint key, e.g. "Sprint 03"), Backlog (clears both `sprint` and `snooze`, unassigning the task entirely).
-- Custom uses a single native `datetime-local` input, defaulting to tomorrow 08:00. It performs exactly one action based on the chosen date: if it falls within the current sprint it snoozes; otherwise it moves the task's `sprint` to match (clearing `snooze`, no dual snooze+move). The submit button's label reflects which action will run (e.g. "Snooze" vs "Move to Sprint 04").
-- Preset options (not custom) that cross into a different sprint than the task's current one show a "Moves to Sprint 03" badge and set `sprint` and `snooze` together when selected.
+- Move options: Next sprint / Future sprint (Saturday 08:00 of the following/following-following sprint; subtext shows the target sprint as a `SprintChip`), Backlog (clears both `sprint` and `snooze`, unassigning the task entirely, shown via `SprintChip` with `sprint={null}`).
+- Custom uses a single native `datetime-local` input, defaulting to tomorrow 08:00. It performs exactly one action based on the chosen date: if it falls within the current sprint it snoozes; otherwise it moves the task's `sprint` to match (clearing `snooze`, no dual snooze+move). The submit button's label reflects which action will run (e.g. "Snooze" vs "Move to" + a `SprintChip`).
+- Preset options (not custom) that cross into a different sprint than the task's current one show a "Moves to" + `SprintChip` note and set `sprint` and `snooze` together when selected.
 
 ### Duplication (Cmd+D)
 

@@ -8,6 +8,7 @@ import {
   classifySprintKey,
   sprintDateRange,
   sprintKeyAdjacent,
+  sprintWeekNumber,
   type SprintLabel,
 } from '@/features/properties/sprint/sprintDef'
 import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
@@ -176,13 +177,13 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
     )
   }
 
-  const sprintNum = sprintKey.match(/(\d+)$/)?.[1]?.padStart(2, '0')
+  const sprintNum = sprintWeekNumber(sprintKey)
   const label = classifySprintKey(sprintKey, now)
   const { start, end } = sprintDateRange(sprintKey)
   const timingText = sprintTimingText(label, start, end, now)
 
-  const prevTargetNum = sprintKeyAdjacent(sprintKey, -1).match(/(\d+)$/)?.[1]?.padStart(2, '0')
-  const nextTargetNum = sprintKeyAdjacent(sprintKey, 1).match(/(\d+)$/)?.[1]?.padStart(2, '0')
+  const prevTargetNum = sprintWeekNumber(sprintKeyAdjacent(sprintKey, -1))
+  const nextTargetNum = sprintWeekNumber(sprintKeyAdjacent(sprintKey, 1))
 
   return (
     <div className="relative shrink-0" style={{ height: COLLAPSED_HEIGHT }}>

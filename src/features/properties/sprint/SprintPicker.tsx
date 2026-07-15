@@ -1,16 +1,12 @@
 import { useMemo, useRef, useState } from 'react'
-import { Badge } from '@/components/ui/badge'
 import { SearchableDropdown } from '@/components/ui/searchable-dropdown'
 import {
   classifySprintKey,
   compareSprintKeys,
   formatSprintKey,
   generateSprintKeys,
-  SPRINT_LABEL_BADGE_CLASS,
-  SPRINT_LABEL_TEXT,
   sprintDateRange,
   sprintKeyOffset,
-  type SprintLabel,
 } from './sprintDef'
 import { updateTask } from '@/features/tasks/taskActions'
 import { SprintChip } from './SprintChip'
@@ -18,7 +14,7 @@ import type { Task } from '@/types'
 
 type SprintOption =
   | { type: 'none' }
-  | { type: 'sprint'; key: string; display: string; badge: SprintLabel; dateRange: string }
+  | { type: 'sprint'; key: string; dateRange: string }
 
 function formatShortDate(d: Date, now: Date): string {
   const day = d.getDate()
@@ -28,13 +24,10 @@ function formatShortDate(d: Date, now: Date): string {
 }
 
 function toOption(key: string, now: Date): SprintOption & { type: 'sprint' } {
-  const badge = classifySprintKey(key, now)
   const { start, end } = sprintDateRange(key)
   return {
     type: 'sprint',
     key,
-    display: formatSprintKey(key, now),
-    badge,
     dateRange: `${formatShortDate(start, now)} – ${formatShortDate(end, now)}`,
   }
 }
@@ -102,7 +95,7 @@ export function SprintPicker({ task }: { task: Task }) {
   return (
     <>
       <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex">
-        {task.sprint ? <SprintChip sprint={task.sprint} now={now} /> : <span className="text-sm text-muted-foreground/30">—</span>}
+        <SprintChip sprint={task.sprint} now={now} />
       </button>
 
       {open && (
@@ -119,13 +112,10 @@ export function SprintPicker({ task }: { task: Task }) {
           height={DROPDOWN_H}
           minWidth={300}
           renderOption={option => option.type === 'none' ? (
-            <span className="text-sm text-muted-foreground">Backlog</span>
+            <SprintChip sprint={null} now={now} />
           ) : (
             <>
-              <span className="text-sm font-medium w-16 shrink-0">{option.display}</span>
-              <Badge className={`${SPRINT_LABEL_BADGE_CLASS[option.badge]} text-[10px] shrink-0`}>
-                {SPRINT_LABEL_TEXT[option.badge]}
-              </Badge>
+              <SprintChip sprint={option.key} now={now} />
               <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap pl-3">
                 {option.dateRange}
               </span>

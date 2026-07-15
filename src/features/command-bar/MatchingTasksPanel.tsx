@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, AnimatePresence } from 'motion/react'
 import { db } from '@/lib/db'
 import type { Task } from '@/types'
 import { TaskResultRow } from './TaskResultRow'
 import { buildTaskChips } from './taskChips'
-import { formatSprintKey } from '@/features/properties/sprint/sprintDef'
+import { SprintChip } from '@/features/properties/sprint/SprintChip'
 
 interface MatchingTasksPanelProps {
   inputValue: string
@@ -21,11 +22,13 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
-function taskSubtitle(task: Task): string {
-  const parts: string[] = []
-  if (task.sprint) parts.push(`Sprint ${formatSprintKey(task.sprint, new Date())}`)
-  parts.push(timeAgo(task.updatedAt))
-  return parts.join(' · ')
+function taskSubtitle(task: Task): ReactNode {
+  return (
+    <span className="flex items-center gap-1.5">
+      <SprintChip sprint={task.sprint} now={new Date()} />
+      <span>{timeAgo(task.updatedAt)}</span>
+    </span>
+  )
 }
 
 const ROW_ANIM = { initial: { opacity: 0, y: -8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -4 }, transition: { type: 'spring' as const, stiffness: 420, damping: 36 } }
