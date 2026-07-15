@@ -1,7 +1,24 @@
+import type { Task } from '@/types'
+
 export interface SnoozeOption {
   key: string
   label: string
   getDate: (now: Date) => Date
+}
+
+export function resolveSnoozeDate(task: Pick<Task, 'snooze' | 'eventDate'>): Date | null {
+  if (!task.snooze) return null
+  if (task.snooze.startsWith('-')) {
+    if (!task.eventDate) return null
+    const offsetMs = Math.abs(parseInt(task.snooze.slice(1))) * 1000
+    return new Date(new Date(task.eventDate).getTime() - offsetMs)
+  }
+  return new Date(task.snooze)
+}
+
+export function isSnoozed(task: Pick<Task, 'snooze' | 'eventDate'>, now: Date): boolean {
+  const date = resolveSnoozeDate(task)
+  return date !== null && date > now
 }
 
 function nextWeekday(now: Date, target: number): Date {
