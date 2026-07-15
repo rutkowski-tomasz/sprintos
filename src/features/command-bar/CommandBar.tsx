@@ -7,8 +7,9 @@ import type { ParseResult } from './taskInputParser'
 import { sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
 import { buildHighlightSegments } from './highlight'
 import { useSession } from '@/features/auth/useSession'
-import { addTask, findSimilarTask } from '@/features/tasks/taskActions'
+import { addTask, findSimilarTasks } from '@/features/tasks/taskActions'
 import { searchEmojis } from './emojiSearch'
+import { EMPTY_SUGGESTIONS, suggestDurations, suggestEventDates, type SimilarTaskSuggestions } from './similarTaskSuggestions'
 import { TaskStatus, type Goal } from '@/types'
 
 const SPRINT_PARAM_PLACEHOLDER: Record<string, string> = {
@@ -35,7 +36,7 @@ interface CommandBarProps {
   onFocusChange: (focused: boolean) => void
   onInputChange?: (value: string) => void
   onParsedChange?: (parsed: ParseResult | null) => void
-  onSuggestionsChange?: (emojis: string[]) => void
+  onSuggestionsChange?: (suggestions: SimilarTaskSuggestions) => void
 }
 
 function sprintForPath(pathname: string): string | null {
@@ -80,7 +81,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       onInputChange?.(text)
       setPlaceholderVisible(!text)
       if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
-      onSuggestionsChange?.([])
+      onSuggestionsChange?.(EMPTY_SUGGESTIONS)
       if (text) {
         const goal = findGoalForInput(text, goals)
         const p = parse(text, new Date(), goal?.id, goal?.name)
@@ -191,14 +192,17 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
     if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
-        const task = await findSimilarTask(val.trim())
-        const taskEmoji = task?.emoji ?? null
+        const similar = await findSimilarTasks(val.trim(), 5)
+        const top = similar[0] ?? null
+        const taskEmoji = top?.emoji ?? null
         const libEmojis = searchEmojis(parsed.title ?? val.trim())
-        const combined = [...new Set([...(taskEmoji ? [taskEmoji] : []), ...libEmojis])]
-        onSuggestionsChange?.(combined)
+        const emojis = [...new Set([...(taskEmoji ? [taskEmoji] : []), ...libEmojis])]
+        const durations = parsed.duration ? [] : suggestDurations(similar)
+        const eventDates = parsed.eventDate ? [] : suggestEventDates(similar)
+        onSuggestionsChange?.({ emojis, durations, eventDates })
       }, 400)
     } else {
-      onSuggestionsChange?.([])
+      onSuggestionsChange?.(EMPTY_SUGGESTIONS)
     }
   }, [onInputChange, onSuggestionsChange, setPlaceholderVisible, goals])
 
@@ -206,7 +210,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     e.preventDefault()
     setInputValue('')
     onInputChange?.('')
-    onSuggestionsChange?.([])
+    onSuggestionsChange?.(EMPTY_SUGGESTIONS)
     setParsedResult(null)
     onParsedChange?.(null)
     setPlaceholderVisible(true)
@@ -219,7 +223,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (ok) {
       setInputValue('')
       onInputChange?.('')
-      onSuggestionsChange?.([])
+      onSuggestionsChange?.(EMPTY_SUGGESTIONS)
       setParsedResult(null)
       onParsedChange?.(null)
       setPlaceholderVisible(true)

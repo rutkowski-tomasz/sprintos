@@ -47,17 +47,16 @@ export async function deleteTask(id: string): Promise<void> {
   flushQueue()
 }
 
-export async function findSimilarTask(query: string): Promise<Task | null> {
+export async function findSimilarTasks(query: string, limit = 1): Promise<Task[]> {
   const vec = await embed(query)
   const tasks = await db.tasks.filter(t => t.deletedAt === null && t.embedding != null).toArray()
-  let best: Task | null = null
-  let bestScore = -Infinity
-  for (const task of tasks) {
+  const scored = tasks.map(task => {
     let dot = 0
     for (let i = 0; i < vec.length; i++) dot += vec[i] * task.embedding![i]
-    if (dot > bestScore) { bestScore = dot; best = task }
-  }
-  return best
+    return { task, score: dot }
+  })
+  scored.sort((a, b) => b.score - a.score)
+  return scored.slice(0, limit).map(s => s.task)
 }
 
 export async function duplicateTask(id: string): Promise<void> {

@@ -5,6 +5,8 @@ import { CommandBar, type CommandBarHandle } from '@/features/command-bar/Comman
 import { TaskPreviewCard } from '@/features/command-bar/TaskPreviewCard'
 import type { ParseResult } from '@/features/command-bar/taskInputParser'
 import type { SuggestionItem } from '@/features/command-bar/CommandSuggestion'
+import { EMPTY_SUGGESTIONS, formatDurationToken, type SimilarTaskSuggestions } from '@/features/command-bar/similarTaskSuggestions'
+import { formatDuration } from '@/features/properties/duration/durationDef'
 import './BottomBar.css'
 
 interface BottomBarProps {
@@ -17,7 +19,7 @@ interface BottomBarProps {
 
 export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputChange, commandBarRef }: BottomBarProps) {
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
-  const [suggestedEmojis, setSuggestedEmojis] = useState<string[]>([])
+  const [similarSuggestions, setSimilarSuggestions] = useState<SimilarTaskSuggestions>(EMPTY_SUGGESTIONS)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -33,10 +35,22 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
     return () => vv.removeEventListener('resize', update)
   }, [])
 
-  const suggestions: SuggestionItem[] = suggestedEmojis.map(emoji => ({
-    label: emoji,
-    onApply: () => commandBarRef.current?.setValue(`${emoji} ${inputValue}`),
-  }))
+  const appendToken = (token: string) => commandBarRef.current?.setValue(`${inputValue.trimEnd()} ${token}`)
+
+  const suggestions: SuggestionItem[] = [
+    ...similarSuggestions.emojis.map(emoji => ({
+      label: emoji,
+      onApply: () => commandBarRef.current?.setValue(`${emoji} ${inputValue}`),
+    })),
+    ...similarSuggestions.durations.map(seconds => ({
+      label: formatDuration(seconds),
+      onApply: () => appendToken(formatDurationToken(seconds)),
+    })),
+    ...similarSuggestions.eventDates.map(eventDate => ({
+      label: eventDate.label,
+      onApply: () => appendToken(eventDate.tokenText),
+    })),
+  ]
 
   return (
     <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`}>
@@ -55,7 +69,7 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
         onFocusChange={onFocusChange}
         onInputChange={onInputChange}
         onParsedChange={setParsedResult}
-        onSuggestionsChange={setSuggestedEmojis}
+        onSuggestionsChange={setSimilarSuggestions}
       />
     </div>
   )

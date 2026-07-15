@@ -227,6 +227,7 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 
 - Sits above the keyboard, below the preview. Fixed height, horizontal scroll.
 - Default chips (unfilled fields only): emoji suggestion (if similar past task found) · `📅 Date` · `⏱ Duration` · `🎯 Goal`
+- Emoji, Date, and Duration chips are sourced from the top similar past tasks (by title embedding). Date and Duration each surface up to 3 deduped candidates; Date resolves each candidate's weekday + time-of-day to its next upcoming occurrence (never today's/this week's if already past). Goal suggestion not yet implemented.
 - When `#` is typed, suggestion row is replaced by the goal search dropdown.
 - Accepting a suggestion inserts its raw token text into the input at cursor position. Parser picks it up naturally.
 - A field's chip is removed from the row once that field is filled.
