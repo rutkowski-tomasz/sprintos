@@ -4,10 +4,27 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { TaskRow } from './TaskRow'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
-import type { Goal, Task } from '@/types'
+import { TaskStatus, type Goal, type Task } from '@/types'
 
 interface TaskListProps {
   tasks: Task[]
+}
+
+const STATUS_RANK: Record<TaskStatus, number> = {
+  [TaskStatus.IN_PROGRESS]: 0,
+  [TaskStatus.NEXT]: 1,
+  [TaskStatus.TODO]: 2,
+  [TaskStatus.DONE]: 3,
+  [TaskStatus.ARCHIVED]: 4,
+}
+
+function compareTasks(a: Task, b: Task): number {
+  const statusDiff = STATUS_RANK[a.status] - STATUS_RANK[b.status]
+  if (statusDiff !== 0) return statusDiff
+  if (a.eventDate && b.eventDate) return a.eventDate.localeCompare(b.eventDate)
+  if (a.eventDate) return -1
+  if (b.eventDate) return 1
+  return 0
 }
 
 export function TaskList({ tasks }: TaskListProps) {
@@ -28,6 +45,8 @@ export function TaskList({ tasks }: TaskListProps) {
       if (isSnoozed(task, now)) snoozed.push(task)
       else active.push(task)
     }
+    active.sort(compareTasks)
+    snoozed.sort(compareTasks)
     return {
       visibleTasks: showSnoozed ? [...active, ...snoozed] : active,
       snoozedIds: new Set(snoozed.map(t => t.id)),
