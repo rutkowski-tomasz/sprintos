@@ -141,7 +141,7 @@ export function TaskList({ tasks, basePath }: TaskListProps) {
       {snoozedIds.size > 0 && (
         <button
           onClick={() => setShowSnoozed(v => !v)}
-          className="w-full py-3 text-center text-sm text-foreground/70 hover:text-foreground"
+          className="w-full py-3 text-center underline decoration-dashed underline-offset-2 decoration-foreground/20 text-xs text-foreground/30 hover:text-foreground active:text-foreground/50"
         >
           {showSnoozed ? `Hide snoozed tasks (${snoozedIds.size})` : `Show snoozed tasks (${snoozedIds.size})`}
         </button>
