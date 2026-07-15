@@ -31,8 +31,13 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
       const inset = Math.max(0, window.innerHeight - (vv.offsetTop + vv.height))
       el.style.transform = inset > 0 ? `translateY(-${inset}px)` : ''
     }
+    update()
     vv.addEventListener('resize', update)
-    return () => vv.removeEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
   }, [])
 
   const appendToken = (token: string) => commandBarRef.current?.setValue(`${inputValue.trimEnd()} ${token}`)
