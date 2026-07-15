@@ -2,10 +2,13 @@ import { useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'motion/react'
 import { ListChecks, Clock, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Duration } from '@/features/properties/duration/Duration'
-import { EventDate } from '@/features/properties/event-date/EventDate'
-import { Snooze } from '@/features/properties/snooze/Snooze'
+import { DurationChip } from '@/features/properties/duration/DurationChip'
+import { EventDateChip } from '@/features/properties/event-date/EventDateChip'
+import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
+import { GoalChip } from '@/features/properties/goal/GoalChip'
+import { SourceUrlChip } from '@/features/properties/url/SourceUrlChip'
+import { DescriptionChip } from '@/features/properties/description/DescriptionChip'
 import type { Goal, Task } from '@/types'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
@@ -82,7 +85,6 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
   }
 
   const goal = task.goalId ? goalMap.get(task.goalId) : null
-  const goalText = goal ? (goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name) : null
 
   return (
     <div className="relative overflow-hidden border-b border-border">
@@ -132,16 +134,17 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-sm truncate flex-1 min-w-0">{task.name}</p>
-            {task.eventDate && <EventDate date={task.eventDate} now={now} />}
-            {task.snooze && <Snooze snooze={task.snooze} now={now} />}
+            {task.eventDate && <EventDateChip date={task.eventDate} now={now} />}
+            <SnoozeChip task={task} now={now} />
           </div>
 
-          {(task.duration || goalText) && (
-            <p className="text-[11px] text-muted-foreground/50 mt-1 truncate">
-              {task.duration && <Duration seconds={task.duration} />}
-              {task.duration && goalText && ' · '}
-              {goalText}
-            </p>
+          {(task.duration || goal || task.sourceUrl || task.description) && (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {task.duration && <DurationChip seconds={task.duration} />}
+              {goal && <GoalChip goal={goal} />}
+              <SourceUrlChip url={task.sourceUrl} />
+              <DescriptionChip description={task.description} />
+            </div>
           )}
         </div>
 
@@ -151,9 +154,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
           onClick={e => e.stopPropagation()}
         >
           <StatusPicker task={task} />
-          <div className="text-[11px] text-muted-foreground/50">
-            <SprintPicker task={task} />
-          </div>
+          <SprintPicker task={task} />
         </div>
       </motion.div>
 

@@ -9,8 +9,9 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
-import { Snooze } from '@/features/properties/snooze/Snooze'
+import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
+import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { formatDuration } from '@/features/properties/duration/durationDef'
 import { updateTask } from './taskActions'
 import type { Task } from '@/types'
@@ -126,7 +127,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
             onClick={() => setRescheduleOpen(true)}
             className="flex items-center gap-2 text-left text-sm hover:text-foreground"
           >
-            {task.snooze ? <Snooze snooze={task.snooze} now={now} /> : <span className="text-muted-foreground/40">—</span>}
+            {isSnoozed(task, now) ? <SnoozeChip task={task} now={now} /> : <span className="text-muted-foreground/40">—</span>}
             <span className="text-xs text-muted-foreground">Snooze…</span>
           </button>
         </Field>

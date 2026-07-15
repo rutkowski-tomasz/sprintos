@@ -79,6 +79,7 @@ function DayTrack({ start, now }: { start: Date; now: Date }) {
       {sprintDays(start).map((day, i) => {
         const isToday = isSameDay(day, now)
         const isPast = day.getTime() < today.getTime()
+        const showMonth = i === 0 || day.getDate() === 1
         return (
           <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
             <span
@@ -97,6 +98,14 @@ function DayTrack({ start, now }: { start: Date; now: Date }) {
               )}
             >
               {day.getDate()}
+            </span>
+            <span
+              className={cn(
+                'text-[8px] font-medium uppercase tracking-wide leading-none',
+                isPast ? 'text-muted-foreground/20' : 'text-muted-foreground/50',
+              )}
+            >
+              {showMonth ? day.toLocaleString('en', { month: 'short' }) : ' '}
             </span>
           </div>
         )
@@ -138,7 +147,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const dividerHeight = useTransform(height, h => Math.max(h - 32, 0))
   const rowOuterGap = useTransform(collapseT, [0, 0.4], [12, 6])
   const dayTrackOpacity = useTransform(collapseT, [0, 0.3], [1, 0])
-  const dayTrackHeight = useTransform(collapseT, [0, 0.45], [26, 0])
+  const dayTrackHeight = useTransform(collapseT, [0, 0.45], [36, 0])
   const trailingRowGap = useTransform(collapseT, [0, 0.45], [20, 0])
   const daysLeftOpacity = useTransform(collapseT, [0.5, 0.85], [0, 1])
 

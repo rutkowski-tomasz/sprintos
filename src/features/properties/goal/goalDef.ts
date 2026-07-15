@@ -1,6 +1,11 @@
 import type { ParseHit, ParseContext, PropertyParser, Token } from '../parser'
+import type { Goal } from '@/types'
 
 export const GOAL_COLOR = '#4ade80'
+
+export function formatGoalLabel(goal: Pick<Goal, 'emoji' | 'name'>): string {
+  return goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name
+}
 
 // A `#tag` resolves to a goal only when its words match the active goal's name.
 // A matched-but-mismatched `#` is consumed (dropped from the title) without a value;

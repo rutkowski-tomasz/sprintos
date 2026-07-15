@@ -13,6 +13,7 @@ import {
   type SprintLabel,
 } from './sprintDef'
 import { updateTask } from '@/features/tasks/taskActions'
+import { SprintChip } from './SprintChip'
 import type { Task } from '@/types'
 
 type SprintOption =
@@ -98,16 +99,10 @@ export function SprintPicker({ task }: { task: Task }) {
     close()
   }
 
-  const label = task.sprint ? `Sprint ${formatSprintKey(task.sprint, now)}` : null
-
   return (
     <>
-      <button
-        ref={triggerRef}
-        onClick={() => setOpen(o => !o)}
-        className="text-sm text-muted-foreground hover:text-foreground transition-colors text-left"
-      >
-        {label ?? <span className="text-muted-foreground/30">—</span>}
+      <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex">
+        {task.sprint ? <SprintChip sprint={task.sprint} now={now} /> : <span className="text-sm text-muted-foreground/30">—</span>}
       </button>
 
       {open && (

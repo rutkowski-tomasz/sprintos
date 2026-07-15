@@ -4,6 +4,7 @@ import { SearchableDropdown } from '@/components/ui/searchable-dropdown'
 import { updateTask } from '@/features/tasks/taskActions'
 import { TaskStatus, type Task } from '@/types'
 import { STATUS_LABEL, STATUS_BADGE, ALL_STATUSES } from './statusDef'
+import { StatusChip } from './StatusChip'
 
 const DROPDOWN_H = 280
 
@@ -32,7 +33,7 @@ export function StatusPicker({ task }: { task: Task }) {
   return (
     <>
       <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex">
-        <Badge className={STATUS_BADGE[task.status]}>{STATUS_LABEL[task.status]}</Badge>
+        <StatusChip status={task.status} />
       </button>
 
       {open && (
