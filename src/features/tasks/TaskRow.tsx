@@ -1,14 +1,16 @@
+import { useState } from 'react'
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'motion/react'
-import { Check } from 'lucide-react'
-import { updateTask } from './taskActions'
+import { ListChecks, Clock } from 'lucide-react'
 import { Duration } from '@/features/properties/duration/Duration'
 import { EventDate } from '@/features/properties/event-date/EventDate'
 import { Snooze } from '@/features/properties/snooze/Snooze'
-import { TaskStatus, type Goal, type Task } from '@/types'
+import { SnoozeSheet } from '@/features/properties/snooze/SnoozeSheet'
+import type { Goal, Task } from '@/types'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
+import { StatusSheet } from '@/features/properties/status/StatusSheet'
 
-const DONE_THRESHOLD = 80
+const SWIPE_THRESHOLD = 80
 
 interface TaskRowProps {
   task: Task
@@ -17,10 +19,14 @@ interface TaskRowProps {
 
 export function TaskRow({ task, goalMap }: TaskRowProps) {
   const x = useMotionValue(0)
-  const rightBgOpacity = useTransform(x, [0, DONE_THRESHOLD], [0, 1])
+  const rightBgOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
+  const leftBgOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
+  const [statusSheetOpen, setStatusSheetOpen] = useState(false)
+  const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false)
 
   function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
-    if (info.offset.x > DONE_THRESHOLD) void updateTask(task.id, { status: TaskStatus.DONE })
+    if (info.offset.x > SWIPE_THRESHOLD) setStatusSheetOpen(true)
+    else if (info.offset.x < -SWIPE_THRESHOLD) setSnoozeSheetOpen(true)
     animate(x, 0, { type: 'spring', stiffness: 400, damping: 35 })
   }
 
@@ -33,7 +39,14 @@ export function TaskRow({ task, goalMap }: TaskRowProps) {
         className="absolute inset-0 flex items-center px-5 bg-emerald-500"
         style={{ opacity: rightBgOpacity }}
       >
-        <Check className="text-white" size={22} strokeWidth={2.5} />
+        <ListChecks className="text-white" size={22} strokeWidth={2.5} />
+      </motion.div>
+
+      <motion.div
+        className="absolute inset-0 flex items-center justify-end px-5 bg-indigo-500"
+        style={{ opacity: leftBgOpacity }}
+      >
+        <Clock className="text-white" size={22} strokeWidth={2.5} />
       </motion.div>
 
       <motion.div
@@ -71,6 +84,9 @@ export function TaskRow({ task, goalMap }: TaskRowProps) {
           </div>
         </div>
       </motion.div>
+
+      <StatusSheet task={task} open={statusSheetOpen} onOpenChange={setStatusSheetOpen} />
+      <SnoozeSheet task={task} open={snoozeSheetOpen} onOpenChange={setSnoozeSheetOpen} />
     </div>
   )
 }

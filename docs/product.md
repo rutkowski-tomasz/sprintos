@@ -239,6 +239,9 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 ### Snooze
 - Global **Show Snoozed** toggle. Snoozed tasks appear ghosted (reduced opacity).
 - Snoozed tasks are fully interactive while visible — no need to un-snooze before acting.
+- Quick-snooze options: Evening (18:00), Tomorrow (08:00), Day after tomorrow (08:00), Weekend (Saturday 08:00), Next week (Monday 08:00). Each shows its resolved weekday + time as muted subtext.
+- Custom snooze uses native date + time inputs for any date/time.
+- If the resolved snooze date falls in a sprint different from the task's currently assigned sprint, the option is flagged (e.g. "Moves to Sprint 03") and selecting it reassigns the task's `sprint` field to match.
 
 ### Duplication (Cmd+D)
 
@@ -256,8 +259,8 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 | 1–4 | Set status |
 
 ### Mobile Gestures
-- **Swipe right**: Mark Done
-- **Swipe left**: Quick-snooze menu
+- **Swipe right**: Opens a bottom sheet to change status (all statuses listed, current one checked)
+- **Swipe left**: Opens the quick-snooze bottom sheet
 
 ### Animation & Native Feel
 
