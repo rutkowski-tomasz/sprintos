@@ -17,11 +17,11 @@ export function TaskList({ tasks }: TaskListProps) {
     [] as Goal[],
   )
   const [showSnoozed, setShowSnoozed] = useState(false)
+  const now = useMemo(() => new Date(), [])
 
   const goalMap = useMemo(() => new Map(goals.map(g => [g.id, g])), [goals])
 
   const { visibleTasks, snoozedIds } = useMemo(() => {
-    const now = new Date()
     const active: Task[] = []
     const snoozed: Task[] = []
     for (const task of tasks) {
@@ -32,7 +32,7 @@ export function TaskList({ tasks }: TaskListProps) {
       visibleTasks: showSnoozed ? [...active, ...snoozed] : active,
       snoozedIds: new Set(snoozed.map(t => t.id)),
     }
-  }, [tasks, showSnoozed])
+  }, [tasks, showSnoozed, now])
 
   if (!tasks.length) {
     return <p className="text-sm text-muted-foreground text-center py-8">No tasks.</p>
@@ -52,7 +52,7 @@ export function TaskList({ tasks }: TaskListProps) {
               transition={{ type: 'spring', stiffness: 420, damping: 36 }}
               style={{ overflow: 'hidden' }}
             >
-              <TaskRow task={task} goalMap={goalMap} />
+              <TaskRow task={task} goalMap={goalMap} now={now} />
             </motion.div>
           )
         })}

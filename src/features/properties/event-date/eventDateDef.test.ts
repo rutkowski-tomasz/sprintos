@@ -10,6 +10,9 @@ describe('formatEventDate', () => {
 })
 
 describe('formatEventDateShort', () => {
-  it('day and short month at midnight', () => expect(formatEventDateShort(iso(2026, 5, 10))).toBe('10 Jun'))
-  it('appends zero-padded 24h time', () => expect(formatEventDateShort(iso(2026, 5, 10, 9, 5))).toBe('10 Jun 09:05'))
+  const now = new Date(2026, 5, 10, 8, 0) // Wed, Jun 10 2026
+  it('delegates to the shared relative date label', () =>
+    expect(formatEventDateShort(iso(2026, 5, 11, 9, 5), now)).toBe('Tomorrow, 09:05'))
+  it('falls back to day + short month beyond the week window', () =>
+    expect(formatEventDateShort(iso(2026, 5, 20), now)).toBe('20 Jun'))
 })

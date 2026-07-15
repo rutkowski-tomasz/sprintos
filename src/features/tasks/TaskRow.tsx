@@ -15,9 +15,10 @@ const SWIPE_THRESHOLD = 80
 interface TaskRowProps {
   task: Task
   goalMap: Map<string, Goal>
+  now: Date
 }
 
-export function TaskRow({ task, goalMap }: TaskRowProps) {
+export function TaskRow({ task, goalMap, now }: TaskRowProps) {
   const x = useMotionValue(0)
   const rightBgOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
   const leftBgOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
@@ -61,8 +62,8 @@ export function TaskRow({ task, goalMap }: TaskRowProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 min-w-0">
             <p className="text-sm truncate flex-1 min-w-0">{task.name}</p>
-            {task.eventDate && <EventDate date={task.eventDate} />}
-            {task.snooze && <Snooze snooze={task.snooze} />}
+            {task.eventDate && <EventDate date={task.eventDate} now={now} />}
+            {task.snooze && <Snooze snooze={task.snooze} now={now} />}
           </div>
 
           {(task.duration || goalText) && (

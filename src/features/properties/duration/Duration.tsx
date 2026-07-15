@@ -1,5 +1,5 @@
-import { formatDurationClock } from './durationDef'
+import { formatDuration } from './durationDef'
 
 export function Duration({ seconds }: { seconds: number }) {
-  return <span>{formatDurationClock(seconds)}</span>
+  return <span>{formatDuration(seconds)}</span>
 }

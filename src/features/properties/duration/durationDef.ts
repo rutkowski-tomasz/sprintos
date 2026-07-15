@@ -5,19 +5,9 @@ export const DURATION_COLOR = '#2dd4bf'
 export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)
-  if (h && m) return `${h}h ${m}m`
+  if (h && m) return `${h}h${m}m`
   if (h) return `${h}h`
   return `${m}m`
-}
-
-export function formatDurationClock(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  const mm = String(m).padStart(2, '0')
-  const ss = String(s).padStart(2, '0')
-  if (h) return `${String(h).padStart(2, '0')}:${mm}:${ss}`
-  return `${mm}:${ss}`
 }
 
 const DURATION_RE = /^(\d+(?:\.\d+)?h)?(\d+m)?$/i

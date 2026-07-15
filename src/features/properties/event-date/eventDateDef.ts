@@ -1,4 +1,5 @@
 import type { ParseHit, PropertyParser, ParseContext, Token } from '../parser'
+import { formatDateLabel } from '@/lib/dateLabel'
 
 export const EVENT_DATE_COLOR = '#818cf8'
 
@@ -12,12 +13,8 @@ export function formatEventDate(iso: string): string {
   return d.toLocaleDateString('en-US', opts)
 }
 
-export function formatEventDateShort(iso: string): string {
-  const d = new Date(iso)
-  const day = d.getDate()
-  const month = d.toLocaleString('en', { month: 'short' })
-  if (d.getHours() === 0 && d.getMinutes() === 0) return `${day} ${month}`
-  return `${day} ${month} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+export function formatEventDateShort(iso: string, now: Date): string {
+  return formatDateLabel(new Date(iso), now)
 }
 
 // ─── Parsing ───────────────────────────────────────────────────────────────
