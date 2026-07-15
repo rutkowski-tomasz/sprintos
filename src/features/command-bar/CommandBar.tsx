@@ -32,6 +32,7 @@ const BASE_PLACEHOLDERS = ['Search tasks...', 'Add or search...', "What's next?"
 export interface CommandBarHandle {
   setValue: (text: string) => void
   submit: () => Promise<void>
+  focus: () => void
 }
 
 interface CommandBarProps {
@@ -105,6 +106,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       el?.focus()
     },
     submit: handleSubmit,
+    focus: () => inputRef.current?.focus(),
   }))
 
   const submit = useCallback(async (): Promise<boolean> => {

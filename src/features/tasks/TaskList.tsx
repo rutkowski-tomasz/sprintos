@@ -109,6 +109,24 @@ export function TaskList({ tasks, basePath }: TaskListProps) {
           <Button variant="ghost" size="sm" onClick={allSelected ? exitSelectMode : selectAll}>
             {allSelected ? 'Deselect all' : 'Select all'}
           </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={selectedIds.size === 0}
+            aria-label="Change status"
+            onClick={() => setMassStatusOpen(true)}
+          >
+            <ListChecks />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            disabled={selectedIds.size === 0}
+            aria-label="Move"
+            onClick={() => setMassMoveOpen(true)}
+          >
+            <ArrowRightLeft />
+          </Button>
         </div>
       )}
 
@@ -145,19 +163,6 @@ export function TaskList({ tasks, basePath }: TaskListProps) {
         >
           {showSnoozed ? `Hide snoozed tasks (${snoozedIds.size})` : `Show snoozed tasks (${snoozedIds.size})`}
         </button>
-      )}
-
-      {selectMode && selectedIds.size > 0 && (
-        <div className="sticky bottom-0 z-20 flex items-center gap-2 border-t border-border bg-background px-3 py-2">
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => setMassStatusOpen(true)}>
-            <ListChecks />
-            Change status
-          </Button>
-          <Button variant="outline" size="sm" className="flex-1" onClick={() => setMassMoveOpen(true)}>
-            <ArrowRightLeft />
-            Move
-          </Button>
-        </div>
       )}
 
       <MassStatusSheet taskIds={selectedIdList} open={massStatusOpen} onOpenChange={setMassStatusOpen} onDone={exitSelectMode} />

@@ -260,6 +260,7 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 
 | Shortcut | Action |
 |----------|--------|
+| Cmd+P / Ctrl+P | Focus the command bar input |
 | Hover → checkbox | Reveal per-row checkbox; click to select |
 | Shift + click | Select all rows between last selected and clicked |
 | Shift + ↑ / ↓ | Extend selection by one row |
@@ -272,6 +273,7 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 - **Swipe left**: Opens the quick-snooze bottom sheet
 - **Tap** a row: opens the task detail page
 - **Hold** a row: enters multi-select mode with that row selected
+- **Swipe the sprint header right → left**: navigate to the next sprint; **left → right**: navigate to the previous sprint. Drag under the distance/velocity threshold snaps back with no navigation.
 
 ### Task Detail
 - A routed page (`/sprint/:key/:taskId`), not a modal — deep-linkable, back button and swipe-from-left-edge both navigate to the list.
@@ -282,9 +284,8 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 
 ### Multi-Select (Mobile)
 - Long-press (~500ms, canceled by ~10px of movement) enters select mode; the pressed row shows a weaker highlight while the hold is registering, full highlight once selected.
-- Select-mode toolbar (top): back button (exits select mode), selection count, Select all / Deselect all toggle.
+- Select-mode toolbar (top, sticky): back button + selection count on the left; Select all / Deselect all toggle and icon buttons for **Change status** and **Move** (sprint/backlog) on the right. The mass-action icons are disabled until at least one row is selected.
 - Deselecting the last selected row exits select mode automatically, same as the back button.
-- Mass actions (bottom bar, shown while ≥1 selected): **Change status** and **Move** (sprint/backlog), applied to every selected task.
 
 ### Animation & Native Feel
 

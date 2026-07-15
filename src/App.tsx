@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useRoutes } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/features/auth/AuthPage'
@@ -58,6 +58,17 @@ function AppShell() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const commandBarRef = useRef<CommandBarHandle>(null)
+
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
+        e.preventDefault()
+        commandBarRef.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [])
 
   return (
     <div className="flex h-dvh">

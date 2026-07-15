@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, type RefObject } from 'react'
-import { motion, useMotionValue, useTransform } from 'motion/react'
+import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/features/sync/useSyncStatus'
 import {
   classifySprintKey,
   sprintDateRange,
+  sprintKeyAdjacent,
   type SprintLabel,
 } from '@/features/properties/sprint/sprintDef'
 import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
@@ -114,11 +116,26 @@ function DayTrack({ start, now }: { start: Date; now: Date }) {
   )
 }
 
+const SWIPE_OFFSET_THRESHOLD = 60
+const SWIPE_VELOCITY_THRESHOLD = 500
+
 export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHeaderProps) {
   const syncStatus = useSyncStatus()
+  const navigate = useNavigate()
   const now = useMemo(() => new Date(), [])
   const fallbackRef = useRef<HTMLDivElement>(null)
   const collapseT = useMotionValue(0)
+  const dragX = useMotionValue(0)
+
+  const handleDragEnd = (_e: PointerEvent | MouseEvent | TouchEvent, info: PanInfo) => {
+    const shouldNavigate = Math.abs(info.offset.x) > SWIPE_OFFSET_THRESHOLD || Math.abs(info.velocity.x) > SWIPE_VELOCITY_THRESHOLD
+    if (shouldNavigate && sprintKey) {
+      const weekOffset = info.offset.x > 0 ? -1 : 1
+      const target = sprintKeyAdjacent(sprintKey, weekOffset)
+      navigate(`/sprint/${target.replace(/ /g, '-')}`)
+    }
+    animate(dragX, 0, { type: 'spring', stiffness: 500, damping: 40 })
+  }
 
   useEffect(() => {
     const el = scrollContainerRef?.current ?? fallbackRef.current
@@ -177,7 +194,11 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   return (
     <div className="relative shrink-0" style={{ height: COLLAPSED_HEIGHT }}>
       <motion.div
-        style={{ height }}
+        style={{ height, x: dragX }}
+        drag="x"
+        dragElastic={0.5}
+        dragConstraints={{ left: 0, right: 0 }}
+        onDragEnd={handleDragEnd}
         className="absolute top-0 left-0 right-0 z-10 overflow-hidden border-b border-border bg-background"
       >
         <motion.span style={{ opacity: accentBarOpacity }} className="absolute left-0 top-0 bottom-0 w-1 bg-purple-500" />

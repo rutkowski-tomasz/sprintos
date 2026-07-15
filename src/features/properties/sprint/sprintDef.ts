@@ -94,6 +94,12 @@ export function sprintDateRange(key: string): { start: Date; end: Date } {
   return { start, end }
 }
 
+export function sprintKeyAdjacent(key: string, weekOffset: number): string {
+  const { start } = sprintDateRange(key)
+  start.setDate(start.getDate() + weekOffset * 7)
+  return sprintKey(start)
+}
+
 export function sprintKeyFromRouteParam(param: string, now: Date): string {
   if (param === 'current') return sprintKey(now)
   if (param === 'next') return sprintKeyOffset(now, 1)
