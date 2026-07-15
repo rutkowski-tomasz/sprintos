@@ -1,10 +1,12 @@
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useRoutes } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
 import { Sidebar } from '@/features/navigation/Sidebar'
 import { BottomBar } from '@/features/navigation/BottomBar'
+import type { CommandBarHandle } from '@/features/command-bar/CommandBar'
+import { MatchingTasksPanel } from '@/features/command-bar/MatchingTasksPanel'
 import { SprintView } from '@/views/SprintView'
 import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
@@ -51,14 +53,32 @@ function AnimatedContent() {
 }
 
 function AppShell() {
+  const [searchFocused, setSearchFocused] = useState(false)
+  const [inputValue, setInputValue] = useState('')
+  const commandBarRef = useRef<CommandBarHandle>(null)
+
   return (
     <div className="flex h-dvh">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         <main className="flex-1 relative overflow-hidden min-h-0">
           <AnimatedContent />
+          <AnimatePresence>
+            {searchFocused && (
+              <MatchingTasksPanel
+                inputValue={inputValue}
+                onCopy={text => commandBarRef.current?.setValue(text)}
+              />
+            )}
+          </AnimatePresence>
         </main>
-        <BottomBar />
+        <BottomBar
+          searchFocused={searchFocused}
+          onFocusChange={setSearchFocused}
+          inputValue={inputValue}
+          onInputChange={setInputValue}
+          commandBarRef={commandBarRef}
+        />
       </div>
     </div>
   )

@@ -1,17 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
+import type { RefObject } from 'react'
 import { NavMenu } from './NavMenu'
 import { CommandBar, type CommandBarHandle } from '@/features/command-bar/CommandBar'
-import { CommandResults } from '@/features/command-bar/CommandResults'
+import { TaskPreviewCard } from '@/features/command-bar/TaskPreviewCard'
 import type { ParseResult } from '@/features/command-bar/taskInputParser'
 import type { SuggestionItem } from '@/features/command-bar/CommandSuggestion'
 import './BottomBar.css'
 
-export function BottomBar() {
-  const [searchFocused, setSearchFocused] = useState(false)
-  const [inputValue, setInputValue] = useState('')
+interface BottomBarProps {
+  searchFocused: boolean
+  onFocusChange: (focused: boolean) => void
+  inputValue: string
+  onInputChange: (value: string) => void
+  commandBarRef: RefObject<CommandBarHandle | null>
+}
+
+export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputChange, commandBarRef }: BottomBarProps) {
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
   const [suggestedEmojis, setSuggestedEmojis] = useState<string[]>([])
-  const commandBarRef = useRef<CommandBarHandle>(null)
   const rootRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -34,13 +40,11 @@ export function BottomBar() {
 
   return (
     <div ref={rootRef} className={`bn-root${searchFocused ? ' bn-search-focused' : ''}`}>
-      {searchFocused && (
+      {searchFocused && parsedResult && (
         <div className="absolute bottom-full left-0 right-0 px-3.5 mb-1">
-          <CommandResults
-            inputValue={inputValue}
+          <TaskPreviewCard
             parsed={parsedResult}
             suggestions={suggestions}
-            onCopy={text => commandBarRef.current?.setValue(text)}
             onSubmit={() => commandBarRef.current?.submit()}
           />
         </div>
@@ -48,8 +52,8 @@ export function BottomBar() {
       <NavMenu />
       <CommandBar
         ref={commandBarRef}
-        onFocusChange={setSearchFocused}
-        onInputChange={setInputValue}
+        onFocusChange={onFocusChange}
+        onInputChange={onInputChange}
         onParsedChange={setParsedResult}
         onSuggestionsChange={setSuggestedEmojis}
       />

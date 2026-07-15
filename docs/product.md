@@ -100,10 +100,9 @@ The command bar is a persistent input at the bottom of the screen. On mobile, it
 [ ☰ ] [ command bar input                    ]
 ```
 
-Above the input (stacked from bottom up):
-1. Suggestion row
-2. Preview panel
-3. Task list / search results
+While the command bar is focused:
+- **Matching/recent tasks** take over the full page content area (not a floating overlay) — replacing the current view for the duration of the search.
+- **Task preview** (the task about to be created, plus the emoji/duration suggestion row) stays as a floating card anchored just above the input, matching the old overlay style. It is collapsible/expandable via a header toggle, so the user can dismiss it to search undistracted without losing their typed input.
 
 ---
 
