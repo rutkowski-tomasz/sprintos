@@ -18,7 +18,7 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
   const hasChips = chips && chips.length > 0
   return (
     <div className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''}`}>
-      <div className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm leading-none bg-white/5${hasChips ? ' mt-0.5' : ''}`}>
+      <div className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm leading-none ${emoji ? 'bg-white/5' : 'bg-muted'}${hasChips ? ' mt-0.5' : ''}`}>
         {emoji ?? ''}
       </div>
 
