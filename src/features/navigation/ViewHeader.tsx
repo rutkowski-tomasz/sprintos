@@ -1,5 +1,5 @@
-import { useMemo, useRef, type RefObject } from 'react'
-import { motion, useScroll, useTransform } from 'motion/react'
+import { useEffect, useMemo, useRef, type RefObject } from 'react'
+import { motion, useMotionValue, useTransform } from 'motion/react'
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/features/sync/useSyncStatus'
 import {
@@ -138,12 +138,23 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const syncStatus = useSyncStatus()
   const now = useMemo(() => new Date(), [])
   const fallbackRef = useRef<HTMLDivElement>(null)
-  const { scrollY, scrollYProgress } = useScroll({ container: scrollContainerRef ?? fallbackRef })
-  const collapseT = useTransform([scrollY, scrollYProgress], (latest) => {
-    const [sy, progress] = latest as [number, number]
-    if (sy > 0 && progress >= 0.999) return 1
-    return Math.min(1, Math.max(0, sy / COLLAPSE_RANGE))
-  })
+  const collapseT = useMotionValue(0)
+
+  useEffect(() => {
+    const el = scrollContainerRef?.current ?? fallbackRef.current
+    if (!el) return
+
+    const updateCollapse = () => {
+      const sy = Math.max(0, el.scrollTop)
+      const maxScroll = el.scrollHeight - el.clientHeight
+      const atBottom = maxScroll > 0 && sy >= maxScroll - 0.5
+      collapseT.set(atBottom ? 1 : Math.min(1, sy / COLLAPSE_RANGE))
+    }
+
+    updateCollapse()
+    el.addEventListener('scroll', updateCollapse, { passive: true })
+    return () => el.removeEventListener('scroll', updateCollapse)
+  }, [scrollContainerRef, collapseT])
   const height = useTransform(collapseT, t => EXPANDED_HEIGHT - t * COLLAPSE_RANGE)
   const accentBarOpacity = useTransform(collapseT, [0, 0.4], [1, 0])
   const numberGroupGap = useTransform(collapseT, [0, 0.35], [8, 0])
