@@ -71,11 +71,11 @@
   position: fixed;
   inset: 0;
   z-index: 110;
-  display: none;
+  pointer-events: none;
 }
 
 .bn-overlay.bn-overlay-active {
-  display: block;
+  pointer-events: all;
 }
 
 /* ── Nav panel ── */
