@@ -426,6 +426,78 @@ describe('parse', () => {
     })
   })
 
+  // ─── Sprint ─────────────────────────────────────────────────────────────────
+
+  describe('sprintKey', () => {
+    // WED = Wed 10 Jun 2026 → current sprint is "26 Q2 10"
+
+    it('Sp1: exact sprint key — YYQ<q><week>', () => {
+      const input = 'Ship feature 26Q210'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q2 10')
+      expect(raw(r.sprintKey, input)).toBe('26Q210')
+      expect(r.title).toBe('Ship feature')
+    })
+
+    it('Sp2: exact sprint key, different quarter/week', () => {
+      const input = 'Plan launch 26Q301'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q3 1')
+      expect(r.title).toBe('Plan launch')
+    })
+
+    it('Sp3: quarter + week — resolves within current quarter when it matches', () => {
+      const input = 'Ship feature Q210'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q2 10')
+      expect(raw(r.sprintKey, input)).toBe('Q210')
+      expect(r.title).toBe('Ship feature')
+    })
+
+    it('Sp4: quarter + week — resolves forward to next occurrence when current quarter has passed it', () => {
+      const input = 'Plan launch Q301'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q3 1')
+      expect(r.title).toBe('Plan launch')
+    })
+
+    it('Sp5: week only — resolves to current sprint when week matches now', () => {
+      const input = 'Ship feature S10'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q2 10')
+      expect(raw(r.sprintKey, input)).toBe('S10')
+      expect(r.title).toBe('Ship feature')
+    })
+
+    it('Sp6: week only — resolves forward, never to a past sprint', () => {
+      const input = 'Plan launch S01'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q3 1')
+      expect(r.title).toBe('Plan launch')
+    })
+
+    it('Sp7: single-digit week', () => {
+      const input = 'Plan launch S3'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q3 3')
+      expect(raw(r.sprintKey, input)).toBe('S3')
+      expect(r.title).toBe('Plan launch')
+    })
+
+    it('Sp8: case insensitive', () => {
+      const input = 'Ship feature q210'
+      const r = parse(input, WED)
+      expect(r.sprintKey?.value).toBe('26 Q2 10')
+      expect(r.title).toBe('Ship feature')
+    })
+
+    it('Sp9: not a sprint token — stays in title', () => {
+      const r = parse('Buy S apples', WED)
+      expect(r.sprintKey).toBeNull()
+      expect(r.title).toBe('Buy S apples')
+    })
+  })
+
   // ─── Combined ───────────────────────────────────────────────────────────────
 
   describe('combined', () => {
@@ -468,6 +540,7 @@ describe('parse', () => {
       expect(r.duration).toBeNull()
       expect(r.goalId).toBeNull()
       expect(r.sourceUrl).toBeNull()
+      expect(r.sprintKey).toBeNull()
     })
 
     it('T2: number that is not a duration or date stays in title', () => {
@@ -558,6 +631,7 @@ describe('parse', () => {
       expect(r.duration).toBeNull()
       expect(r.goalId).toBeNull()
       expect(r.sourceUrl).toBeNull()
+      expect(r.sprintKey).toBeNull()
     })
 
     it('X2: only an emoji', () => {

@@ -16,11 +16,12 @@ interface TaskPreviewCardProps {
   onSubmit: () => void
 }
 
-function sprintLabelForPath(pathname: string): string | null {
+function sprintLabel(pathname: string, parsedSprintKey?: string): string | null {
+  const now = new Date()
+  if (parsedSprintKey) return `Sprint ${formatSprintKey(parsedSprintKey, now)}`
   if (pathname === '/backlog') return 'Backlog'
   const m = pathname.match(/^\/sprint\/(.+)$/)
   if (!m) return null
-  const now = new Date()
   return `Sprint ${formatSprintKey(sprintKeyFromRouteParam(m[1], now), now)}`
 }
 
@@ -58,7 +59,7 @@ export function TaskPreviewCard({ parsed, suggestions, onSubmit }: TaskPreviewCa
             <TaskResultRow
               emoji={parsed.emoji?.value ?? undefined}
               name={parsed.title || 'Untitled'}
-              subtitle={sprintLabelForPath(location.pathname) ?? undefined}
+              subtitle={sprintLabel(location.pathname, parsed.sprintKey?.value) ?? undefined}
               status={(parsed.status?.value ?? TaskStatus.TODO) as TaskStatus}
               chips={buildPreviewChips(parsed)}
               isPreview

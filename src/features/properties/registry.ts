@@ -4,6 +4,7 @@ import { EMOJI_COLOR } from './emoji/emojiDef'
 import { STATUS_COLOR } from './status/statusDef'
 import { GOAL_COLOR } from './goal/goalDef'
 import { URL_COLOR } from './url/urlDef'
+import { SPRINT_COLOR } from './sprint/sprintParserDef'
 
 export const PROPERTY_COLORS = {
   eventDate: EVENT_DATE_COLOR,
@@ -12,6 +13,7 @@ export const PROPERTY_COLORS = {
   status: STATUS_COLOR,
   goal: GOAL_COLOR,
   url: URL_COLOR,
+  sprint: SPRINT_COLOR,
 } as const
 
 // Properties that render as a value chip, with how to format and colour them.

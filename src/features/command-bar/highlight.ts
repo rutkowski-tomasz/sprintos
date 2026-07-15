@@ -8,6 +8,7 @@ const SPAN_COLORS: Record<string, string> = {
   status: PROPERTY_COLORS.status,
   goal: PROPERTY_COLORS.goal,
   url: PROPERTY_COLORS.url,
+  sprint: PROPERTY_COLORS.sprint,
 }
 
 export interface HighlightSegment {
@@ -26,6 +27,7 @@ export function buildHighlightSegments(input: string, parsed: ParseResult): High
     parsed.status && { start: parsed.status.start, end: parsed.status.end, type: 'status' },
     parsed.goalId && { start: parsed.goalId.start, end: parsed.goalId.end, type: 'goal' },
     parsed.sourceUrl && { start: parsed.sourceUrl.start, end: parsed.sourceUrl.end, type: 'url' },
+    parsed.sprintKey && { start: parsed.sprintKey.start, end: parsed.sprintKey.end, type: 'sprint' },
   ].filter(Boolean) as Array<{ start: number; end: number; type: string }>
 
   spans.sort((a, b) => a.start - b.start)

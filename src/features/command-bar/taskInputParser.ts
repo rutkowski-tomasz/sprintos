@@ -15,6 +15,7 @@ export interface ParseResult {
   status: (Omit<Span, 'value'> & { value: number }) | null
   goalId: (Omit<Span, 'value'> & { value: string }) | null
   sourceUrl: (Omit<Span, 'value'> & { value: string }) | null
+  sprintKey: (Omit<Span, 'value'> & { value: string }) | null
 }
 
 function tokenise(input: string): Token[] {
@@ -57,5 +58,6 @@ export function parse(
     status: (fields.status as ParseResult['status']) ?? null,
     goalId: (fields.goalId as ParseResult['goalId']) ?? null,
     sourceUrl: (fields.sourceUrl as ParseResult['sourceUrl']) ?? null,
+    sprintKey: (fields.sprintKey as ParseResult['sprintKey']) ?? null,
   }
 }

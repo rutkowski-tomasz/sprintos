@@ -105,7 +105,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     if (!parsed.title) return false
     await addTask({
       userId: session.user.id,
-      sprint: sprintForPath(location.pathname),
+      sprint: parsed.sprintKey?.value ?? sprintForPath(location.pathname),
       goalId: parsed.goalId?.value ?? null,
       name: parsed.title,
       emoji: parsed.emoji?.value ?? null,

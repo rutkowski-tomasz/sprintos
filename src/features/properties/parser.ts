@@ -4,6 +4,7 @@ import { goalParser } from './goal/goalDef'
 import { durationParser } from './duration/durationDef'
 import { dateParser } from './event-date/eventDateDef'
 import { statusParser } from './status/statusDef'
+import { sprintParser } from './sprint/sprintParserDef'
 
 export interface Token {
   text: string
@@ -24,7 +25,7 @@ export interface ParseHit {
   value: unknown
 }
 
-export type PropertyKey = 'emoji' | 'eventDate' | 'duration' | 'status' | 'goalId' | 'sourceUrl'
+export type PropertyKey = 'emoji' | 'eventDate' | 'duration' | 'status' | 'goalId' | 'sourceUrl' | 'sprintKey'
 
 export interface PropertyParser {
   key: PropertyKey
@@ -37,6 +38,7 @@ export const PROPERTY_PARSERS: PropertyParser[] = [
   emojiParser,
   urlParser,
   goalParser,
+  sprintParser,
   durationParser,
   dateParser,
   statusParser,
