@@ -1,7 +1,7 @@
 import type { ParseHit, PropertyParser, ParseContext, Token } from '../parser'
 import { formatDateLabel } from '@/lib/dateLabel'
 
-export const EVENT_DATE_COLOR = '#818cf8'
+export const EVENT_DATE_COLOR = '#fb923c'
 
 export function formatEventDate(iso: string): string {
   const d = new Date(iso)
