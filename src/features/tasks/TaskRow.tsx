@@ -4,7 +4,7 @@ import { ListChecks, Clock } from 'lucide-react'
 import { Duration } from '@/features/properties/duration/Duration'
 import { EventDate } from '@/features/properties/event-date/EventDate'
 import { Snooze } from '@/features/properties/snooze/Snooze'
-import { SnoozeSheet } from '@/features/properties/snooze/SnoozeSheet'
+import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import type { Goal, Task } from '@/types'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
@@ -23,11 +23,11 @@ export function TaskRow({ task, goalMap, now }: TaskRowProps) {
   const rightBgOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
   const leftBgOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
   const [statusSheetOpen, setStatusSheetOpen] = useState(false)
-  const [snoozeSheetOpen, setSnoozeSheetOpen] = useState(false)
+  const [rescheduleSheetOpen, setRescheduleSheetOpen] = useState(false)
 
   function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
     if (info.offset.x > SWIPE_THRESHOLD) setStatusSheetOpen(true)
-    else if (info.offset.x < -SWIPE_THRESHOLD) setSnoozeSheetOpen(true)
+    else if (info.offset.x < -SWIPE_THRESHOLD) setRescheduleSheetOpen(true)
     animate(x, 0, { type: 'spring', stiffness: 400, damping: 35 })
   }
 
@@ -87,7 +87,7 @@ export function TaskRow({ task, goalMap, now }: TaskRowProps) {
       </motion.div>
 
       <StatusSheet task={task} open={statusSheetOpen} onOpenChange={setStatusSheetOpen} />
-      <SnoozeSheet task={task} open={snoozeSheetOpen} onOpenChange={setSnoozeSheetOpen} />
+      <RescheduleSheet task={task} open={rescheduleSheetOpen} onOpenChange={setRescheduleSheetOpen} />
     </div>
   )
 }

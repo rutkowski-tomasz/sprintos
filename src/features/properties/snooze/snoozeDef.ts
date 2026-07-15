@@ -1,10 +1,13 @@
 import type { Task } from '@/types'
 import { formatDateLabel } from '@/lib/dateLabel'
+import { sprintDateRange, sprintKey, sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
 
 export interface SnoozeOption {
   key: string
   label: string
   getDate: (now: Date) => Date
+  sameSprintOnly?: boolean
+  movesSprint?: boolean
 }
 
 export function resolveSnoozeDate(task: Pick<Task, 'snooze' | 'eventDate'>): Date | null {
@@ -22,10 +25,9 @@ export function isSnoozed(task: Pick<Task, 'snooze' | 'eventDate'>, now: Date): 
   return date !== null && date > now
 }
 
-function nextWeekday(now: Date, target: number): Date {
-  const d = new Date(now)
-  const diff = ((target - d.getDay()) + 7) % 7 || 7
-  d.setDate(d.getDate() + diff)
+function sprintStart(key: string): Date {
+  const d = new Date(sprintDateRange(key).start)
+  d.setHours(8, 0, 0, 0)
   return d
 }
 
@@ -33,29 +35,46 @@ export const SNOOZE_OPTIONS: SnoozeOption[] = [
   {
     key: 'evening',
     label: 'Evening',
+    sameSprintOnly: true,
     getDate: now => { const d = new Date(now); d.setHours(18, 0, 0, 0); return d },
   },
   {
     key: 'tomorrow',
     label: 'Tomorrow',
+    sameSprintOnly: true,
     getDate: now => { const d = new Date(now); d.setDate(d.getDate() + 1); d.setHours(8, 0, 0, 0); return d },
   },
   {
     key: 'day-after-tomorrow',
     label: 'Day after tomorrow',
+    sameSprintOnly: true,
     getDate: now => { const d = new Date(now); d.setDate(d.getDate() + 2); d.setHours(8, 0, 0, 0); return d },
   },
   {
-    key: 'weekend',
-    label: 'Weekend',
-    getDate: now => { const d = nextWeekday(now, 6); d.setHours(8, 0, 0, 0); return d },
+    key: 'next-sprint',
+    label: 'Next sprint',
+    movesSprint: true,
+    getDate: now => sprintStart(sprintKeyOffset(now, 1)),
   },
   {
-    key: 'next-week',
-    label: 'Next week',
-    getDate: now => { const d = nextWeekday(now, 1); d.setHours(8, 0, 0, 0); return d },
+    key: 'future-sprint',
+    label: 'Future sprint',
+    movesSprint: true,
+    getDate: now => sprintStart(sprintKeyOffset(now, 2)),
   },
 ]
+
+export function defaultCustomDateTime(now: Date): string {
+  const d = new Date(now)
+  d.setDate(d.getDate() + 1)
+  d.setHours(8, 0, 0, 0)
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+export function isWithinCurrentSprint(date: Date, now: Date): boolean {
+  return sprintKey(date) === sprintKey(now)
+}
 
 export function formatSnoozeOptionDate(date: Date): string {
   const weekday = date.toLocaleDateString('en-US', { weekday: 'short' })

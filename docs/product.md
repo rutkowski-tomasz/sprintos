@@ -239,9 +239,11 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 ### Snooze
 - Global **Show Snoozed** toggle. Snoozed tasks appear ghosted (reduced opacity).
 - Snoozed tasks are fully interactive while visible — no need to un-snooze before acting.
-- Quick-snooze options: Evening (18:00), Tomorrow (08:00), Day after tomorrow (08:00), Weekend (Saturday 08:00), Next week (Monday 08:00). Each shows its resolved weekday + time as muted subtext.
-- Custom snooze uses native date + time inputs for any date/time.
-- If the resolved snooze date falls in a sprint different from the task's currently assigned sprint, the option is flagged (e.g. "Moves to Sprint 03") and selecting it reassigns the task's `sprint` field to match.
+- The "Reschedule" sheet (`RescheduleSheet`, swipe left) covers two distinct actions grouped under headers with a leading icon (moon for snooze, arrow for sprint move): **Snooze** (hide until a time, same sprint) and **Move to sprint** (reassign the task's `sprint`).
+- Snooze options: Evening (18:00), Tomorrow (08:00), Day after tomorrow (08:00). Each is only offered while its resolved date stays within the current sprint — once it would cross into the next sprint, it's dropped in favor of the move options below.
+- Move options: Next sprint / Future sprint (Saturday 08:00 of the following/following-following sprint; subtext shows the target sprint key, e.g. "Sprint 03"), Backlog (clears both `sprint` and `snooze`, unassigning the task entirely).
+- Custom uses a single native `datetime-local` input, defaulting to tomorrow 08:00. It performs exactly one action based on the chosen date: if it falls within the current sprint it snoozes; otherwise it moves the task's `sprint` to match (clearing `snooze`, no dual snooze+move). The submit button's label reflects which action will run (e.g. "Snooze" vs "Move to Sprint 04").
+- Preset options (not custom) that cross into a different sprint than the task's current one show a "Moves to Sprint 03" badge and set `sprint` and `snooze` together when selected.
 
 ### Duplication (Cmd+D)
 
