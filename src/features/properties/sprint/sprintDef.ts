@@ -1,5 +1,21 @@
 export type SprintLabel = 'past' | 'previous' | 'current' | 'next' | 'future'
 
+export const SPRINT_LABEL_TEXT: Record<SprintLabel, string> = {
+  current: 'Current',
+  next: 'Next',
+  future: 'Future',
+  previous: 'Previous',
+  past: 'Past',
+}
+
+export const SPRINT_LABEL_BADGE_CLASS: Record<SprintLabel, string> = {
+  current: 'bg-blue-500/15 text-blue-400 border-transparent',
+  next: 'bg-purple-500/15 text-purple-400 border-transparent',
+  future: 'bg-zinc-500/15 text-zinc-400 border-transparent',
+  previous: 'bg-amber-500/15 text-amber-400 border-transparent',
+  past: 'bg-zinc-400/10 text-zinc-500 border-transparent',
+}
+
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000
 
 function sprintStartOf(date: Date): Date {

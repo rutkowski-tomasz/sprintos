@@ -6,31 +6,18 @@ import {
   compareSprintKeys,
   formatSprintKey,
   generateSprintKeys,
+  SPRINT_LABEL_BADGE_CLASS,
+  SPRINT_LABEL_TEXT,
   sprintDateRange,
   sprintKeyOffset,
+  type SprintLabel,
 } from './sprintDef'
 import { updateTask } from '@/features/tasks/taskActions'
 import type { Task } from '@/types'
 
-const BADGE_CLASS: Record<string, string> = {
-  current:  'bg-blue-500/15 text-blue-400 border-transparent',
-  next:     'bg-purple-500/15 text-purple-400 border-transparent',
-  future:   'bg-zinc-500/15 text-zinc-400 border-transparent',
-  previous: 'bg-amber-500/15 text-amber-400 border-transparent',
-  past:     'bg-zinc-400/10 text-zinc-500 border-transparent',
-}
-
-const BADGE_TEXT: Record<string, string> = {
-  current:  'Current',
-  next:     'Next',
-  future:   'Future',
-  previous: 'Previous',
-  past:     'Past',
-}
-
 type SprintOption =
   | { type: 'none' }
-  | { type: 'sprint'; key: string; display: string; badge: string; dateRange: string }
+  | { type: 'sprint'; key: string; display: string; badge: SprintLabel; dateRange: string }
 
 function formatShortDate(d: Date, now: Date): string {
   const day = d.getDate()
@@ -141,8 +128,8 @@ export function SprintPicker({ task }: { task: Task }) {
           ) : (
             <>
               <span className="text-sm font-medium w-16 shrink-0">{option.display}</span>
-              <Badge className={`${BADGE_CLASS[option.badge]} text-[10px] shrink-0`}>
-                {BADGE_TEXT[option.badge]}
+              <Badge className={`${SPRINT_LABEL_BADGE_CLASS[option.badge]} text-[10px] shrink-0`}>
+                {SPRINT_LABEL_TEXT[option.badge]}
               </Badge>
               <span className="ml-auto text-xs text-muted-foreground whitespace-nowrap pl-3">
                 {option.dateRange}

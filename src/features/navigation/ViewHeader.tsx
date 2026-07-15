@@ -7,6 +7,7 @@ import {
   sprintDateRange,
   type SprintLabel,
 } from '@/features/properties/sprint/sprintDef'
+import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
 
 interface ViewHeaderProps {
   viewName: string
@@ -20,14 +21,6 @@ const COLLAPSED_HEIGHT = 56
 const COLLAPSE_RANGE = EXPANDED_HEIGHT - COLLAPSED_HEIGHT
 
 export const SPRINT_HEADER_INSET = EXPANDED_HEIGHT - COLLAPSED_HEIGHT
-
-const STATUS_LABEL: Record<SprintLabel, string> = {
-  current: 'Current',
-  next: 'Next',
-  previous: 'Previous',
-  past: 'Past',
-  future: 'Future',
-}
 
 const SYNC_LABELS = { synced: 'Synced', sending: 'Sending', queued: 'In Queue' } as const
 const SYNC_COLOR = { synced: 'text-green-400', sending: 'text-amber-400', queued: 'text-amber-400' } as const
@@ -77,28 +70,6 @@ function sprintDays(start: Date): Date[] {
     d.setDate(d.getDate() + i)
     return d
   })
-}
-
-function SprintCurrentBadge() {
-  return (
-    <div className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-purple-400 bg-purple-500/10 shrink-0">
-      <span className="size-1 rounded-full bg-purple-300 shrink-0" />
-      <span className="text-[9px] font-bold tracking-widest uppercase text-purple-300 leading-none">Current</span>
-    </div>
-  )
-}
-
-function SprintStatusText({ label }: { label: SprintLabel }) {
-  return (
-    <span
-      className={cn(
-        'text-xs font-bold tracking-widest uppercase shrink-0',
-        label === 'current' ? 'text-purple-400' : 'text-muted-foreground',
-      )}
-    >
-      {STATUS_LABEL[label]}
-    </span>
-  )
 }
 
 function DayTrack({ start, now }: { start: Date; now: Date }) {
@@ -227,7 +198,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
 
           <div className="relative flex-1 min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              {label === 'current' ? <SprintCurrentBadge /> : <SprintStatusText label={label} />}
+              <SprintBadge label={label} />
               <div className="flex-1" />
               {syncIndicator}
               <motion.span style={{ opacity: daysLeftOpacity }} className="text-xs text-muted-foreground shrink-0">
