@@ -149,6 +149,54 @@
   }
 }
 
+/* ── Command menu ── */
+.bn-cmd-menu {
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bn-cmd-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.bn-cmd-row-selected {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.bn-cmd-token {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.bn-cmd-row-selected .bn-cmd-token {
+  background: linear-gradient(90deg, #ff5f6d, #ffc371, #47e0a1, #4facfe, #a86bff, #ff5f6d);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: bn-cmd-rainbow 3s linear infinite;
+}
+
+.bn-cmd-desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+@keyframes bn-cmd-rainbow {
+  to {
+    background-position: 300% 50%;
+  }
+}
+
 /* ── Submit button ── */
 .bn-submit {
   flex-shrink: 0;

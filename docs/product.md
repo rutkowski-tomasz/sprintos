@@ -208,6 +208,13 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 - If the edited text exactly matches a goal name: shadow field is auto-restored, text re-colors. No manual re-selection needed. Auto-confirm fires only when no goal with a longer matching name exists in the dropdown.
 - If `#something` is submitted with no selection: goal is null, `#something` absorbed into title with `#` stripped.
 
+#### Commands
+
+- `/` as the first character switches the bar to command mode — task parsing/preview is suspended for as long as the input starts with `/`.
+- Supported: `/current`, `/next`, `/previous`, `/future` (sprint after next), `/past` (sprint before previous), `/backlog`, `/settings`. Each navigates immediately on activation; none take arguments.
+- Matching is by prefix against the typed text (e.g. `/p` matches both `/previous` and `/past`). Matches render in a dropdown above the bar, topmost match highlighted by default.
+- Arrow Up/Down move the highlight (wraps at the ends); Enter activates the highlighted command. Mouse/tap selects directly.
+
 ---
 
 ### Preview Panel

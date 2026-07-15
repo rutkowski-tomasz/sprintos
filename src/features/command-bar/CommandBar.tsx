@@ -1,5 +1,5 @@
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/lib/db'
 import { parse } from './taskInputParser'
@@ -11,6 +11,8 @@ import { addTask, findSimilarTasks } from '@/features/tasks/taskActions'
 import { searchEmojis } from './emojiSearch'
 import { EMPTY_SUGGESTIONS, suggestDurations, suggestEventDates, type SimilarTaskSuggestions } from './similarTaskSuggestions'
 import { TaskStatus, type Goal } from '@/types'
+import { matchCommands, routeForCommand, type CommandDef } from './commands'
+import { CommandMenu } from './CommandMenu'
 
 const SPRINT_PARAM_PLACEHOLDER: Record<string, string> = {
   current: 'Add to current sprint...',
@@ -57,6 +59,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   ref,
 ) {
   const location = useLocation()
+  const navigate = useNavigate()
   const { session } = useSession()
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const placeholderRef = useRef<HTMLDivElement>(null)
@@ -64,6 +67,12 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [inputValue, setInputValue] = useState('')
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
+  const [selectedCommandIndex, setSelectedCommandIndex] = useState(0)
+
+  const isCommandMode = inputValue.startsWith('/')
+  const commandMatches = useMemo(() => (isCommandMode ? matchCommands(inputValue) : []), [isCommandMode, inputValue])
+
+  useEffect(() => { setSelectedCommandIndex(0) }, [inputValue])
 
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -159,9 +168,9 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
 
   const onFocus = useCallback(() => {
     if (placeholderTimerRef.current) clearInterval(placeholderTimerRef.current)
-    setPlaceholderVisible(false)
+    setPlaceholderVisible(!inputValue)
     onFocusChange(true)
-  }, [setPlaceholderVisible, onFocusChange])
+  }, [setPlaceholderVisible, onFocusChange, inputValue])
 
   const onBlur = useCallback(() => {
     onFocusChange(false)
@@ -170,6 +179,19 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       startCycle()
     }
   }, [onFocusChange, inputValue, setPlaceholderVisible, startCycle])
+
+  const executeCommand = useCallback((cmd: CommandDef) => {
+    navigate(routeForCommand(cmd.key, new Date()))
+    setInputValue('')
+    onInputChange?.('')
+    setParsedResult(null)
+    onParsedChange?.(null)
+    onSuggestionsChange?.(EMPTY_SUGGESTIONS)
+    setPlaceholderVisible(true)
+    startCycle()
+    const el = inputRef.current
+    if (el) { el.style.height = 'auto'; el.blur() }
+  }, [navigate, onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible, startCycle])
 
   const similarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -183,13 +205,21 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     el.style.height = 'auto'
     el.style.height = `${el.scrollHeight}px`
 
+    if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
+
+    if (val.startsWith('/')) {
+      setParsedResult(null)
+      onParsedChange?.(null)
+      onSuggestionsChange?.(EMPTY_SUGGESTIONS)
+      return
+    }
+
     const goal = findGoalForInput(val, goals)
     const parsed = parse(val, new Date(), goal?.id, goal?.name)
     const next = val ? parsed : null
     setParsedResult(next)
     onParsedChange?.(next)
 
-    if (similarTimerRef.current) clearTimeout(similarTimerRef.current)
     if (val.trim() && !parsed.emoji) {
       similarTimerRef.current = setTimeout(async () => {
         const similar = await findSimilarTasks(val.trim(), 5)
@@ -204,7 +234,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     } else {
       onSuggestionsChange?.(EMPTY_SUGGESTIONS)
     }
-  }, [onInputChange, onSuggestionsChange, setPlaceholderVisible, goals])
+  }, [onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible, goals])
 
   const onClearMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -229,63 +259,90 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
       setPlaceholderVisible(true)
       startCycle()
       const el = inputRef.current
-      if (el) { el.style.height = 'auto'; el.focus() }
+      if (el) { el.style.height = 'auto'; el.blur() }
     }
   }, [submit, startCycle, onInputChange, onParsedChange, onSuggestionsChange, setPlaceholderVisible])
 
-  const highlightSegments = parsedResult ? buildHighlightSegments(inputValue, parsedResult) : null
+  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isCommandMode) {
+      if (e.key === 'ArrowDown' && commandMatches.length > 0) {
+        e.preventDefault()
+        setSelectedCommandIndex(i => (i + 1) % commandMatches.length)
+      } else if (e.key === 'ArrowUp' && commandMatches.length > 0) {
+        e.preventDefault()
+        setSelectedCommandIndex(i => (i - 1 + commandMatches.length) % commandMatches.length)
+      } else if (e.key === 'Enter') {
+        e.preventDefault()
+        const match = commandMatches[selectedCommandIndex]
+        if (match) executeCommand(match)
+      }
+      return
+    }
+    if (e.key === 'Enter') { e.preventDefault(); handleSubmit() }
+  }, [isCommandMode, commandMatches, selectedCommandIndex, executeCommand, handleSubmit])
+
+  const highlightSegments = isCommandMode
+    ? [{ text: inputValue, color: '#fff', underline: false }]
+    : parsedResult ? buildHighlightSegments(inputValue, parsedResult) : null
 
   return (
-    <div className="bn-search-bar">
-      <div className="bn-search-area">
-        <textarea
-          ref={inputRef}
-          rows={1}
-          className="bn-search-input"
-          value={inputValue}
-          onChange={onChange}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit() } }}
-          inputMode="text"
-          enterKeyHint="done"
-          autoCapitalize="none"
-          autoCorrect="off"
-          autoComplete="off"
-          spellCheck={false}
-          aria-label="Search or add task"
-        />
-        {highlightSegments && (
-          <div className="bn-highlight-overlay" aria-hidden="true">
-            {highlightSegments.map((seg, i) => (
-              <span
-                key={i}
-                style={{
-                  color: seg.color,
-                  textDecoration: seg.underline ? 'underline' : 'none',
-                  textDecorationColor: seg.color,
-                  textUnderlineOffset: '3px',
-                }}
-              >
-                {seg.text}
-              </span>
-            ))}
-          </div>
-        )}
-        <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
-      </div>
+    <>
+      {isCommandMode && commandMatches.length > 0 && (
+        <div className="absolute bottom-full left-0 right-0 px-3.5 mb-1">
+          <CommandMenu commands={commandMatches} selectedIndex={selectedCommandIndex} onSelect={executeCommand} />
+        </div>
+      )}
+      <div className="bn-search-bar">
+        <div className="bn-search-area">
+          <textarea
+            ref={inputRef}
+            rows={1}
+            className="bn-search-input"
+            value={inputValue}
+            onChange={onChange}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            inputMode="text"
+            enterKeyHint="done"
+            autoCapitalize="none"
+            autoCorrect="off"
+            autoComplete="off"
+            spellCheck={false}
+            aria-label="Search or add task"
+          />
+          {highlightSegments && (
+            <div className="bn-highlight-overlay" aria-hidden="true">
+              {highlightSegments.map((seg, i) => (
+                <span
+                  key={i}
+                  style={{
+                    color: seg.color,
+                    textDecoration: seg.underline ? 'underline' : 'none',
+                    textDecorationColor: seg.color,
+                    textUnderlineOffset: '3px',
+                  }}
+                >
+                  {seg.text}
+                </span>
+              ))}
+            </div>
+          )}
+          <div ref={placeholderRef} className="bn-placeholder" aria-hidden="true" />
+        </div>
 
-      <button
-        className={`bn-clear${inputValue ? ' bn-clear-visible' : ''}`}
-        aria-label="Clear input"
-        type="button"
-        onMouseDown={onClearMouseDown}
-      >
-        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="3" strokeLinecap="round">
-          <line x1="6" y1="6" x2="18" y2="18"/>
-          <line x1="18" y1="6" x2="6" y2="18"/>
-        </svg>
-      </button>
-    </div>
+        <button
+          className={`bn-clear${inputValue ? ' bn-clear-visible' : ''}`}
+          aria-label="Clear input"
+          type="button"
+          onMouseDown={onClearMouseDown}
+        >
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="3" strokeLinecap="round">
+            <line x1="6" y1="6" x2="18" y2="18"/>
+            <line x1="18" y1="6" x2="6" y2="18"/>
+          </svg>
+        </button>
+      </div>
+    </>
   )
 })
