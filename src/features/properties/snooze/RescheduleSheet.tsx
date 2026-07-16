@@ -38,10 +38,14 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
     return new Date(y, m - 1, d, h, min)
   }, [customDateTime])
 
-  function apply(date: Date) {
+  function apply(date: Date, movesSprint = false) {
     const targetKey = sprintKey(date)
-    const sprintPatch = !snoozeOnly && task.sprint && targetKey !== task.sprint ? { sprint: targetKey } : {}
-    void updateTask(task.id, { snooze: date.toISOString(), ...sprintPatch })
+    if (!snoozeOnly && movesSprint) {
+      void updateTask(task.id, { sprint: targetKey, snooze: null })
+    } else {
+      const sprintPatch = !snoozeOnly && task.sprint && targetKey !== task.sprint ? { sprint: targetKey } : {}
+      void updateTask(task.id, { snooze: date.toISOString(), ...sprintPatch })
+    }
     onOpenChange(false)
   }
 
@@ -68,7 +72,9 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
   const snoozeOptions = SNOOZE_OPTIONS.filter(
     option => !option.sameSprintOnly || isWithinCurrentSprint(option.getDate(now), now),
   )
-  const moveOptions = snoozeOptions.filter(option => option.movesSprint)
+  const moveOptions = snoozeOptions.filter(
+    option => option.movesSprint && sprintKey(option.getDate(now)) !== task.sprint,
+  )
   const pureSnoozeOptions = snoozeOptions.filter(option => !option.movesSprint)
 
   const customLabel: ReactNode = snoozeOnly
@@ -115,7 +121,7 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                 return (
                   <button
                     key={option.key}
-                    onClick={() => apply(date)}
+                    onClick={() => apply(date, true)}
                     className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
                   >
                     <span className="flex items-center gap-2.5">
@@ -128,18 +134,20 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                   </button>
                 )
               })}
-              <button
-                onClick={moveToBacklog}
-                className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
-              >
-                <span className="flex items-center gap-2.5">
-                  <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
-                  <span className="flex flex-col gap-0.5">
-                    <SprintChip sprint={null} now={now} />
-                    <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>
+              {task.sprint && (
+                <button
+                  onClick={moveToBacklog}
+                  className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
+                >
+                  <span className="flex items-center gap-2.5">
+                    <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+                    <span className="flex flex-col gap-0.5">
+                      <SprintChip sprint={null} now={now} />
+                      <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>
+                    </span>
                   </span>
-                </span>
-              </button>
+                </button>
+              )}
             </>
           )}
 

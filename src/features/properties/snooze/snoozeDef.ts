@@ -51,6 +51,12 @@ export const SNOOZE_OPTIONS: SnoozeOption[] = [
     getDate: now => { const d = new Date(now); d.setDate(d.getDate() + 2); d.setHours(8, 0, 0, 0); return d },
   },
   {
+    key: 'current-sprint',
+    label: 'Current sprint',
+    movesSprint: true,
+    getDate: now => sprintStart(sprintKeyOffset(now, 0)),
+  },
+  {
     key: 'next-sprint',
     label: 'Next sprint',
     movesSprint: true,
