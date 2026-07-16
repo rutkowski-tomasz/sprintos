@@ -15,6 +15,7 @@ import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { StatusSheet } from '@/features/properties/status/StatusSheet'
 
 const SWIPE_THRESHOLD = 80
+const SWIPE_VELOCITY_THRESHOLD = 500
 const LONG_PRESS_MS = 500
 const LONG_PRESS_MOVE_TOLERANCE = 10
 
@@ -41,8 +42,10 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
   const longPressFired = useRef(false)
 
   function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
-    if (info.offset.x > SWIPE_THRESHOLD) setStatusSheetOpen(true)
-    else if (info.offset.x < -SWIPE_THRESHOLD) setRescheduleSheetOpen(true)
+    const passedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD
+    const passedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD
+    if (passedRight) setStatusSheetOpen(true)
+    else if (passedLeft) setRescheduleSheetOpen(true)
     animate(x, 0, { type: 'spring', stiffness: 400, damping: 35 })
   }
 

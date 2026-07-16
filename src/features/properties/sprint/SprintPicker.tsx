@@ -67,7 +67,9 @@ function buildOptions(
       : compareSprintKeys(a, b)
   })
 
-  const parsed = sprintParser.parse([{ text: search.trim(), start: 0, end: search.trim().length }], { now })
+  const trimmed = search.trim()
+  const keywordText = /^(next|previous|current|future|past)$/i.test(trimmed) ? `s${trimmed}` : trimmed
+  const parsed = sprintParser.parse([{ text: keywordText, start: 0, end: keywordText.length }], { now })
   const parsedKey = parsed ? (parsed.value as string) : null
   const ranked = parsedKey ? [parsedKey, ...sorted.filter(k => k !== parsedKey)] : sorted
 

@@ -14,5 +14,5 @@ describe('formatEventDateShort', () => {
   it('delegates to the shared relative date label', () =>
     expect(formatEventDateShort(iso(2026, 5, 11, 9, 5), now)).toBe('Tomorrow, 09:05'))
   it('falls back to day + short month beyond the week window', () =>
-    expect(formatEventDateShort(iso(2026, 5, 20), now)).toBe('20 Jun'))
+    expect(formatEventDateShort(iso(2026, 5, 20), now)).toBe('20 Jun, Saturday'))
 })

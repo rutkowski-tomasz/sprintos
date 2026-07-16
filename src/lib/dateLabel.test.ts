@@ -16,11 +16,11 @@ describe('formatDateLabel', () => {
   it('includes time for a weekday label when set', () => expect(formatDateLabel(d(10, 14, 5), now)).toBe('Wednesday, 14:05'))
   it('still uses the weekday name 6 days out', () => expect(formatDateLabel(d(14), now)).toBe('Sunday'))
 
-  it('falls back to day + short month 7 days out', () => expect(formatDateLabel(d(15), now)).toBe('15 Jun'))
+  it('falls back to day + short month 7 days out', () => expect(formatDateLabel(d(15), now)).toBe('15 Jun, Monday'))
   it('falls back to day + short month further out', () => {
     const farFriday = new Date(2026, 5, 5, 9, 0)
-    expect(formatDateLabel(new Date(2026, 7, 1, 16, 30), farFriday)).toBe('1 Aug, 16:30')
+    expect(formatDateLabel(new Date(2026, 7, 1, 16, 30), farFriday)).toBe('1 Aug, Saturday 16:30')
   })
 
-  it('falls back to day + short month for past dates', () => expect(formatDateLabel(d(1), now)).toBe('1 Jun'))
+  it('falls back to day + short month for past dates', () => expect(formatDateLabel(d(1), now)).toBe('1 Jun, Monday'))
 })

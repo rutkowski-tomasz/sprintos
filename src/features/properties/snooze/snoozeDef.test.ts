@@ -13,5 +13,5 @@ describe('formatSnooze', () => {
   it('delegates ISO dates to the shared relative date label', () =>
     expect(formatSnooze(iso(9, 8, 0), now)).toBe('@Tomorrow, 08:00'))
   it('falls back to day + short month beyond the week window', () =>
-    expect(formatSnooze(iso(20), now)).toBe('@20 Jun'))
+    expect(formatSnooze(iso(20), now)).toBe('@20 Jun, Saturday'))
 })

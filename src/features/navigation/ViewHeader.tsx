@@ -170,7 +170,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
 
   if (!sprintKey) {
     return (
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-border">
+      <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-border bg-background">
         <h2 className="text-xl font-semibold">{viewName}</h2>
         {syncIndicator}
       </div>

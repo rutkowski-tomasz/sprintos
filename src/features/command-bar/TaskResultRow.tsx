@@ -19,8 +19,9 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
   const hasChips = chips && chips.length > 0
   return (
     <div
-      onClick={onOpen}
-      className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''} ${onOpen ? 'cursor-pointer active:bg-white/5' : ''}`}
+      onMouseDown={isPreview ? e => e.preventDefault() : undefined}
+      onClick={isPreview ? onSubmit : onOpen}
+      className={`flex gap-3 px-4 py-3 ${hasChips ? 'items-start' : 'items-center'} ${!isPreview ? 'border-b border-white/8 last:border-0' : ''} ${isPreview || onOpen ? 'cursor-pointer active:bg-white/5' : ''}`}
     >
       <div className={`w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm leading-none ${emoji ? 'bg-white/5' : 'bg-muted'}${hasChips ? ' mt-0.5' : ''}`}>
         {emoji ?? ''}

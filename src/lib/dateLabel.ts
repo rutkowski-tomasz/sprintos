@@ -11,13 +11,17 @@ function dayDiff(date: Date, now: Date): number {
 
 export function formatDateLabel(date: Date, now: Date): string {
   const diff = dayDiff(date, now)
-  const datePart =
-    diff === 0 ? 'Today'
-    : diff === 1 ? 'Tomorrow'
-    : diff > 1 && diff < 7 ? date.toLocaleDateString('en-US', { weekday: 'long' })
-    : `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}`
-
-  if (date.getHours() === 0 && date.getMinutes() === 0) return datePart
+  const hasTime = !(date.getHours() === 0 && date.getMinutes() === 0)
   const time = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
-  return `${datePart}, ${time}`
+
+  if (diff === 0) return hasTime ? `Today, ${time}` : 'Today'
+  if (diff === 1) return hasTime ? `Tomorrow, ${time}` : 'Tomorrow'
+  if (diff > 1 && diff < 7) {
+    const weekday = date.toLocaleDateString('en-US', { weekday: 'long' })
+    return hasTime ? `${weekday}, ${time}` : weekday
+  }
+
+  const monthDay = `${date.getDate()} ${date.toLocaleString('en-US', { month: 'short' })}`
+  const weekday = date.toLocaleDateString('en-US', { weekday: 'long' })
+  return hasTime ? `${monthDay}, ${weekday} ${time}` : `${monthDay}, ${weekday}`
 }
