@@ -7,6 +7,7 @@ import {
   generateSprintKeys,
   sprintDateRange,
   sprintKeyOffset,
+  type SprintLabel,
 } from './sprintDef'
 import { sprintParser } from './sprintParserDef'
 import { updateTask } from '@/features/tasks/taskActions'
@@ -33,6 +34,13 @@ function toOption(key: string, now: Date): SprintOption & { type: 'sprint' } {
   }
 }
 
+const LABEL_WORDS: SprintLabel[] = ['past', 'previous', 'current', 'next', 'future']
+
+// Every label word this prefix could mean — e.g. "p" matches both "past" and "previous".
+function matchLabelPrefix(q: string): SprintLabel[] {
+  return LABEL_WORDS.filter(w => w.startsWith(q))
+}
+
 function buildOptions(
   assigned: string | null,
   search: string,
@@ -40,8 +48,9 @@ function buildOptions(
   allKeys: string[],
 ): SprintOption[] {
   const none: SprintOption = { type: 'none' }
+  const trimmed = search.trim()
 
-  if (!search.trim()) {
+  if (!trimmed) {
     const windowKeys = new Set<string>()
     for (let i = 0; i <= 4; i++) windowKeys.add(sprintKeyOffset(now, i))
     if (assigned) windowKeys.delete(assigned)
@@ -50,11 +59,24 @@ function buildOptions(
     return [none, ...sprintKeys.map(k => toOption(k, now))]
   }
 
+  const q = trimmed.toLowerCase()
+
+  // "past"/"pas"/"future"/"fut" etc. — every sprint across the matched label(s), closest to
+  // now first ("p" matches both past and previous, so "previous" sorts ahead of older sprints).
+  const labels = matchLabelPrefix(q)
+  if (labels.length > 0) {
+    const currentKey = sprintKeyOffset(now, 0)
+    const matching = allKeys.filter(k => labels.includes(classifySprintKey(k, now)))
+    const sorted = matching.sort((a, b) =>
+      Math.abs(compareSprintKeys(a, currentKey)) - Math.abs(compareSprintKeys(b, currentKey)),
+    )
+    return [none, ...sorted.slice(0, 20).map(k => toOption(k, now))]
+  }
+
   const LABEL_PRIORITY: Record<string, number> = {
     current: 0, next: 1, future: 2, previous: 3, past: 4,
   }
 
-  const q = search.toLowerCase()
   const filtered = allKeys.filter(
     k => k.toLowerCase().includes(q) || formatSprintKey(k, now).toLowerCase().includes(q),
   )
@@ -67,9 +89,7 @@ function buildOptions(
       : compareSprintKeys(a, b)
   })
 
-  const trimmed = search.trim()
-  const keywordText = /^(next|previous|current|future|past)$/i.test(trimmed) ? `s${trimmed}` : trimmed
-  const parsed = sprintParser.parse([{ text: keywordText, start: 0, end: keywordText.length }], { now })
+  const parsed = sprintParser.parse([{ text: trimmed, start: 0, end: trimmed.length }], { now })
   const parsedKey = parsed ? (parsed.value as string) : null
   const ranked = parsedKey ? [parsedKey, ...sorted.filter(k => k !== parsedKey)] : sorted
 
