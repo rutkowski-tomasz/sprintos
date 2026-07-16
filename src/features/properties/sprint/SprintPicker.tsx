@@ -7,6 +7,7 @@ import {
   generateSprintKeys,
   sprintDateRange,
   sprintKeyOffset,
+  sprintRelativeLabel,
   type SprintLabel,
 } from './sprintDef'
 import { sprintParser } from './sprintParserDef'
@@ -78,7 +79,9 @@ function buildOptions(
   }
 
   const filtered = allKeys.filter(
-    k => k.toLowerCase().includes(q) || formatSprintKey(k, now).toLowerCase().includes(q),
+    k => k.toLowerCase().includes(q)
+      || formatSprintKey(k, now).toLowerCase().includes(q)
+      || sprintRelativeLabel(k, now).toLowerCase().includes(q),
   )
   const sorted = [...filtered].sort((a, b) => {
     const pa = LABEL_PRIORITY[classifySprintKey(a, now)]

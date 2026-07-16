@@ -12,7 +12,7 @@ import { MassMoveSheet } from './MassMoveSheet'
 import { deleteTasks } from './taskActions'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSE_RANGE } from '@/features/navigation/sprintHeaderCollapse'
-import { classifySprintKey, compareSprintKeys, formatSprintKey, SPRINT_LABEL_COLOR, SPRINT_LABEL_TEXT } from '@/features/properties/sprint/sprintDef'
+import { classifySprintKey, compareSprintKeys, formatSprintDateRange, formatSprintKey, SPRINT_LABEL_COLOR, SPRINT_LABEL_TEXT, sprintRelativeLabel } from '@/features/properties/sprint/sprintDef'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 interface TaskListProps {
@@ -22,10 +22,16 @@ interface TaskListProps {
   groupBySprint?: boolean
 }
 
+function sprintLabelText(sprint: string, now: Date): string {
+  const label = classifySprintKey(sprint, now)
+  if (label === 'future' || label === 'past') return `${SPRINT_LABEL_TEXT[label]} · ${sprintRelativeLabel(sprint, now)}`
+  return SPRINT_LABEL_TEXT[label]
+}
+
 function SprintGroupHeader({ sprint, now }: { sprint: string | null; now: Date }) {
   if (!sprint) {
     return (
-      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-background">
+      <div className="flex items-center gap-1.5 px-4 py-2 mt-6 border-b border-border bg-background">
         <span className="size-1 rounded-full shrink-0 bg-muted-foreground/35" />
         <span className="text-[10px] font-bold tracking-widest uppercase leading-none text-muted-foreground/35">
           Backlog
@@ -36,10 +42,13 @@ function SprintGroupHeader({ sprint, now }: { sprint: string | null; now: Date }
   const label = classifySprintKey(sprint, now)
   const color = SPRINT_LABEL_COLOR[label]
   return (
-    <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-background">
+    <div className="flex items-center gap-1.5 px-4 py-2 mt-6 border-b border-border bg-background">
       <span className="size-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
       <span className="text-[10px] font-bold tracking-widest uppercase leading-none" style={{ color }}>
-        {SPRINT_LABEL_TEXT[label]} · Sprint {formatSprintKey(sprint, now)}
+        Sprint {formatSprintKey(sprint, now)} · {sprintLabelText(sprint, now)}
+      </span>
+      <span className="text-[10px] font-medium leading-none text-muted-foreground/50 ml-auto">
+        {formatSprintDateRange(sprint)}
       </span>
     </div>
   )

@@ -19,6 +19,15 @@ export function splitLeadingEmoji(text: string): { emoji: string; rest: string }
   return { emoji: text.slice(0, pos), rest: text.slice(pos) }
 }
 
+const EMOJI_CLUSTER_GLOBAL = new RegExp(`${EMOJI_START.source.slice(1)}(?:${EMOJI_CONT.source.slice(1)})*`, 'gu')
+
+// Finds the first emoji grapheme cluster anywhere in `text`, wherever it falls.
+export function findFirstEmoji(text: string): { emoji: string; start: number; end: number } | null {
+  const m = text.matchAll(EMOJI_CLUSTER_GLOBAL).next().value
+  if (!m) return null
+  return { emoji: m[0], start: m.index, end: m.index + m[0].length }
+}
+
 // First emoji wins; later emojis stay in the title.
 export const emojiParser: PropertyParser = {
   key: 'emoji',

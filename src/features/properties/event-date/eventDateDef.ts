@@ -1,7 +1,31 @@
 import type { ParseHit, PropertyParser, ParseContext, Token } from '../parser'
-import { formatDateLabel } from '@/lib/dateLabel'
+import { dayDiff, formatDateLabel } from '@/lib/dateLabel'
+import { SPRINT_LABEL_COLOR } from '../sprint/sprintDef'
 
-export const EVENT_DATE_COLOR = '#fb923c'
+const EVENT_DATE_HUE = 27
+const EVENT_DATE_LIGHTNESS = 61
+
+function hslToHex(h: number, s: number, l: number): string {
+  s /= 100
+  l /= 100
+  const k = (n: number) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n: number) => l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)))
+  const toHex = (x: number) => Math.round(x * 255).toString(16).padStart(2, '0')
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`
+}
+
+// Level 1 (today or past): full saturation. Level 2 (tomorrow): muted. Level 3 (2+ days out): future-sprint gray.
+export const EVENT_DATE_COLOR = hslToHex(EVENT_DATE_HUE, 96, EVENT_DATE_LIGHTNESS)
+export const EVENT_DATE_COLOR_TOMORROW = hslToHex(EVENT_DATE_HUE, 55, EVENT_DATE_LIGHTNESS)
+export const EVENT_DATE_COLOR_LATER = SPRINT_LABEL_COLOR.future
+
+export function eventDateColor(date: Date, now: Date): string {
+  const diff = dayDiff(date, now)
+  if (diff <= 0) return EVENT_DATE_COLOR
+  if (diff === 1) return EVENT_DATE_COLOR_TOMORROW
+  return EVENT_DATE_COLOR_LATER
+}
 
 export function formatEventDate(iso: string): string {
   const d = new Date(iso)

@@ -4,7 +4,7 @@ function startOfDay(d: Date): Date {
   return s
 }
 
-function dayDiff(date: Date, now: Date): number {
+export function dayDiff(date: Date, now: Date): number {
   const msPerDay = 86400000
   return Math.round((startOfDay(date).getTime() - startOfDay(now).getTime()) / msPerDay)
 }

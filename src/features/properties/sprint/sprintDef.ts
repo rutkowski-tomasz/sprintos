@@ -68,6 +68,21 @@ export function classifySprintKey(key: string, now: Date): SprintLabel {
   return sprintKeyOrdinal(key) < sprintKeyOrdinal(current) ? 'past' : 'future'
 }
 
+export function sprintWeeksFromNow(key: string, now: Date): number {
+  const { start } = sprintDateRange(key)
+  const { start: nowStart } = sprintDateRange(sprintKey(now))
+  return Math.round((start.getTime() - nowStart.getTime()) / MS_PER_WEEK)
+}
+
+// "in Nw" for future sprints, "Nw ago" for past sprints, the label word otherwise.
+export function sprintRelativeLabel(key: string, now: Date): string {
+  const label = classifySprintKey(key, now)
+  const weeks = sprintWeeksFromNow(key, now)
+  if (label === 'future') return `in ${weeks}w`
+  if (label === 'past') return `${Math.abs(weeks)}w ago`
+  return SPRINT_LABEL_TEXT[label]
+}
+
 export function formatSprintKey(key: string, now: Date): string {
   const m = key.match(/^(\d+) Q(\d) (\d+)$/)
   if (!m) return key
@@ -92,6 +107,12 @@ export function sprintDateRange(key: string): { start: Date; end: Date } {
   const end = new Date(start)
   end.setDate(end.getDate() + 6)
   return { start, end }
+}
+
+export function formatSprintDateRange(key: string): string {
+  const { start, end } = sprintDateRange(key)
+  const fmt = (d: Date) => `${d.getDate()} ${d.toLocaleString('en', { month: 'short' })}`
+  return `${fmt(start)} - ${fmt(end)}`
 }
 
 export function sprintWeekNumber(key: string): string {

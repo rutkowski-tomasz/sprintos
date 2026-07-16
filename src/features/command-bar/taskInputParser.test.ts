@@ -63,6 +63,30 @@ describe('parse', () => {
       const r = parse(input, WED)
       expect(r.emoji?.value).toBe('💪🏻')
     })
+
+    it('E7: leading emoji with no whitespace', () => {
+      const input = '👥Meetup'
+      const r = parse(input, WED)
+      expect(r.emoji?.value).toBe('👥')
+      expect(raw(r.emoji, input)).toBe('👥')
+      expect(r.title).toBe('Meetup')
+    })
+
+    it('E8: trailing emoji with no whitespace', () => {
+      const input = 'Meetup👥'
+      const r = parse(input, WED)
+      expect(r.emoji?.value).toBe('👥')
+      expect(raw(r.emoji, input)).toBe('👥')
+      expect(r.title).toBe('Meetup')
+    })
+
+    it('E9: mid-word emoji with no whitespace on either side', () => {
+      const input = 'Friends👥meetup'
+      const r = parse(input, WED)
+      expect(r.emoji?.value).toBe('👥')
+      expect(raw(r.emoji, input)).toBe('👥')
+      expect(r.title).toBe('Friends meetup')
+    })
   })
 
   // ─── Event date ─────────────────────────────────────────────────────────────

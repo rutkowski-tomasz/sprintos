@@ -1,5 +1,6 @@
 import type { Token } from '@/features/properties/parser'
 import { PROPERTY_PARSERS } from '@/features/properties/parser'
+import { findFirstEmoji } from '@/features/properties/emoji/emojiDef'
 
 export interface Span {
   start: number
@@ -23,7 +24,17 @@ function tokenise(input: string): Token[] {
   const re = /\S+/gu
   let m: RegExpExecArray | null
   while ((m = re.exec(input)) !== null) {
-    tokens.push({ text: m[0], start: m.index, end: m.index + m[0].length })
+    const text = m[0]
+    const hit = findFirstEmoji(text)
+    if (!hit) {
+      tokens.push({ text, start: m.index, end: m.index + text.length })
+      continue
+    }
+    const before = text.slice(0, hit.start)
+    const after = text.slice(hit.end)
+    if (before) tokens.push({ text: before, start: m.index, end: m.index + hit.start })
+    tokens.push({ text: hit.emoji, start: m.index + hit.start, end: m.index + hit.end })
+    if (after) tokens.push({ text: after, start: m.index + hit.end, end: m.index + text.length })
   }
   return tokens
 }
