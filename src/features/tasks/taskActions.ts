@@ -64,6 +64,25 @@ export async function findSimilarTasks(query: string, limit = 1): Promise<Task[]
   return scored.slice(0, limit).map(s => s.task)
 }
 
+export async function createSeries(id: string, count: number): Promise<void> {
+  const task = await db.tasks.get(id)
+  if (!task) return
+  const width = String(count).length
+  const label = (n: number) => String(n).padStart(width, '0')
+  await updateTask(id, { name: `${task.name} ${label(1)}/${count}` })
+  for (let i = 2; i <= count; i++) {
+    const now = new Date().toISOString()
+    const part: Task = { ...task, id: crypto.randomUUID(), name: `${task.name} ${label(i)}/${count}`, createdAt: now, updatedAt: now, version: 1 }
+    await db.tasks.put(part)
+    await db.sync_queue.add({
+      operation: 'insert',
+      table: 'tasks',
+      payload: part,
+    })
+  }
+  flushQueue()
+}
+
 export async function duplicateTask(id: string): Promise<string | null> {
   const task = await db.tasks.get(id)
   if (!task) return null

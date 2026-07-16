@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split } from 'lucide-react'
 import { db } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
@@ -20,7 +21,7 @@ import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { formatDuration, durationParser } from '@/features/properties/duration/durationDef'
 import { splitLeadingEmoji } from '@/features/properties/emoji/emojiDef'
-import { updateTask, duplicateTask, deleteTask } from './taskActions'
+import { updateTask, duplicateTask, deleteTask, createSeries } from './taskActions'
 import type { Task } from '@/types'
 
 const BACK_OFFSET_THRESHOLD = 100
@@ -291,11 +292,48 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
   )
 }
 
+function SeriesSheet({ task, open, onOpenChange }: { task: Task; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [count, setCount] = useState('4')
+  const parsed = parseInt(count, 10)
+  const valid = Number.isInteger(parsed) && parsed >= 2
+
+  async function handleCreate() {
+    if (!valid) return
+    await createSeries(task.id, parsed)
+    onOpenChange(false)
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="bottom">
+        <SheetHeader>
+          <SheetTitle>Split into series</SheetTitle>
+        </SheetHeader>
+        <div className="flex flex-col gap-2 px-4 pb-4">
+          <label className="text-xs text-muted-foreground">Number of parts</label>
+          <input
+            type="number"
+            min={2}
+            autoFocus
+            value={count}
+            onChange={e => setCount(e.target.value)}
+            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-sm"
+          />
+          <Button size="lg" className="w-full" disabled={!valid} onClick={() => void handleCreate()}>
+            Split
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
   const navigate = useNavigate()
   const task = useLiveQuery(() => db.tasks.get(taskId), [taskId])
   const x = useMotionValue(0)
   const dragControls = useDragControls()
+  const [seriesOpen, setSeriesOpen] = useState(false)
 
   function goBack() {
     navigate(listPath)
@@ -368,6 +406,9 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
             <DropdownMenuItem onClick={() => void handleCopyContent()}>
               <ClipboardCopy /> Copy content
             </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setSeriesOpen(true)}>
+              <Split /> Split into series
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
               <Trash2 /> Delete
@@ -377,6 +418,7 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
       </div>
 
       {task && <TaskDetailForm task={task} now={now} />}
+      {task && <SeriesSheet task={task} open={seriesOpen} onOpenChange={setSeriesOpen} />}
     </motion.div>
   )
 }
