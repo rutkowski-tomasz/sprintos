@@ -11,12 +11,37 @@ import { MassStatusSheet } from './MassStatusSheet'
 import { MassMoveSheet } from './MassMoveSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSE_RANGE } from '@/features/navigation/sprintHeaderCollapse'
+import { classifySprintKey, compareSprintKeys, formatSprintKey, SPRINT_LABEL_COLOR, SPRINT_LABEL_TEXT } from '@/features/properties/sprint/sprintDef'
 import { TaskStatus, type Goal, type Task } from '@/types'
 
 interface TaskListProps {
   tasks: Task[]
   basePath: string
   scrollContainerRef?: RefObject<HTMLDivElement | null>
+  groupBySprint?: boolean
+}
+
+function SprintGroupHeader({ sprint, now }: { sprint: string | null; now: Date }) {
+  if (!sprint) {
+    return (
+      <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-background">
+        <span className="size-1 rounded-full shrink-0 bg-muted-foreground/35" />
+        <span className="text-[10px] font-bold tracking-widest uppercase leading-none text-muted-foreground/35">
+          Backlog
+        </span>
+      </div>
+    )
+  }
+  const label = classifySprintKey(sprint, now)
+  const color = SPRINT_LABEL_COLOR[label]
+  return (
+    <div className="flex items-center gap-1.5 px-4 py-2 border-b border-border bg-background">
+      <span className="size-1 rounded-full shrink-0" style={{ backgroundColor: color }} />
+      <span className="text-[10px] font-bold tracking-widest uppercase leading-none" style={{ color }}>
+        {SPRINT_LABEL_TEXT[label]} · Sprint {formatSprintKey(sprint, now)}
+      </span>
+    </div>
+  )
 }
 
 const STATUS_RANK: Record<TaskStatus, number> = {
@@ -36,7 +61,16 @@ function compareTasks(a: Task, b: Task): number {
   return 0
 }
 
-export function TaskList({ tasks, basePath, scrollContainerRef }: TaskListProps) {
+function compareBySprintGroup(a: Task, b: Task): number {
+  if (a.sprint !== b.sprint) {
+    if (!a.sprint) return 1
+    if (!b.sprint) return -1
+    return compareSprintKeys(a.sprint, b.sprint)
+  }
+  return compareTasks(a, b)
+}
+
+export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint }: TaskListProps) {
   const navigate = useNavigate()
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
@@ -62,13 +96,14 @@ export function TaskList({ tasks, basePath, scrollContainerRef }: TaskListProps)
       if (isSnoozed(task, now)) snoozed.push(task)
       else active.push(task)
     }
-    active.sort(compareTasks)
-    snoozed.sort(compareTasks)
+    const sorter = groupBySprint ? compareBySprintGroup : compareTasks
+    active.sort(sorter)
+    snoozed.sort(sorter)
     return {
       visibleTasks: showSnoozed ? [...active, ...snoozed] : active,
       snoozedIds: new Set(snoozed.map(t => t.id)),
     }
-  }, [tasks, showSnoozed, now])
+  }, [tasks, showSnoozed, now, groupBySprint])
 
   function enterSelectMode(id: string) {
     setSelectMode(true)
@@ -144,8 +179,11 @@ export function TaskList({ tasks, basePath, scrollContainerRef }: TaskListProps)
       )}
 
       <AnimatePresence initial={false}>
-        {visibleTasks.map(task => {
+        {visibleTasks.map((task, i) => {
           const snoozed = snoozedIds.has(task.id)
+          const showHeader = groupBySprint
+            && task.sprint !== visibleTasks[i - 1]?.sprint
+            && (task.sprint || i > 0)
           return (
             <motion.div
               key={`${task.id}:${snoozed}`}
@@ -155,6 +193,7 @@ export function TaskList({ tasks, basePath, scrollContainerRef }: TaskListProps)
               transition={{ type: 'spring', stiffness: 420, damping: 36 }}
               style={{ overflow: 'hidden' }}
             >
+              {showHeader && <SprintGroupHeader sprint={task.sprint} now={now} />}
               <TaskRow
                 task={task}
                 goalMap={goalMap}

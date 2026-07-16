@@ -19,6 +19,7 @@ const VIEW_ROUTES = [
   { path: '/sprint/:key', element: <SprintView /> },
   { path: '/sprint/:key/:taskId', element: <SprintView /> },
   { path: '/backlog', element: <Backlog /> },
+  { path: '/backlog/:taskId', element: <Backlog /> },
   { path: '/goals', element: <Goals /> },
   { path: '/', element: <Navigate to="/sprint/current" replace /> },
   { path: '*', element: <Navigate to="/sprint/current" replace /> },
@@ -63,7 +64,7 @@ function AppShell() {
   const navigate = useNavigate()
 
   function openTaskDetail(task: Task) {
-    const path = task.sprint ? `/sprint/${task.sprint.replace(/ /g, '-')}/${task.id}` : '/backlog'
+    const path = task.sprint ? `/sprint/${task.sprint.replace(/ /g, '-')}/${task.id}` : `/backlog/${task.id}`
     navigate(path)
     setSearchFocused(false)
     commandBarRef.current?.close()
