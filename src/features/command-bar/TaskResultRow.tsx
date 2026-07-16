@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { ArrowDownLeft, Plus } from 'lucide-react'
 import type { TaskStatus } from '@/types'
-import { STATUS_LABEL, STATUS_BADGE } from '@/features/properties/status/statusDef'
+import { StatusChip } from '@/features/properties/status/StatusChip'
 
 interface TaskResultRowProps {
   emoji?: string
@@ -38,9 +38,7 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
       </div>
 
       <div className="shrink-0 flex flex-col items-end gap-1">
-        <span className={`text-xs px-2.5 py-0.5 rounded-full border ${STATUS_BADGE[status]}`}>
-          {STATUS_LABEL[status]}
-        </span>
+        <StatusChip status={status} />
         {subtitle && <div className="text-[11px] text-white/40">{subtitle}</div>}
       </div>
 

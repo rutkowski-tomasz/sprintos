@@ -1,7 +1,10 @@
-import { Chip } from '../Chip'
-import { STATUS_LABEL, STATUS_CHIP_COLOR } from './statusDef'
+import { STATUS_LABEL, STATUS_BADGE } from './statusDef'
 import type { TaskStatus } from '@/types'
 
 export function StatusChip({ status }: { status: TaskStatus }) {
-  return <Chip color={STATUS_CHIP_COLOR[status]}>{STATUS_LABEL[status]}</Chip>
+  return (
+    <span className={`inline-flex items-center text-[11px] px-2 py-0.5 rounded-md leading-none border ${STATUS_BADGE[status]}`}>
+      {STATUS_LABEL[status]}
+    </span>
+  )
 }

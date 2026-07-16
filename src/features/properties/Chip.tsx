@@ -7,7 +7,7 @@ export function Chip({ color, muted, children }: { color?: string; muted?: boole
       style={muted
         ? { color: 'rgba(255,255,255,0.35)', borderColor: 'transparent', backgroundColor: 'transparent' }
         : color
-        ? { color, borderColor: `${color}40`, backgroundColor: `${color}12` }
+        ? { color, borderColor: `${color}26`, backgroundColor: `${color}0a` }
         : { color: 'rgba(255,255,255,0.28)', borderColor: 'rgba(255,255,255,0.10)', backgroundColor: 'transparent' }}
     >
       {children}

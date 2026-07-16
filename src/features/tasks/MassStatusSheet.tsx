@@ -1,8 +1,8 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
 import { updateTasks } from './taskActions'
 import type { TaskStatus } from '@/types'
-import { STATUS_LABEL, STATUS_BADGE, ALL_STATUSES } from '@/features/properties/status/statusDef'
+import { ALL_STATUSES } from '@/features/properties/status/statusDef'
+import { StatusChip } from '@/features/properties/status/StatusChip'
 
 interface MassStatusSheetProps {
   taskIds: string[]
@@ -31,7 +31,7 @@ export function MassStatusSheet({ taskIds, open, onOpenChange, onDone }: MassSta
               onClick={() => pick(status)}
               className="flex items-center rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
             >
-              <Badge className={STATUS_BADGE[status]}>{STATUS_LABEL[status]}</Badge>
+              <StatusChip status={status} />
             </button>
           ))}
         </div>

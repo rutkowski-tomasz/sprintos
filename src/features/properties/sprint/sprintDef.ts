@@ -13,7 +13,7 @@ export const SPRINT_LABEL_COLOR: Record<SprintLabel, string> = {
   next: '#c084fc',
   previous: '#fbbf24',
   future: '#a1a1aa',
-  past: '#71717a',
+  past: '#92400e',
 }
 
 const MS_PER_WEEK = 7 * 24 * 60 * 60 * 1000

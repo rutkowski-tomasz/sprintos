@@ -1,9 +1,9 @@
 import { Check } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
-import { Badge } from '@/components/ui/badge'
 import { updateTask } from '@/features/tasks/taskActions'
 import type { Task, TaskStatus } from '@/types'
-import { STATUS_LABEL, STATUS_BADGE, ALL_STATUSES } from './statusDef'
+import { ALL_STATUSES } from './statusDef'
+import { StatusChip } from './StatusChip'
 
 interface StatusSheetProps {
   task: Task
@@ -30,7 +30,7 @@ export function StatusSheet({ task, open, onOpenChange }: StatusSheetProps) {
               onClick={() => pick(status)}
               className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
             >
-              <Badge className={STATUS_BADGE[status]}>{STATUS_LABEL[status]}</Badge>
+              <StatusChip status={status} />
               {task.status === status && <Check size={16} className="text-muted-foreground" />}
             </button>
           ))}

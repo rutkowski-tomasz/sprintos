@@ -19,14 +19,6 @@ export const STATUS_BADGE: Record<number, string> = {
   [TaskStatus.ARCHIVED]: 'bg-zinc-400/10 text-zinc-500 border-transparent',
 }
 
-export const STATUS_CHIP_COLOR: Record<number, string> = {
-  [TaskStatus.TODO]: '#a1a1aa',
-  [TaskStatus.NEXT]: '#c084fc',
-  [TaskStatus.IN_PROGRESS]: '#60a5fa',
-  [TaskStatus.DONE]: '#34d399',
-  [TaskStatus.ARCHIVED]: '#71717a',
-}
-
 export const ALL_STATUSES = [
   TaskStatus.TODO,
   TaskStatus.NEXT,
