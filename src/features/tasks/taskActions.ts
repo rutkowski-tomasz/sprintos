@@ -64,9 +64,9 @@ export async function findSimilarTasks(query: string, limit = 1): Promise<Task[]
   return scored.slice(0, limit).map(s => s.task)
 }
 
-export async function duplicateTask(id: string): Promise<void> {
+export async function duplicateTask(id: string): Promise<string | null> {
   const task = await db.tasks.get(id)
-  if (!task) return
+  if (!task) return null
   const all = await db.tasks.filter(t => t.deletedAt === null).toArray()
   const names = new Set(all.map(t => t.name))
   let n = 1
@@ -81,4 +81,5 @@ export async function duplicateTask(id: string): Promise<void> {
     payload: copy,
   })
   flushQueue()
+  return copy.id
 }

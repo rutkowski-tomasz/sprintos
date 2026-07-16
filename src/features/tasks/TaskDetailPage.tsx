@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X } from 'lucide-react'
 import { db } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,7 @@ import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { formatDuration, durationParser } from '@/features/properties/duration/durationDef'
+import { splitLeadingEmoji } from '@/features/properties/emoji/emojiDef'
 import { updateTask, duplicateTask, deleteTask } from './taskActions'
 import type { Task } from '@/types'
 
@@ -96,7 +97,19 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
 
   function saveEmoji() {
     const trimmed = emoji.trim()
-    if (trimmed !== (task.emoji ?? '')) void updateTask(task.id, { emoji: trimmed || null })
+    const { emoji: leading, rest } = splitLeadingEmoji(trimmed)
+    if (!leading) {
+      if (trimmed !== (task.emoji ?? '')) void updateTask(task.id, { emoji: trimmed || null })
+      return
+    }
+    setEmoji(leading)
+    if (leading !== (task.emoji ?? '')) void updateTask(task.id, { emoji: leading })
+    const overflow = rest.trim()
+    if (overflow) {
+      const newName = `${overflow} ${task.name}`.trim()
+      setName(newName)
+      void updateTask(task.id, { name: newName })
+    }
   }
 
   function saveDescription() {
@@ -120,6 +133,12 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
     const iso = eventDateLocal ? new Date(eventDateLocal).toISOString() : null
     if (iso !== task.eventDate) void updateTask(task.id, { eventDate: iso })
     setEditingDate(false)
+  }
+
+  function clearEventDate() {
+    setEventDateLocal('')
+    setEditingDate(false)
+    if (task.eventDate !== null) void updateTask(task.id, { eventDate: null })
   }
 
   return (
@@ -162,14 +181,23 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
 
         <Field label="Event date">
           {editingDate || eventDateLocal ? (
-            <input
-              type="datetime-local"
-              autoFocus={editingDate}
-              value={eventDateLocal}
-              onChange={e => setEventDateLocal(e.target.value)}
-              onBlur={saveEventDate}
-              className="bg-transparent border-0 outline-none text-sm text-right"
-            />
+            <>
+              <input
+                type="datetime-local"
+                autoFocus={editingDate}
+                value={eventDateLocal}
+                onChange={e => setEventDateLocal(e.target.value)}
+                onBlur={saveEventDate}
+                className="bg-transparent border-0 outline-none text-sm text-right"
+              />
+              <button
+                onClick={clearEventDate}
+                aria-label="Clear event date"
+                className="shrink-0 text-muted-foreground/40 hover:text-foreground transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
           ) : (
             <EmptyValue onClick={() => setEditingDate(true)} />
           )}
@@ -283,7 +311,8 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
 
   async function handleDuplicate() {
     if (!task) return
-    await duplicateTask(task.id)
+    const newId = await duplicateTask(task.id)
+    if (newId) navigate(`${listPath}/${newId}`)
   }
 
   async function handleCopyContent() {

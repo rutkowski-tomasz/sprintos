@@ -58,7 +58,7 @@ function compareTasks(a: Task, b: Task): number {
   if (a.eventDate && b.eventDate) return a.eventDate.localeCompare(b.eventDate)
   if (a.eventDate) return -1
   if (b.eventDate) return 1
-  return 0
+  return a.name.localeCompare(b.name)
 }
 
 function compareBySprintGroup(a: Task, b: Task): number {
