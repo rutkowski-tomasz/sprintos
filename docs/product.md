@@ -58,6 +58,7 @@ Quarterly objective: title, emoji, quarter (e.g. `"26 Q3"`), Markdown summary, l
 | **Planning** | All incomplete tasks — sprint-assigned and unassigned — ordered by Sprint → Status. Shows both what is planned and what still needs a sprint. |
 | **All Tasks** | Cursor-paginated table. Filter by Goal/Status (including Completed), full-text search, sort by `createdAt` for mass cleanup |
 | **Goals** | Aggregated progress (completed / total tasks). Inline create/rename, multi-select delete |
+| **Settings** | Avatar/initials, name, email, language preference (English US / Polish — stored only, does not affect app locale yet), sign out |
 
 ## Display Labels
 

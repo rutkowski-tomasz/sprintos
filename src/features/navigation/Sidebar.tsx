@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { Zap, CalendarDays, List, Target, LogOut } from 'lucide-react'
+import { Zap, CalendarDays, List, Target, Settings, LogOut } from 'lucide-react'
 import { Logo } from './Logo'
 import { supabase } from '@/lib/supabase'
 
@@ -8,6 +8,7 @@ const NAV = [
   { to: '/sprint/next', label: 'Next sprint', icon: CalendarDays },
   { to: '/backlog', label: 'Backlog', icon: List },
   { to: '/goals', label: 'Goals', icon: Target },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export function Sidebar() {

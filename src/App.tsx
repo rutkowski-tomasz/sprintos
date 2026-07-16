@@ -10,6 +10,7 @@ import { MatchingTasksPanel } from '@/features/command-bar/MatchingTasksPanel'
 import { SprintView } from '@/views/SprintView'
 import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
+import { Settings } from '@/views/Settings'
 import { SharePage } from '@/features/share/SharePage'
 import type { Task } from '@/types'
 
@@ -21,6 +22,7 @@ const VIEW_ROUTES = [
   { path: '/backlog', element: <Backlog /> },
   { path: '/backlog/:taskId', element: <Backlog /> },
   { path: '/goals', element: <Goals /> },
+  { path: '/settings', element: <Settings /> },
   { path: '/', element: <Navigate to="/sprint/current" replace /> },
   { path: '*', element: <Navigate to="/sprint/current" replace /> },
 ]
