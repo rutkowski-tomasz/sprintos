@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { Zap, CalendarDays, List, Target, Settings, LogOut } from 'lucide-react'
 import { Logo } from './Logo'
-import { supabase } from '@/lib/supabase'
+import { useSignOutFlow } from '@/features/auth/useSignOutFlow'
 
 const NAV = [
   { to: '/sprint/current', label: 'Current sprint', icon: Zap },
@@ -12,6 +12,8 @@ const NAV = [
 ]
 
 export function Sidebar() {
+  const { requestSignOut, dialog } = useSignOutFlow()
+
   return (
     <aside className="hidden md:flex flex-col w-52 shrink-0 min-h-screen border-r border-border bg-sidebar p-3 gap-0.5">
       <div className="flex items-center gap-2 px-2 py-3 mb-1">
@@ -37,12 +39,13 @@ export function Sidebar() {
         ))}
       </nav>
       <button
-        onClick={() => supabase.auth.signOut()}
+        onClick={requestSignOut}
         className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-sidebar-foreground/40 hover:text-sidebar-foreground hover:bg-sidebar-accent/60 transition-colors"
       >
         <LogOut size={15} />
         Sign out
       </button>
+      {dialog}
     </aside>
   )
 }

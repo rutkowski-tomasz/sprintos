@@ -17,3 +17,7 @@ class AppDB extends Dexie {
 }
 
 export const db = new AppDB()
+
+export async function clearLocalData() {
+  await Promise.all([db.goals.clear(), db.tasks.clear(), db.sync_queue.clear()])
+}

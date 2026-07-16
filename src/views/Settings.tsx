@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { LogOut } from 'lucide-react'
 import { ViewHeader } from '@/features/navigation/ViewHeader'
 import { useSession } from '@/features/auth/useSession'
+import { useSignOutFlow } from '@/features/auth/useSignOutFlow'
 import { supabase } from '@/lib/supabase'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,7 @@ export function Settings() {
 
   const [locale, setLocale] = useState<string>('en-US')
   const [saving, setSaving] = useState(false)
+  const { requestSignOut, dialog } = useSignOutFlow()
 
   useEffect(() => {
     if (metadata.locale) setLocale(metadata.locale)
@@ -81,12 +83,13 @@ export function Settings() {
         </section>
 
         <section>
-          <Button variant="outline" onClick={() => supabase.auth.signOut()}>
+          <Button variant="outline" onClick={requestSignOut}>
             <LogOut />
             Sign out
           </Button>
         </section>
       </div>
+      {dialog}
     </div>
   )
 }
