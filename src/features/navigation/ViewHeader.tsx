@@ -104,14 +104,14 @@ function DayTrack({ start, now, tasks }: { start: Date; now: Date; tasks: Task[]
   const today = startOfDay(now)
   const marks = useMemo(() => dayMarksByDate(tasks, now), [tasks, now])
   return (
-    <div className="flex w-full justify-between">
+    <div className="flex w-full justify-end gap-2">
       {sprintDays(start).map((day, i) => {
         const isToday = isSameDay(day, now)
         const isPast = day.getTime() < today.getTime()
         const showMonth = i === 0 || day.getDate() === 1
         const dayMarks = marks.get(startOfDay(day).getTime())
         return (
-          <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
+          <div key={i} className="flex w-8 shrink-0 flex-col items-center gap-0.5">
             <span
               className={cn(
                 'text-[8px] font-medium uppercase tracking-wide leading-none',
@@ -276,7 +276,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef, tasks = []
 
           <div className="relative flex-1 min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              <SprintBadge label={label} />
+              <SprintBadge label={label} sprintKey={sprintKey} now={now} />
               <div className="flex-1" />
               {syncIndicator}
               <motion.span style={{ opacity: daysLeftOpacity }} className="text-xs text-muted-foreground shrink-0">

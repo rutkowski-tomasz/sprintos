@@ -1,12 +1,14 @@
-import { useMemo, useState, type RefObject } from 'react'
+import { useMemo, useState, type ReactNode, type RefObject } from 'react'
 import { AnimatePresence, motion, useTransform } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ListChecks, ArrowRightLeft, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
 import { useNow } from '@/lib/useNow'
+import { useIsMobile } from '@/lib/useIsMobile'
 import { Button } from '@/components/ui/button'
 import { TaskRow } from './TaskRow'
+import { TaskTable } from './TaskTable'
 import { MassStatusSheet } from './MassStatusSheet'
 import { MassMoveSheet } from './MassMoveSheet'
 import { deleteTasks } from './taskActions'
@@ -20,6 +22,7 @@ interface TaskListProps {
   basePath: string
   scrollContainerRef?: RefObject<HTMLDivElement | null>
   groupBySprint?: boolean
+  emptyState?: ReactNode
 }
 
 function sprintLabelText(sprint: string, now: Date): string {
@@ -80,8 +83,9 @@ function compareBySprintGroup(a: Task, b: Task): number {
   return compareTasks(a, b)
 }
 
-export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint }: TaskListProps) {
+export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, emptyState }: TaskListProps) {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const goals = useLiveQuery(
     () => db.goals.filter(g => g.deletedAt === null).toArray(),
     [],
@@ -150,8 +154,66 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint }:
   const allSelected = selectedIds.size > 0 && visibleTasks.every(t => selectedIds.has(t.id))
   const selectedIdList = useMemo(() => Array.from(selectedIds), [selectedIds])
 
+  function toggleSelectAll() {
+    if (allSelected) setSelectedIds(new Set())
+    else selectAll()
+  }
+
   if (!tasks.length) {
-    return <p className="text-sm text-muted-foreground text-center py-8">No tasks.</p>
+    return (
+      <div className="flex flex-col items-center gap-3 py-8">
+        <p className="text-sm text-muted-foreground">No tasks.</p>
+        {emptyState}
+      </div>
+    )
+  }
+
+  if (!isMobile) {
+    return (
+      <div className="border-t border-border">
+        {selectedIds.size > 0 && (
+          <div className="sticky top-0 z-20 flex items-center gap-2 border-b border-border bg-background px-3 py-2">
+            <span className="text-sm font-medium flex-1">{selectedIds.size} selected</span>
+            <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Deselect all
+            </Button>
+            <Button variant="ghost" size="icon-sm" aria-label="Change status" onClick={() => setMassStatusOpen(true)}>
+              <ListChecks />
+            </Button>
+            <Button variant="ghost" size="icon-sm" aria-label="Move" onClick={() => setMassMoveOpen(true)}>
+              <ArrowRightLeft />
+            </Button>
+            <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={deleteSelected}>
+              <Trash2 />
+            </Button>
+          </div>
+        )}
+
+        <TaskTable
+          tasks={visibleTasks}
+          goalMap={goalMap}
+          now={now}
+          groupBySprint={groupBySprint}
+          selectedIds={selectedIds}
+          onToggleSelect={toggleSelect}
+          allSelected={allSelected}
+          onToggleSelectAll={toggleSelectAll}
+          onOpenDetail={openDetail}
+        />
+
+        {snoozedIds.size > 0 && (
+          <button
+            onClick={() => setShowSnoozed(v => !v)}
+            className="w-full py-3 text-center underline decoration-dashed underline-offset-2 decoration-foreground/20 text-xs text-foreground/30 hover:text-foreground active:text-foreground/50"
+          >
+            {showSnoozed ? `Hide snoozed tasks (${snoozedIds.size})` : `Show snoozed tasks (${snoozedIds.size})`}
+          </button>
+        )}
+
+        <MassStatusSheet taskIds={selectedIdList} open={massStatusOpen} onOpenChange={setMassStatusOpen} onDone={exitSelectMode} />
+        <MassMoveSheet taskIds={selectedIdList} open={massMoveOpen} onOpenChange={setMassMoveOpen} onDone={exitSelectMode} />
+      </div>
+    )
   }
 
   return (

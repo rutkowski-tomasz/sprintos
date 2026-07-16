@@ -14,12 +14,6 @@
   --bn-btn-size: 48px;
 }
 
-@media (min-width: 768px) {
-  .bn-root {
-    display: none !important;
-  }
-}
-
 /* ── Bottom bar ── */
 .bn-root {
   position: fixed;
@@ -253,5 +247,19 @@
 .bn-clear:active {
   background: rgba(255, 255, 255, 0.2);
   transform: scale(0.9);
+}
+
+/* ── Desktop layout ── */
+@media (min-width: 768px) {
+  .bn-root {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    justify-content: center;
+  }
+  .bn-search-bar {
+    flex: 0 1 640px;
+  }
 }
 

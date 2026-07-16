@@ -21,7 +21,8 @@ import { isEventDateMisaligned, sprintKey } from '@/features/properties/sprint/s
 import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
-import { formatDuration, durationParser } from '@/features/properties/duration/durationDef'
+import { formatDuration, parseDurationText } from '@/features/properties/duration/durationDef'
+import { formatEventDateShort, toDatetimeLocal } from '@/features/properties/event-date/eventDateDef'
 import { splitLeadingEmoji } from '@/features/properties/emoji/emojiDef'
 import { updateTask, duplicateTask, deleteTask, createSeries } from './taskActions'
 import type { Task } from '@/types'
@@ -35,19 +36,6 @@ interface TaskDetailPageProps {
   taskId: string
   now: Date
   listPath: string
-}
-
-function toDatetimeLocal(iso: string): string {
-  const d = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
-}
-
-function parseDurationText(text: string, now: Date): number | null {
-  const trimmed = text.trim()
-  if (!trimmed) return null
-  const hit = durationParser.parse([{ text: trimmed, start: 0, end: trimmed.length }], { now })
-  return hit ? (hit.value as number) : null
 }
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
@@ -70,6 +58,7 @@ function EmptyValue({ onClick }: { onClick?: () => void }) {
 function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [name, setName] = useState(task.name)
+  const [editingName, setEditingName] = useState(false)
   const nameRef = useRef<HTMLTextAreaElement>(null)
   const [emoji, setEmoji] = useState(task.emoji ?? '')
   const [description, setDescription] = useState(task.description ?? '')
@@ -94,6 +83,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
     const trimmed = name.trim()
     if (trimmed && trimmed !== task.name) void updateTask(task.id, { name: trimmed })
     else setName(task.name)
+    setEditingName(false)
   }
 
   function resizeNameInput(el: HTMLTextAreaElement) {
@@ -103,7 +93,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
 
   useEffect(() => {
     if (nameRef.current) resizeNameInput(nameRef.current)
-  }, [name])
+  }, [name, editingName])
 
   function saveEmoji() {
     const trimmed = emoji.trim()
@@ -161,23 +151,34 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
           className="h-8 w-8 shrink-0 text-center text-lg bg-transparent border-0 outline-none rounded hover:bg-muted/40 focus:bg-muted/40 transition-colors"
           placeholder="—"
         />
-        <textarea
-          ref={nameRef}
-          rows={1}
-          value={name}
-          onChange={e => {
-            setName(e.target.value)
-            resizeNameInput(e.target)
-          }}
-          onBlur={saveName}
-          onKeyDown={e => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              e.currentTarget.blur()
-            }
-          }}
-          className="flex-1 min-w-0 resize-none overflow-hidden whitespace-pre-wrap break-words text-lg font-semibold leading-snug bg-transparent border-0 outline-none rounded px-1 -mx-1 py-1 hover:bg-muted/40 focus:bg-muted/40 transition-colors"
-        />
+        {editingName ? (
+          <textarea
+            ref={nameRef}
+            rows={1}
+            autoFocus
+            value={name}
+            onChange={e => {
+              setName(e.target.value)
+              resizeNameInput(e.target)
+            }}
+            onFocus={e => e.currentTarget.setSelectionRange(e.currentTarget.value.length, e.currentTarget.value.length)}
+            onBlur={saveName}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                e.currentTarget.blur()
+              }
+            }}
+            className="flex-1 min-w-0 resize-none overflow-hidden whitespace-pre-wrap break-words text-lg font-semibold leading-snug bg-transparent border-0 outline-none rounded px-1 -mx-1 py-1 hover:bg-muted/40 focus:bg-muted/40 transition-colors"
+          />
+        ) : (
+          <button
+            onClick={() => setEditingName(true)}
+            className="flex-1 min-w-0 whitespace-pre-wrap break-words text-left text-lg font-semibold leading-snug rounded px-1 -mx-1 py-1 hover:bg-muted/40 transition-colors"
+          >
+            {name}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-col divide-y divide-border border-t border-border shrink-0">
@@ -202,11 +203,11 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
         )}
 
         <Field label="Event date">
-          {editingDate || eventDateLocal ? (
+          {editingDate ? (
             <>
               <input
                 type="datetime-local"
-                autoFocus={editingDate}
+                autoFocus
                 value={eventDateLocal}
                 onChange={e => setEventDateLocal(e.target.value)}
                 onBlur={saveEventDate}
@@ -220,6 +221,10 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
                 <X className="h-3.5 w-3.5" />
               </button>
             </>
+          ) : task.eventDate ? (
+            <button onClick={() => setEditingDate(true)} className="text-sm hover:text-foreground">
+              {formatEventDateShort(task.eventDate, now)}
+            </button>
           ) : (
             <EmptyValue onClick={() => setEditingDate(true)} />
           )}

@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from 'react'
-import { useLocation, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { AnimatePresence, motion } from 'motion/react'
 import { ViewHeader, SPRINT_HEADER_INSET } from '@/features/navigation/ViewHeader'
 import { TaskList } from '@/features/tasks/TaskList'
@@ -8,15 +8,18 @@ import { useSprintTasks } from '@/features/tasks/useSprintTasks'
 import { usePullToRefresh } from '@/features/tasks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/features/tasks/PullToRefreshIndicator'
 import { refreshData } from '@/features/sync/sync'
-import { sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
+import { Button } from '@/components/ui/button'
+import { sprintKey, sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
 
 export function SprintView() {
   const { key: param, taskId } = useParams<{ key: string; taskId?: string }>()
-  const key = sprintKeyFromRouteParam(param ?? 'current', new Date())
+  const now = useMemo(() => new Date(), [])
+  const key = sprintKeyFromRouteParam(param ?? 'current', now)
+  const isCurrent = key === sprintKey(now)
   const tasks = useSprintTasks(key)
   const scrollRef = useRef<HTMLDivElement>(null)
-  const now = useMemo(() => new Date(), [])
   const location = useLocation()
+  const navigate = useNavigate()
   const basePath = taskId ? location.pathname.slice(0, -(taskId.length + 1)) : location.pathname
   const handleRefresh = useCallback(() => refreshData(), [])
   const { pullY, bounceY, refreshing } = usePullToRefresh(scrollRef, handleRefresh)
@@ -31,7 +34,18 @@ export function SprintView() {
       >
         <motion.div style={{ y: bounceY }}>
           <PullToRefreshIndicator pullY={pullY} refreshing={refreshing} />
-          {tasks && <TaskList tasks={tasks} basePath={basePath} scrollContainerRef={scrollRef} />}
+          {tasks && (
+            <TaskList
+              tasks={tasks}
+              basePath={basePath}
+              scrollContainerRef={scrollRef}
+              emptyState={!isCurrent && (
+                <Button variant="outline" size="sm" onClick={() => navigate('/sprint/current')}>
+                  Back to current sprint
+                </Button>
+              )}
+            />
+          )}
           <div className="h-24" />
         </motion.div>
       </div>

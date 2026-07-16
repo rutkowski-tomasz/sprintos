@@ -125,7 +125,7 @@ export function SprintPicker({ task }: { task: Task }) {
 
   return (
     <>
-      <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex">
+      <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex cursor-pointer">
         <SprintChip sprint={task.sprint} now={now} />
       </button>
 

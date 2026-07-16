@@ -43,7 +43,7 @@ export function StatusPicker({ task }: { task: Task }) {
 
   return (
     <>
-      <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex">
+      <button ref={triggerRef} onClick={() => setOpen(o => !o)} className="inline-flex cursor-pointer">
         <StatusChip status={task.status} />
       </button>
 

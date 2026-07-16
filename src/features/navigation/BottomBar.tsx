@@ -76,7 +76,9 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
         onParsedChange={setParsedResult}
         onSuggestionsChange={setSimilarSuggestions}
       />
-      <NavMenu />
+      <div className="md:hidden">
+        <NavMenu />
+      </div>
     </div>
   )
 }

@@ -2,6 +2,13 @@ import type { ParseHit, PropertyParser, Token } from '../parser'
 
 export const DURATION_COLOR = '#2dd4bf'
 
+export function parseDurationText(text: string, now: Date): number | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  const hit = durationParser.parse([{ text: trimmed, start: 0, end: trimmed.length }], { now })
+  return hit ? (hit.value as number) : null
+}
+
 export function formatDuration(seconds: number): string {
   const h = Math.floor(seconds / 3600)
   const m = Math.floor((seconds % 3600) / 60)

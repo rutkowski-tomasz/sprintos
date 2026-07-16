@@ -275,17 +275,17 @@ On submit: title is derived from the raw string minus all confirmed tokens (gaps
 
 All fields are copied. `name` gets ` 1` appended; if that name already exists, increment until a unique name is found (`name 2`, `name 3`, …).
 
-### Keyboard Shortcuts (Desktop)
+### Desktop Task List (Table)
 
-| Shortcut | Action |
-|----------|--------|
-| Cmd+P / Ctrl+P | Focus the command bar input |
-| Hover → checkbox | Reveal per-row checkbox; click to select |
-| Shift + click | Select all rows between last selected and clicked |
-| Shift + ↑ / ↓ | Extend selection by one row |
-| Cmd+D / Ctrl+D | Duplicate selected |
-| Backspace | Delete selected |
-| 1–4 | Set status |
+Below the `lg` breakpoint (1024px, via `useIsMobile`) the task list renders as the mobile card list described below. At or above it, `TaskList` renders `TaskTable` instead — a data table (`src/components/ui/table.tsx`) sharing the same underlying selection/sort/group state as the mobile view.
+
+- Columns: select checkbox, emoji, name, event date (+ misalignment warning), status, sprint, duration, goal, url/description presence icons, open-detail chevron.
+- Selection: a checkbox per row (always visible, no long-press gating) plus a header checkbox for select all/none. Selecting one or more rows shows a toolbar above the table with the count and **Change status** / **Move** / **Delete** actions — the same `MassStatusSheet`/`MassMoveSheet`/`deleteTasks` used on mobile.
+- Editing status or sprint: click directly on the Status or Sprint cell to open that property's picker inline (`StatusPicker`/`SprintPicker`, unchanged from mobile).
+- Opening a task: click the trailing chevron button — clicking elsewhere on the row does not navigate, since status/sprint cells need their own click target.
+- Sprint grouping and the snoozed-tasks toggle mirror the mobile list's behavior, rendered as table rows instead of `<div>`s.
+
+Not yet implemented: hover-to-reveal checkboxes, shift+click range select, shift+↑/↓ to extend selection, Cmd+D/Backspace/1–4 row-level keyboard shortcuts, Cmd+P command bar focus shortcut.
 
 ### Mobile Gestures
 - **Swipe right**: Opens a bottom sheet to change status (all statuses listed, current one checked)
@@ -297,7 +297,7 @@ All fields are copied. `name` gets ` 1` appended; if that name already exists, i
 ### Task Detail
 - A routed page (`/sprint/:key/:taskId`), not a modal — deep-linkable, back button and swipe-from-left-edge both navigate to the list.
 - Slides in from the right; the underlying tab (sprint/backlog) does not re-transition or remount when opening/closing it.
-- Shows every property, including `sourceUrl` and `description` (not shown on the list row). All fields auto-save on blur except pickers (status, sprint), which save immediately.
+- Shows every property, including `sourceUrl` and `description` (not shown on the list row). Name, event date, duration, and link render as read-only text/buttons until clicked, then switch to an editable input that saves on blur; description is always a live textarea. Pickers (status, sprint) save immediately on selection, no click-to-edit gate.
 - Description has no input border — it fills the remaining vertical space like a notes field.
 - The Snooze field opens `RescheduleSheet` in `snoozeOnly` mode: snooze options only, no sprint-move options (sprint has its own picker on the same page).
 
