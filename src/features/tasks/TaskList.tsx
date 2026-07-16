@@ -2,13 +2,14 @@ import { useMemo, useState, type RefObject } from 'react'
 import { AnimatePresence, motion, useTransform } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ListChecks, ArrowRightLeft } from 'lucide-react'
+import { ArrowLeft, ListChecks, ArrowRightLeft, Trash2 } from 'lucide-react'
 import { db } from '@/lib/db'
 import { useNow } from '@/lib/useNow'
 import { Button } from '@/components/ui/button'
 import { TaskRow } from './TaskRow'
 import { MassStatusSheet } from './MassStatusSheet'
 import { MassMoveSheet } from './MassMoveSheet'
+import { deleteTasks } from './taskActions'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
 import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSE_RANGE } from '@/features/navigation/sprintHeaderCollapse'
 import { classifySprintKey, compareSprintKeys, formatSprintKey, SPRINT_LABEL_COLOR, SPRINT_LABEL_TEXT } from '@/features/properties/sprint/sprintDef'
@@ -127,6 +128,12 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint }:
     setSelectedIds(new Set(visibleTasks.map(t => t.id)))
   }
 
+  function deleteSelected() {
+    if (!window.confirm(`Delete ${selectedIds.size} task${selectedIds.size === 1 ? '' : 's'}?`)) return
+    void deleteTasks(selectedIdList)
+    exitSelectMode()
+  }
+
   function openDetail(task: Task) {
     navigate(`${basePath}/${task.id}`)
   }
@@ -173,6 +180,15 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint }:
               onClick={() => setMassMoveOpen(true)}
             >
               <ArrowRightLeft />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={selectedIds.size === 0}
+              aria-label="Delete"
+              onClick={deleteSelected}
+            >
+              <Trash2 />
             </Button>
           </motion.div>
         </>

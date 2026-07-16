@@ -52,6 +52,10 @@ export async function deleteTask(id: string): Promise<void> {
   flushQueue()
 }
 
+export async function deleteTasks(ids: string[]): Promise<void> {
+  await Promise.all(ids.map(deleteTask))
+}
+
 export async function findSimilarTasks(query: string, limit = 1): Promise<Task[]> {
   const vec = await embed(query)
   const tasks = await db.tasks.filter(t => t.deletedAt === null && t.embedding != null).toArray()
