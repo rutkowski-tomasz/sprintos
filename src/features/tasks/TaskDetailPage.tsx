@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
@@ -66,6 +66,7 @@ function EmptyValue({ onClick }: { onClick?: () => void }) {
 function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
   const [rescheduleOpen, setRescheduleOpen] = useState(false)
   const [name, setName] = useState(task.name)
+  const nameRef = useRef<HTMLTextAreaElement>(null)
   const [emoji, setEmoji] = useState(task.emoji ?? '')
   const [description, setDescription] = useState(task.description ?? '')
   const [sourceUrl, setSourceUrl] = useState(task.sourceUrl ?? '')
@@ -83,6 +84,15 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
     if (trimmed && trimmed !== task.name) void updateTask(task.id, { name: trimmed })
     else setName(task.name)
   }
+
+  function resizeNameInput(el: HTMLTextAreaElement) {
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }
+
+  useEffect(() => {
+    if (nameRef.current) resizeNameInput(nameRef.current)
+  }, [name])
 
   function saveEmoji() {
     const trimmed = emoji.trim()
@@ -122,11 +132,22 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
           className="h-8 w-8 shrink-0 text-center text-lg bg-transparent border-0 outline-none rounded hover:bg-muted/40 focus:bg-muted/40 transition-colors"
           placeholder="—"
         />
-        <input
+        <textarea
+          ref={nameRef}
+          rows={1}
           value={name}
-          onChange={e => setName(e.target.value)}
+          onChange={e => {
+            setName(e.target.value)
+            resizeNameInput(e.target)
+          }}
           onBlur={saveName}
-          className="h-8 flex-1 min-w-0 text-lg font-semibold bg-transparent border-0 outline-none rounded px-1 -mx-1 hover:bg-muted/40 focus:bg-muted/40 transition-colors"
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            }
+          }}
+          className="flex-1 min-w-0 resize-none overflow-hidden whitespace-pre-wrap break-words text-lg font-semibold leading-snug bg-transparent border-0 outline-none rounded px-1 -mx-1 py-1 hover:bg-muted/40 focus:bg-muted/40 transition-colors"
         />
       </div>
 
