@@ -70,6 +70,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const [inputValue, setInputValue] = useState('')
   const [parsedResult, setParsedResult] = useState<ParseResult | null>(null)
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0)
+  const [touchPressed, setTouchPressed] = useState(false)
 
   const isCommandMode = inputValue.startsWith('/')
   const commandMatches = useMemo(() => (isCommandMode ? matchCommands(inputValue) : []), [isCommandMode, inputValue])
@@ -311,7 +312,12 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
           <CommandMenu commands={commandMatches} selectedIndex={selectedCommandIndex} onSelect={executeCommand} />
         </div>
       )}
-      <div className="bn-search-bar">
+      <div
+        className={`bn-search-bar${touchPressed ? ' bn-search-bar-pressed' : ''}`}
+        onTouchStart={() => setTouchPressed(true)}
+        onTouchEnd={() => setTouchPressed(false)}
+        onTouchCancel={() => setTouchPressed(false)}
+      >
         <div className="bn-search-area">
           <textarea
             ref={inputRef}

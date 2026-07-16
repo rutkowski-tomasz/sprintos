@@ -24,7 +24,8 @@ export function NavMenu() {
     const panel = panelRef.current
     if (!trigger || !panel) return
     const r = trigger.getBoundingClientRect()
-    panel.style.left = r.left + 'px'
+    panel.style.left = 'auto'
+    panel.style.right = window.innerWidth - r.right + 'px'
     panel.style.bottom = window.innerHeight - r.bottom + 'px'
     panel.style.top = 'auto'
   }, [])

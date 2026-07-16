@@ -69,7 +69,6 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
           />
         </div>
       )}
-      <NavMenu />
       <CommandBar
         ref={commandBarRef}
         onFocusChange={onFocusChange}
@@ -77,6 +76,7 @@ export function BottomBar({ searchFocused, onFocusChange, inputValue, onInputCha
         onParsedChange={setParsedResult}
         onSuggestionsChange={setSimilarSuggestions}
       />
+      <NavMenu />
     </div>
   )
 }

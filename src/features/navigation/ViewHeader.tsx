@@ -13,11 +13,16 @@ import {
 } from '@/features/properties/sprint/sprintDef'
 import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
 import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSED_HEIGHT, COLLAPSE_RANGE } from './sprintHeaderCollapse'
+import { EVENT_DATE_COLOR } from '@/features/properties/event-date/eventDateDef'
+import { SNOOZE_COLOR } from '@/features/properties/snooze/SnoozeChip'
+import { resolveSnoozeDate } from '@/features/properties/snooze/snoozeDef'
+import type { Task } from '@/types'
 
 interface ViewHeaderProps {
   viewName: string
   sprintKey?: string
   scrollContainerRef?: RefObject<HTMLDivElement | null>
+  tasks?: Task[]
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
@@ -74,16 +79,47 @@ function sprintDays(start: Date): Date[] {
   })
 }
 
-function DayTrack({ start, now }: { start: Date; now: Date }) {
+interface DayMarks {
+  hasEvent: boolean
+  hasSnooze: boolean
+}
+
+function dayMarksByDate(tasks: Task[], now: Date): Map<number, DayMarks> {
+  const marks = new Map<number, DayMarks>()
+  const mark = (d: Date, field: 'hasEvent' | 'hasSnooze') => {
+    const k = startOfDay(d).getTime()
+    const existing = marks.get(k) ?? { hasEvent: false, hasSnooze: false }
+    existing[field] = true
+    marks.set(k, existing)
+  }
+  for (const task of tasks) {
+    if (task.eventDate) mark(new Date(task.eventDate), 'hasEvent')
+    const snoozeDate = resolveSnoozeDate(task)
+    if (snoozeDate && snoozeDate > now) mark(snoozeDate, 'hasSnooze')
+  }
+  return marks
+}
+
+function DayTrack({ start, now, tasks }: { start: Date; now: Date; tasks: Task[] }) {
   const today = startOfDay(now)
+  const marks = useMemo(() => dayMarksByDate(tasks, now), [tasks, now])
   return (
     <div className="flex w-full justify-between">
       {sprintDays(start).map((day, i) => {
         const isToday = isSameDay(day, now)
         const isPast = day.getTime() < today.getTime()
         const showMonth = i === 0 || day.getDate() === 1
+        const dayMarks = marks.get(startOfDay(day).getTime())
         return (
           <div key={i} className="flex flex-1 flex-col items-center gap-0.5">
+            <span
+              className={cn(
+                'text-[8px] font-medium uppercase tracking-wide leading-none',
+                isPast ? 'text-muted-foreground/20' : 'text-muted-foreground/50',
+              )}
+            >
+              {showMonth ? day.toLocaleString('en', { month: 'short' }) : ' '}
+            </span>
             <span
               className={cn(
                 'text-[8px] font-medium uppercase tracking-wide',
@@ -101,13 +137,9 @@ function DayTrack({ start, now }: { start: Date; now: Date }) {
             >
               {day.getDate()}
             </span>
-            <span
-              className={cn(
-                'text-[8px] font-medium uppercase tracking-wide leading-none',
-                isPast ? 'text-muted-foreground/20' : 'text-muted-foreground/50',
-              )}
-            >
-              {showMonth ? day.toLocaleString('en', { month: 'short' }) : ' '}
+            <span className="flex items-center gap-0.5 h-1">
+              {dayMarks?.hasEvent && <span className="size-1 rounded-full" style={{ backgroundColor: EVENT_DATE_COLOR }} />}
+              {dayMarks?.hasSnooze && <span className="size-1 rounded-full" style={{ backgroundColor: SNOOZE_COLOR }} />}
             </span>
           </div>
         )
@@ -119,7 +151,7 @@ function DayTrack({ start, now }: { start: Date; now: Date }) {
 const SWIPE_OFFSET_THRESHOLD = 60
 const SWIPE_VELOCITY_THRESHOLD = 500
 
-export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHeaderProps) {
+export function ViewHeader({ viewName, sprintKey, scrollContainerRef, tasks = [] }: ViewHeaderProps) {
   const syncStatus = useSyncStatus()
   const navigate = useNavigate()
   const now = useMemo(() => new Date(), [])
@@ -155,7 +187,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
   const dividerHeight = useTransform(height, h => Math.max(h - 32, 0))
   const rowOuterGap = useTransform(collapseT, [0, 0.4], [12, 6])
   const dayTrackOpacity = useTransform(collapseT, [0, 0.3], [1, 0])
-  const dayTrackHeight = useTransform(collapseT, [0, 0.45], [36, 0])
+  const dayTrackHeight = useTransform(collapseT, [0, 0.45], [44, 0])
   const trailingRowGap = useTransform(collapseT, [0, 0.45], [20, 0])
   const daysLeftOpacity = useTransform(collapseT, [0.5, 0.85], [0, 1])
 
@@ -253,7 +285,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef }: ViewHead
             </div>
 
             <motion.div style={{ opacity: dayTrackOpacity, height: dayTrackHeight, marginTop: trailingRowGap }} className="overflow-hidden">
-              <DayTrack start={start} now={now} />
+              <DayTrack start={start} now={now} tasks={tasks} />
             </motion.div>
           </div>
         </motion.div>

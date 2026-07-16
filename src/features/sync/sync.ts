@@ -64,7 +64,7 @@ function deserializeTask(raw: Record<string, unknown>): Task {
   } as Task
 }
 
-async function bootstrap() {
+export async function refreshData() {
   if (!navigator.onLine) return
 
   const [{ data: goals }, { data: tasks }] = await Promise.all([
@@ -80,7 +80,7 @@ async function bootstrap() {
 
 export function setupSync() {
   rollover(new Date())
-  bootstrap()
+  refreshData()
   window.addEventListener('online', flushQueue)
 
   const channel = supabase

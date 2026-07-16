@@ -16,8 +16,17 @@ import { StatusSheet } from '@/features/properties/status/StatusSheet'
 
 const SWIPE_THRESHOLD = 80
 const SWIPE_VELOCITY_THRESHOLD = 500
+const SWIPE_RESIST_FACTOR = 0.3
+const SWIPE_UNCROSS_MARGIN = 12
 const LONG_PRESS_MS = 500
 const LONG_PRESS_MOVE_TOLERANCE = 10
+
+function resistDrag(offset: number, threshold: number): number {
+  const abs = Math.abs(offset)
+  if (abs <= threshold) return offset
+  const damped = threshold + (abs - threshold) * SWIPE_RESIST_FACTOR
+  return offset < 0 ? -damped : damped
+}
 
 interface TaskRowProps {
   task: Task
@@ -32,21 +41,54 @@ interface TaskRowProps {
 
 export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSelect, onLongPress, onOpenDetail }: TaskRowProps) {
   const x = useMotionValue(0)
-  const rightBgOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
-  const leftBgOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
+  const rightBgOpacity = useTransform(x, [0, 16], [0, 1])
+  const leftBgOpacity = useTransform(x, [-16, 0], [1, 0])
+  const rightBgColor = useTransform(x, [0, SWIPE_THRESHOLD], ['rgba(16,185,129,0.35)', 'rgba(16,185,129,1)'])
+  const leftBgColor = useTransform(x, [-SWIPE_THRESHOLD, 0], ['rgba(99,102,241,1)', 'rgba(99,102,241,0.35)'])
+  const rightIconScale = useTransform(x, [0, SWIPE_THRESHOLD], [0.8, 1])
+  const leftIconScale = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0.8])
+  const rightLabelOpacity = useTransform(x, [16, 44], [0, 1])
+  const leftLabelOpacity = useTransform(x, [-44, -16], [1, 0])
+  const bumpScaleRight = useMotionValue(1)
+  const bumpScaleLeft = useMotionValue(1)
   const [statusSheetOpen, setStatusSheetOpen] = useState(false)
   const [rescheduleSheetOpen, setRescheduleSheetOpen] = useState(false)
   const [isPressing, setIsPressing] = useState(false)
   const longPressTimer = useRef<number | null>(null)
   const pressStart = useRef<{ x: number; y: number } | null>(null)
   const longPressFired = useRef(false)
+  const crossedRight = useRef(false)
+  const crossedLeft = useRef(false)
+
+  function handleDrag(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
+    const resisted = resistDrag(info.offset.x, SWIPE_THRESHOLD)
+    x.set(resisted)
+
+    if (resisted > SWIPE_THRESHOLD && !crossedRight.current) {
+      crossedRight.current = true
+      navigator.vibrate?.(8)
+      animate(bumpScaleRight, [1, 1.3, 1], { duration: 0.26, ease: 'easeOut' })
+    } else if (resisted <= SWIPE_THRESHOLD - SWIPE_UNCROSS_MARGIN) {
+      crossedRight.current = false
+    }
+
+    if (resisted < -SWIPE_THRESHOLD && !crossedLeft.current) {
+      crossedLeft.current = true
+      navigator.vibrate?.(8)
+      animate(bumpScaleLeft, [1, 1.3, 1], { duration: 0.26, ease: 'easeOut' })
+    } else if (resisted >= -SWIPE_THRESHOLD + SWIPE_UNCROSS_MARGIN) {
+      crossedLeft.current = false
+    }
+  }
 
   function handleDragEnd(_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) {
-    const passedRight = info.offset.x > SWIPE_THRESHOLD || info.velocity.x > SWIPE_VELOCITY_THRESHOLD
-    const passedLeft = info.offset.x < -SWIPE_THRESHOLD || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD
+    const passedRight = crossedRight.current || info.velocity.x > SWIPE_VELOCITY_THRESHOLD
+    const passedLeft = crossedLeft.current || info.velocity.x < -SWIPE_VELOCITY_THRESHOLD
     if (passedRight) setStatusSheetOpen(true)
     else if (passedLeft) setRescheduleSheetOpen(true)
-    animate(x, 0, { type: 'spring', stiffness: 400, damping: 35 })
+    crossedRight.current = false
+    crossedLeft.current = false
+    animate(x, 0, { type: 'spring', stiffness: 500, damping: 32 })
   }
 
   function clearLongPress() {
@@ -92,23 +134,43 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
   return (
     <div className="relative overflow-hidden border-b border-border">
       <motion.div
-        className="absolute inset-0 flex items-center px-5 bg-emerald-500"
-        style={{ opacity: rightBgOpacity }}
+        className="absolute inset-0 flex items-center justify-start px-5"
+        style={{ opacity: rightBgOpacity, backgroundColor: rightBgColor }}
       >
-        <ListChecks className="text-white" size={22} strokeWidth={2.5} />
+        <div className="flex flex-col items-center gap-1">
+          <motion.div style={{ scale: rightIconScale }}>
+            <motion.div style={{ scale: bumpScaleRight }}>
+              <ListChecks className="text-white" size={22} strokeWidth={2.5} />
+            </motion.div>
+          </motion.div>
+          <motion.span style={{ opacity: rightLabelOpacity }} className="text-white/85 text-[10px] font-medium">
+            Status
+          </motion.span>
+        </div>
       </motion.div>
 
       <motion.div
-        className="absolute inset-0 flex items-center justify-end px-5 bg-indigo-500"
-        style={{ opacity: leftBgOpacity }}
+        className="absolute inset-0 flex items-center justify-end px-5"
+        style={{ opacity: leftBgOpacity, backgroundColor: leftBgColor }}
       >
-        <Clock className="text-white" size={22} strokeWidth={2.5} />
+        <div className="flex flex-col items-center gap-1">
+          <motion.div style={{ scale: leftIconScale }}>
+            <motion.div style={{ scale: bumpScaleLeft }}>
+              <Clock className="text-white" size={22} strokeWidth={2.5} />
+            </motion.div>
+          </motion.div>
+          <motion.span style={{ opacity: leftLabelOpacity }} className="text-white/85 text-[10px] font-medium">
+            Reschedule
+          </motion.span>
+        </div>
       </motion.div>
 
       <motion.div
         drag={selectMode ? false : 'x'}
         dragMomentum={false}
+        dragElastic={1}
         style={{ x }}
+        onDrag={handleDrag}
         onDragEnd={handleDragEnd}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
