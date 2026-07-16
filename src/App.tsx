@@ -10,6 +10,7 @@ import { MatchingTasksPanel } from '@/features/command-bar/MatchingTasksPanel'
 import { SprintView } from '@/views/SprintView'
 import { Backlog } from '@/views/Backlog'
 import { Goals } from '@/views/Goals'
+import { SharePage } from '@/features/share/SharePage'
 import type { Task } from '@/types'
 
 const ROUTE_ORDER = ['/sprint/current', '/sprint/next', '/backlog']
@@ -111,6 +112,14 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<AuthPage />} />
+      <Route
+        path="/share"
+        element={
+          <ProtectedRoute>
+            <SharePage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/*"
         element={

@@ -119,6 +119,17 @@ While the command bar is focused:
 
 ---
 
+### Share Target
+
+The PWA registers as an OS share target (`share_target` in the manifest, GET method, action `/sprintos/share`) — on iOS 16.4+, once installed to the Home Screen, SprintOS appears in the native share sheet from other apps (e.g. sharing a YouTube video).
+
+- `SharePage` (`src/features/share/SharePage.tsx`) receives the shared `title`/`text`/`url` query params, resolves a task name (shared title, else shared text with any URL stripped out, else the URL itself), and creates the task immediately — no confirmation step, matching the "no Save/Cancel" rule.
+- If the shared URL is a YouTube link and no title was provided, the name is looked up via YouTube's oEmbed endpoint. No general metadata (e.g. duration) is fetched for other sites.
+- The task is assigned to the current sprint; the user lands on its detail page immediately after creation to edit further.
+- iOS caches the manifest at install time — a `share_target` addition requires removing and re-adding the Home Screen icon to take effect.
+
+---
+
 ### Task Creation
 
 #### Input behavior

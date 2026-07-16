@@ -3,7 +3,7 @@ import { flushQueue } from '@/features/sync/sync'
 import { embed } from '@/lib/embedder'
 import { TaskStatus, type Task } from '@/types'
 
-export async function addTask(fields: Pick<Task, 'userId' | 'sprint' | 'goalId' | 'name' | 'emoji' | 'status' | 'eventDate' | 'snooze' | 'sourceUrl' | 'duration'>): Promise<void> {
+export async function addTask(fields: Pick<Task, 'userId' | 'sprint' | 'goalId' | 'name' | 'emoji' | 'status' | 'eventDate' | 'snooze' | 'sourceUrl' | 'duration'>): Promise<string> {
   const now = new Date().toISOString()
   const task: Task = {
     ...fields,
@@ -19,6 +19,7 @@ export async function addTask(fields: Pick<Task, 'userId' | 'sprint' | 'goalId' 
   await db.tasks.add(task)
   await db.sync_queue.add({ operation: 'insert', table: 'tasks', payload: task })
   flushQueue()
+  return task.id
 }
 
 export async function updateTask(id: string, patch: Partial<Task>): Promise<void> {
