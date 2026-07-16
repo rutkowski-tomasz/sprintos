@@ -114,6 +114,13 @@ export function sprintKeyFromRouteParam(param: string, now: Date): string {
   return `${parseInt(m[1])} Q${parseInt(m[2])} ${parseInt(m[3])}`
 }
 
+export function isEventDateMisaligned(eventDate: string, sprint: string): boolean {
+  const { start, end } = sprintDateRange(sprint)
+  end.setHours(23, 59, 59, 999)
+  const date = new Date(eventDate)
+  return date < start || date > end
+}
+
 export function generateSprintKeys(now: Date, yearsBefore = 1, yearsAfter = 1): string[] {
   const keys: string[] = []
   const year = now.getFullYear()

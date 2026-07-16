@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'motion/react'
-import { ListChecks, Clock, Check } from 'lucide-react'
+import { ListChecks, Clock, Check, TriangleAlert } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { DurationChip } from '@/features/properties/duration/DurationChip'
 import { EventDateChip } from '@/features/properties/event-date/EventDateChip'
@@ -11,6 +11,7 @@ import { SourceUrlChip } from '@/features/properties/url/SourceUrlChip'
 import { DescriptionChip } from '@/features/properties/description/DescriptionChip'
 import type { Goal, Task } from '@/types'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
+import { isEventDateMisaligned } from '@/features/properties/sprint/sprintDef'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { StatusSheet } from '@/features/properties/status/StatusSheet'
 
@@ -130,6 +131,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
   }
 
   const goal = task.goalId ? goalMap.get(task.goalId) : null
+  const misaligned = !!(task.eventDate && task.sprint && isEventDateMisaligned(task.eventDate, task.sprint))
 
   return (
     <div className="relative overflow-hidden border-b border-border">
@@ -204,7 +206,16 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
 
           {(task.eventDate || task.duration || goal || task.sourceUrl || task.description) && (
             <div className="flex items-center gap-1 mt-1 flex-wrap">
-              {task.eventDate && <EventDateChip date={task.eventDate} now={now} />}
+              {task.eventDate && (
+                <span className="inline-flex items-center gap-1">
+                  <EventDateChip date={task.eventDate} now={now} />
+                  {misaligned && (
+                    <span title="Event date is outside the assigned sprint" className="shrink-0 flex">
+                      <TriangleAlert size={12} className="text-muted-foreground/50" />
+                    </span>
+                  )}
+                </span>
+              )}
               {task.duration && <DurationChip seconds={task.duration} />}
               {goal && <GoalChip goal={goal} />}
               <SourceUrlChip url={task.sourceUrl} />

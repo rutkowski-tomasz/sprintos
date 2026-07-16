@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split, TriangleAlert } from 'lucide-react'
 import { db } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,8 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
+import { SprintChip } from '@/features/properties/sprint/SprintChip'
+import { isEventDateMisaligned, sprintKey } from '@/features/properties/sprint/sprintDef'
 import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
@@ -80,6 +82,13 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
 
   const goal = useLiveQuery(() => task.goalId ? db.goals.get(task.goalId) : undefined, [task.goalId])
   const goalText = goal ? (goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name) : null
+
+  const misaligned = !!(task.eventDate && task.sprint && isEventDateMisaligned(task.eventDate, task.sprint))
+  const suggestedSprint = task.eventDate ? sprintKey(new Date(task.eventDate)) : null
+
+  function moveToSuggestedSprint() {
+    if (suggestedSprint) void updateTask(task.id, { sprint: suggestedSprint })
+  }
 
   function saveName() {
     const trimmed = name.trim()
@@ -179,6 +188,18 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
         <Field label="Sprint">
           <SprintPicker task={task} />
         </Field>
+
+        {misaligned && suggestedSprint && (
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40">
+            <TriangleAlert size={14} className="shrink-0 text-muted-foreground/50" />
+            <span className="text-xs text-muted-foreground flex-1 min-w-0">
+              Event date is outside the assigned sprint.
+            </span>
+            <Button size="sm" variant="outline" onClick={moveToSuggestedSprint} className="shrink-0 gap-1.5">
+              Move to <SprintChip sprint={suggestedSprint} now={now} />
+            </Button>
+          </div>
+        )}
 
         <Field label="Event date">
           {editingDate || eventDateLocal ? (
