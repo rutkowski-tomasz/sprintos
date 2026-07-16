@@ -8,6 +8,7 @@ import {
   sprintDateRange,
   sprintKeyOffset,
 } from './sprintDef'
+import { sprintParser } from './sprintParserDef'
 import { updateTask } from '@/features/tasks/taskActions'
 import { SprintChip } from './SprintChip'
 import type { Task } from '@/types'
@@ -65,7 +66,12 @@ function buildOptions(
       ? compareSprintKeys(b, a)
       : compareSprintKeys(a, b)
   })
-  return [none, ...sorted.slice(0, 20).map(k => toOption(k, now))]
+
+  const parsed = sprintParser.parse([{ text: search.trim(), start: 0, end: search.trim().length }], { now })
+  const parsedKey = parsed ? (parsed.value as string) : null
+  const ranked = parsedKey ? [parsedKey, ...sorted.filter(k => k !== parsedKey)] : sorted
+
+  return [none, ...ranked.slice(0, 20).map(k => toOption(k, now))]
 }
 
 const DROPDOWN_H = 340

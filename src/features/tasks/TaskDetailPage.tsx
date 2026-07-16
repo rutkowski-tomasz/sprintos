@@ -2,18 +2,24 @@ import { useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, Link as LinkIcon, ExternalLink } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical } from 'lucide-react'
 import { db } from '@/lib/db'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { StatusPicker } from '@/features/properties/status/StatusPicker'
 import { SprintPicker } from '@/features/properties/sprint/SprintPicker'
 import { SnoozeChip } from '@/features/properties/snooze/SnoozeChip'
 import { RescheduleSheet } from '@/features/properties/snooze/RescheduleSheet'
 import { isSnoozed } from '@/features/properties/snooze/snoozeDef'
-import { formatDuration } from '@/features/properties/duration/durationDef'
-import { updateTask } from './taskActions'
+import { formatDuration, durationParser } from '@/features/properties/duration/durationDef'
+import { updateTask, duplicateTask, deleteTask } from './taskActions'
 import type { Task } from '@/types'
 
 const BACK_OFFSET_THRESHOLD = 100
@@ -33,12 +39,27 @@ function toDatetimeLocal(iso: string): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
+function parseDurationText(text: string, now: Date): number | null {
+  const trimmed = text.trim()
+  if (!trimmed) return null
+  const hit = durationParser.parse([{ text: trimmed, start: 0, end: trimmed.length }], { now })
+  return hit ? (hit.value as number) : null
+}
+
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5 px-4 py-3">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {children}
+    <div className="flex items-center justify-between gap-3 px-4 py-2.5">
+      <span className="text-sm text-muted-foreground shrink-0">{label}</span>
+      <div className="flex items-center justify-end gap-1.5 min-w-0">{children}</div>
     </div>
+  )
+}
+
+function EmptyValue({ onClick }: { onClick?: () => void }) {
+  return (
+    <button onClick={onClick} className="text-sm text-muted-foreground/40 hover:text-muted-foreground transition-colors">
+      Empty
+    </button>
   )
 }
 
@@ -48,8 +69,11 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
   const [emoji, setEmoji] = useState(task.emoji ?? '')
   const [description, setDescription] = useState(task.description ?? '')
   const [sourceUrl, setSourceUrl] = useState(task.sourceUrl ?? '')
-  const [durationMin, setDurationMin] = useState(task.duration ? String(Math.round(task.duration / 60)) : '')
+  const [editingUrl, setEditingUrl] = useState(false)
+  const [durationText, setDurationText] = useState(task.duration ? formatDuration(task.duration) : '')
+  const [editingDuration, setEditingDuration] = useState(false)
   const [eventDateLocal, setEventDateLocal] = useState(task.eventDate ? toDatetimeLocal(task.eventDate) : '')
+  const [editingDate, setEditingDate] = useState(false)
 
   const goal = useLiveQuery(() => task.goalId ? db.goals.get(task.goalId) : undefined, [task.goalId])
   const goalText = goal ? (goal.emoji ? `${goal.emoji} ${goal.name}` : goal.name) : null
@@ -72,34 +96,37 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
   function saveSourceUrl() {
     const trimmed = sourceUrl.trim()
     if (trimmed !== (task.sourceUrl ?? '')) void updateTask(task.id, { sourceUrl: trimmed || null })
+    setEditingUrl(false)
   }
 
   function saveDuration() {
-    const minutes = parseFloat(durationMin)
-    const seconds = minutes > 0 ? Math.round(minutes * 60) : null
+    const seconds = parseDurationText(durationText, now)
     if (seconds !== task.duration) void updateTask(task.id, { duration: seconds })
+    setDurationText(seconds ? formatDuration(seconds) : '')
+    setEditingDuration(false)
   }
 
   function saveEventDate() {
     const iso = eventDateLocal ? new Date(eventDateLocal).toISOString() : null
     if (iso !== task.eventDate) void updateTask(task.id, { eventDate: iso })
+    setEditingDate(false)
   }
 
   return (
     <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
-      <div className="flex items-start gap-2 px-4 pt-4 pb-3">
-        <Input
+      <div className="flex items-center gap-2 px-4 pt-4 pb-3">
+        <input
           value={emoji}
           onChange={e => setEmoji(e.target.value)}
           onBlur={saveEmoji}
-          className="h-8 w-10 shrink-0 text-center text-lg px-0"
+          className="h-8 w-8 shrink-0 text-center text-lg bg-transparent border-0 outline-none rounded hover:bg-muted/40 focus:bg-muted/40 transition-colors"
           placeholder="—"
         />
-        <Input
+        <input
           value={name}
           onChange={e => setName(e.target.value)}
           onBlur={saveName}
-          className="h-8 flex-1 text-base font-medium"
+          className="h-8 flex-1 min-w-0 text-lg font-semibold bg-transparent border-0 outline-none rounded px-1 -mx-1 hover:bg-muted/40 focus:bg-muted/40 transition-colors"
         />
       </div>
 
@@ -113,40 +140,46 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
         </Field>
 
         <Field label="Event date">
-          <input
-            type="datetime-local"
-            value={eventDateLocal}
-            onChange={e => setEventDateLocal(e.target.value)}
-            onBlur={saveEventDate}
-            className="w-full rounded-lg border border-input bg-transparent px-2.5 py-1.5 text-sm"
-          />
+          {editingDate || eventDateLocal ? (
+            <input
+              type="datetime-local"
+              autoFocus={editingDate}
+              value={eventDateLocal}
+              onChange={e => setEventDateLocal(e.target.value)}
+              onBlur={saveEventDate}
+              className="bg-transparent border-0 outline-none text-sm text-right"
+            />
+          ) : (
+            <EmptyValue onClick={() => setEditingDate(true)} />
+          )}
         </Field>
 
         <Field label="Snooze">
           <button
             onClick={() => setRescheduleOpen(true)}
-            className="flex items-center gap-2 text-left text-sm hover:text-foreground"
+            className="flex items-center gap-2 text-right text-sm hover:text-foreground"
           >
-            {isSnoozed(task, now) ? <SnoozeChip task={task} now={now} /> : <span className="text-muted-foreground/40">—</span>}
-            <span className="text-xs text-muted-foreground">Snooze…</span>
+            {isSnoozed(task, now) ? <SnoozeChip task={task} now={now} /> : <span className="text-muted-foreground/40">Empty</span>}
           </button>
         </Field>
 
         <Field label="Duration">
-          <div className="flex items-center gap-2">
-            <Input
-              type="number"
-              min={0}
-              value={durationMin}
-              onChange={e => setDurationMin(e.target.value)}
+          {editingDuration ? (
+            <input
+              autoFocus
+              value={durationText}
+              onChange={e => setDurationText(e.target.value)}
               onBlur={saveDuration}
-              className="h-8 w-24"
-              placeholder="Minutes"
+              placeholder="e.g. 1h30m"
+              className="bg-transparent border-0 outline-none text-sm text-right w-24"
             />
-            {task.duration && (
-              <span className="text-xs text-muted-foreground">{formatDuration(task.duration)}</span>
-            )}
-          </div>
+          ) : task.duration ? (
+            <button onClick={() => setEditingDuration(true)} className="text-sm hover:text-foreground">
+              {formatDuration(task.duration)}
+            </button>
+          ) : (
+            <EmptyValue onClick={() => setEditingDuration(true)} />
+          )}
         </Field>
 
         {goalText && (
@@ -156,20 +189,41 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
         )}
 
         <Field label="Link">
-          <div className="flex items-center gap-2">
-            <LinkIcon size={14} className="shrink-0 text-muted-foreground" />
-            <Input
+          {editingUrl ? (
+            <input
+              autoFocus
               value={sourceUrl}
               onChange={e => setSourceUrl(e.target.value)}
               onBlur={saveSourceUrl}
-              className="h-8 flex-1"
+              placeholder="https://…"
+              className="bg-transparent border-0 outline-none text-sm text-right flex-1 min-w-0"
             />
-            {task.sourceUrl && (
-              <a href={task.sourceUrl} target="_blank" rel="noreferrer" className="shrink-0 text-muted-foreground hover:text-foreground">
+          ) : task.sourceUrl ? (
+            <div className="flex items-center gap-1 min-w-0">
+              <button
+                onClick={() => setEditingUrl(true)}
+                className="truncate max-w-[160px] text-sm hover:text-foreground"
+              >
+                {task.sourceUrl}
+              </button>
+              <button
+                onClick={() => void navigator.clipboard.writeText(task.sourceUrl ?? '')}
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
+                <Copy size={14} />
+              </button>
+              <a
+                href={task.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="shrink-0 text-muted-foreground hover:text-foreground"
+              >
                 <ExternalLink size={14} />
               </a>
-            )}
-          </div>
+            </div>
+          ) : (
+            <EmptyValue onClick={() => setEditingUrl(true)} />
+          )}
         </Field>
       </div>
 
@@ -206,6 +260,25 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
     }
   }
 
+  async function handleDuplicate() {
+    if (!task) return
+    await duplicateTask(task.id)
+  }
+
+  async function handleCopyContent() {
+    if (!task) return
+    const parts = [task.emoji ? `${task.emoji} ${task.name}` : task.name]
+    if (task.description) parts.push(task.description)
+    await navigator.clipboard.writeText(parts.join('\n\n'))
+  }
+
+  async function handleDelete() {
+    if (!task) return
+    if (!window.confirm(`Delete "${task.name}"?`)) return
+    await deleteTask(task.id)
+    goBack()
+  }
+
   return (
     <motion.div
       drag="x"
@@ -231,6 +304,26 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
         <Button variant="ghost" size="icon-sm" onClick={goBack}>
           <ArrowLeft />
         </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon-sm" className="ml-auto">
+              <MoreVertical />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => void handleDuplicate()}>
+              <Copy /> Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => void handleCopyContent()}>
+              <ClipboardCopy /> Copy content
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
+              <Trash2 /> Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {task && <TaskDetailForm task={task} now={now} />}
