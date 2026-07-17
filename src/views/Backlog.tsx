@@ -8,8 +8,10 @@ import { useBacklogTasks } from '@/features/tasks/useBacklogTasks'
 import { usePullToRefresh } from '@/features/tasks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/features/tasks/PullToRefreshIndicator'
 import { refreshData } from '@/features/sync/sync'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export function Backlog() {
+  useDocumentTitle('Backlog')
   const { taskId } = useParams<{ taskId?: string }>()
   const tasks = useBacklogTasks()
   const scrollRef = useRef<HTMLDivElement>(null)

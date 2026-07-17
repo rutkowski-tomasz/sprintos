@@ -3,6 +3,7 @@ import { LogOut } from 'lucide-react'
 import { ViewHeader } from '@/features/navigation/ViewHeader'
 import { useSession } from '@/features/auth/useSession'
 import { useSignOutFlow } from '@/features/auth/useSignOutFlow'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { supabase } from '@/lib/supabase'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ function initials(name: string | undefined, email: string | undefined): string {
 }
 
 export function Settings() {
+  useDocumentTitle('Settings')
   const { session } = useSession()
   const user = session?.user
   const metadata = user?.user_metadata ?? {}

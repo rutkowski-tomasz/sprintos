@@ -9,13 +9,15 @@ import { usePullToRefresh } from '@/features/tasks/usePullToRefresh'
 import { PullToRefreshIndicator } from '@/features/tasks/PullToRefreshIndicator'
 import { refreshData } from '@/features/sync/sync'
 import { Button } from '@/components/ui/button'
-import { sprintKey, sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
+import { classifySprintKey, SPRINT_LABEL_TEXT, sprintKey, sprintKeyFromRouteParam } from '@/features/properties/sprint/sprintDef'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export function SprintView() {
   const { key: param, taskId } = useParams<{ key: string; taskId?: string }>()
   const now = useMemo(() => new Date(), [])
   const key = sprintKeyFromRouteParam(param ?? 'current', now)
   const isCurrent = key === sprintKey(now)
+  useDocumentTitle(`${SPRINT_LABEL_TEXT[classifySprintKey(key, now)]} Sprint`)
   const tasks = useSprintTasks(key)
   const scrollRef = useRef<HTMLDivElement>(null)
   const location = useLocation()
