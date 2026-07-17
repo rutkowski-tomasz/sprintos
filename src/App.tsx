@@ -3,7 +3,8 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useRoutes } from 're
 import { AnimatePresence, motion } from 'motion/react'
 import { AuthPage } from '@/features/auth/AuthPage'
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute'
-import { Sidebar } from '@/features/navigation/Sidebar'
+import { AppSidebar } from '@/features/navigation/AppSidebar'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { BottomBar } from '@/features/navigation/BottomBar'
 import type { CommandBarHandle } from '@/features/command-bar/CommandBar'
 import { MatchingTasksPanel } from '@/features/command-bar/MatchingTasksPanel'
@@ -15,6 +16,7 @@ import { SharePage } from '@/features/share/SharePage'
 import type { Task } from '@/types'
 
 const ROUTE_ORDER = ['/sprint/current', '/sprint/next', '/backlog']
+const SIDEBAR_STORAGE_KEY = 'sidebar-open'
 
 const VIEW_ROUTES = [
   { path: '/sprint/:key', element: <SprintView /> },
@@ -62,8 +64,14 @@ function AnimatedContent() {
 function AppShell() {
   const [searchFocused, setSearchFocused] = useState(false)
   const [inputValue, setInputValue] = useState('')
+  const [sidebarOpen, setSidebarOpen] = useState(() => localStorage.getItem(SIDEBAR_STORAGE_KEY) !== '0')
   const commandBarRef = useRef<CommandBarHandle>(null)
   const navigate = useNavigate()
+
+  function handleSidebarOpenChange(open: boolean) {
+    setSidebarOpen(open)
+    localStorage.setItem(SIDEBAR_STORAGE_KEY, open ? '1' : '0')
+  }
 
   function openTaskDetail(task: Task) {
     const path = task.sprint ? `/sprint/${task.sprint.replace(/ /g, '-')}/${task.id}` : `/backlog/${task.id}`
@@ -76,7 +84,7 @@ function AppShell() {
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'p') {
         e.preventDefault()
-        commandBarRef.current?.focus()
+        commandBarRef.current?.flash()
       }
     }
     window.addEventListener('keydown', onKeyDown)
@@ -84,10 +92,10 @@ function AppShell() {
   }, [])
 
   return (
-    <div className="flex h-dvh">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
-        <main className="flex-1 relative overflow-hidden min-h-0 pt-safe bg-background">
+    <SidebarProvider open={sidebarOpen} onOpenChange={handleSidebarOpenChange} className="h-dvh min-h-0">
+      <AppSidebar onQuickCreate={() => commandBarRef.current?.flash()} />
+      <SidebarInset className="flex flex-col overflow-hidden min-h-0">
+        <div className="flex-1 relative overflow-hidden min-h-0 pt-safe bg-background">
           <AnimatedContent />
           <AnimatePresence>
             {searchFocused && (
@@ -98,7 +106,7 @@ function AppShell() {
               />
             )}
           </AnimatePresence>
-        </main>
+        </div>
         <BottomBar
           searchFocused={searchFocused}
           onFocusChange={setSearchFocused}
@@ -106,8 +114,8 @@ function AppShell() {
           onInputChange={setInputValue}
           commandBarRef={commandBarRef}
         />
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
 

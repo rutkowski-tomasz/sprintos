@@ -33,6 +33,7 @@ export interface CommandBarHandle {
   setValue: (text: string) => void
   submit: () => Promise<void>
   focus: () => void
+  flash: () => void
   close: () => void
 }
 
@@ -64,6 +65,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
   const navigate = useNavigate()
   const { session } = useSession()
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const searchBarRef = useRef<HTMLDivElement>(null)
   const placeholderRef = useRef<HTMLDivElement>(null)
   const placeholderIndexRef = useRef(0)
   const placeholderTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -109,6 +111,14 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
     },
     submit: handleSubmit,
     focus: () => inputRef.current?.focus(),
+    flash: () => {
+      inputRef.current?.focus()
+      const el = searchBarRef.current
+      if (!el) return
+      el.classList.remove('bn-search-bar-flash')
+      void el.offsetWidth
+      el.classList.add('bn-search-bar-flash')
+    },
     close: () => {
       setInputValue('')
       onInputChange?.('')
@@ -313,6 +323,7 @@ export const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function
         </div>
       )}
       <div
+        ref={searchBarRef}
         className={`bn-search-bar${touchPressed ? ' bn-search-bar-pressed' : ''}`}
         onTouchStart={() => setTouchPressed(true)}
         onTouchEnd={() => setTouchPressed(false)}

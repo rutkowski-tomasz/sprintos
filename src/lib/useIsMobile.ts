@@ -1,17 +1,20 @@
 import { useSyncExternalStore } from 'react'
 
-const QUERY = '(max-width: 1023px)'
+function makeIsMobileHook(query: string) {
+  function subscribe(callback: () => void): () => void {
+    const mql = window.matchMedia(query)
+    mql.addEventListener('change', callback)
+    return () => mql.removeEventListener('change', callback)
+  }
 
-function subscribe(callback: () => void): () => void {
-  const mql = window.matchMedia(QUERY)
-  mql.addEventListener('change', callback)
-  return () => mql.removeEventListener('change', callback)
+  function getSnapshot(): boolean {
+    return window.matchMedia(query).matches
+  }
+
+  return function useMediaQuery(): boolean {
+    return useSyncExternalStore(subscribe, getSnapshot)
+  }
 }
 
-function getSnapshot(): boolean {
-  return window.matchMedia(QUERY).matches
-}
-
-export function useIsMobile(): boolean {
-  return useSyncExternalStore(subscribe, getSnapshot)
-}
+export const useIsMobile = makeIsMobileHook('(max-width: 1023px)')
+export const useIsSidebarMobile = makeIsMobileHook('(max-width: 767px)')

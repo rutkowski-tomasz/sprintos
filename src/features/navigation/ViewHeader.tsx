@@ -13,6 +13,7 @@ import {
 } from '@/features/properties/sprint/sprintDef'
 import { SprintBadge } from '@/features/properties/sprint/SprintBadge'
 import { useSprintCollapseT, EXPANDED_HEIGHT, COLLAPSED_HEIGHT, COLLAPSE_RANGE } from './sprintHeaderCollapse'
+import { SiteHeader } from './SiteHeader'
 import { EVENT_DATE_COLOR } from '@/features/properties/event-date/eventDateDef'
 import { SNOOZE_COLOR } from '@/features/properties/snooze/SnoozeChip'
 import { resolveSnoozeDate } from '@/features/properties/snooze/snoozeDef'
@@ -201,12 +202,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef, tasks = []
   )
 
   if (!sprintKey) {
-    return (
-      <div className="px-4 pt-4 pb-3 flex items-center justify-between border-b border-border bg-background">
-        <h2 className="text-xl font-semibold">{viewName}</h2>
-        {syncIndicator}
-      </div>
-    )
+    return <SiteHeader viewName={viewName}>{syncIndicator}</SiteHeader>
   }
 
   const sprintNum = sprintWeekNumber(sprintKey)
