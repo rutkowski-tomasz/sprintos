@@ -1,5 +1,7 @@
 import type { ComponentProps } from 'react'
 import { useMemo } from 'react'
+import { NavLink } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import {
   PlayCircleIcon,
   ChevronRightIcon,
@@ -18,6 +20,7 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -25,6 +28,14 @@ import {
 } from '@/components/ui/sidebar'
 import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
 import { IS_MAC } from '@/lib/platform'
+import { db } from '@/lib/db'
+import type { Task } from '@/types'
+
+const RECENT_TASKS_LIMIT = 5
+
+function taskDetailPath(task: Task): string {
+  return task.sprint ? `/sprint/${task.sprint.replace(/ /g, '-')}/${task.id}` : `/backlog/${task.id}`
+}
 
 const QUICK_CREATE_SHORTCUT = IS_MAC ? '⌘P' : 'Ctrl+P'
 
@@ -47,6 +58,12 @@ export function AppSidebar({ onQuickCreate, ...props }: AppSidebarProps) {
     { to: `/sprint/${pastSlug}`, label: 'Past', icon: ChevronDoubleLeftIcon },
   ]
   const backlog = [{ to: '/backlog', label: 'Backlog', icon: QueueListIcon }]
+
+  const recentTasks = useLiveQuery(async () => {
+    const all = await db.tasks.filter(t => t.deletedAt === null).toArray()
+    all.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    return all.slice(0, RECENT_TASKS_LIMIT)
+  }, [])
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -81,6 +98,29 @@ export function AppSidebar({ onQuickCreate, ...props }: AppSidebarProps) {
         <NavMain items={upcoming} />
         <NavMain items={history} />
         <NavMain items={backlog} />
+        {recentTasks && recentTasks.length > 0 && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Recent tasks</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {recentTasks.map(task => (
+                  <SidebarMenuItem key={task.id}>
+                    <NavLink to={taskDetailPath(task)}>
+                      {({ isActive }) => (
+                        <SidebarMenuButton asChild tooltip={task.name} isActive={isActive}>
+                          <span>
+                            <span className="text-sm leading-none">{task.emoji ?? '📄'}</span>
+                            <span className="font-normal truncate">{task.name}</span>
+                          </span>
+                        </SidebarMenuButton>
+                      )}
+                    </NavLink>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser />
