@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { LogOut } from 'lucide-react'
+import { ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline'
 import { ViewHeader } from '@/features/navigation/ViewHeader'
 import { useSession } from '@/features/auth/useSession'
 import { useSignOutFlow } from '@/features/auth/useSignOutFlow'
@@ -86,7 +86,7 @@ export function Settings() {
 
         <section>
           <Button variant="outline" onClick={requestSignOut}>
-            <LogOut />
+            <ArrowRightStartOnRectangleIcon />
             Sign out
           </Button>
         </section>

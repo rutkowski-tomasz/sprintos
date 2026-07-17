@@ -1,11 +1,11 @@
-import type { LucideIcon } from 'lucide-react'
+import type { ComponentType, SVGProps } from 'react'
 import { NavLink } from 'react-router-dom'
 import { SidebarGroup, SidebarGroupContent, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar'
 
 interface NavMainItem {
   to: string
   label: string
-  icon: LucideIcon
+  icon: ComponentType<SVGProps<SVGSVGElement>>
 }
 
 export function NavMain({ items }: { items: NavMainItem[] }) {
@@ -20,7 +20,7 @@ export function NavMain({ items }: { items: NavMainItem[] }) {
                   <SidebarMenuButton asChild tooltip={label} isActive={isActive}>
                     <span>
                       <Icon />
-                      <span>{label}</span>
+                      <span className="font-normal">{label}</span>
                     </span>
                   </SidebarMenuButton>
                 )}

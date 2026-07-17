@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ArrowDownLeft, Plus } from 'lucide-react'
+import { ArrowDownLeftIcon, PlusIcon } from '@heroicons/react/24/outline'
 import type { TaskStatus } from '@/types'
 import { StatusChip } from '@/features/properties/status/StatusChip'
 
@@ -51,7 +51,7 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
           onClick={e => e.stopPropagation()}
           aria-label="Add task"
         >
-          <Plus size={16} />
+          <PlusIcon className="size-4" />
         </button>
       ) : (
         <button
@@ -61,7 +61,7 @@ export function TaskResultRow({ emoji, name, subtitle, status, chips, isPreview,
           onClick={e => e.stopPropagation()}
           aria-label="Copy to input"
         >
-          <ArrowDownLeft size={16} />
+          <ArrowDownLeftIcon className="size-4" />
         </button>
       )}
     </div>

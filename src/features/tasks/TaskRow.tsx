@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 import { motion, useMotionValue, useTransform, animate, type PanInfo } from 'motion/react'
-import { ListChecks, Clock, Check, TriangleAlert } from 'lucide-react'
+import { QueueListIcon, ClockIcon, CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { DurationChip } from '@/features/properties/duration/DurationChip'
 import { EventDateChip } from '@/features/properties/event-date/EventDateChip'
@@ -142,7 +142,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
         <div className="flex flex-col items-center gap-1">
           <motion.div style={{ scale: rightIconScale }}>
             <motion.div style={{ scale: bumpScaleRight }}>
-              <ListChecks className="text-white" size={22} strokeWidth={2.5} />
+              <QueueListIcon className="text-white size-[22px]" strokeWidth={2.5} />
             </motion.div>
           </motion.div>
           <motion.span style={{ opacity: rightLabelOpacity }} className="text-white/85 text-[10px] font-medium">
@@ -158,7 +158,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
         <div className="flex flex-col items-center gap-1">
           <motion.div style={{ scale: leftIconScale }}>
             <motion.div style={{ scale: bumpScaleLeft }}>
-              <Clock className="text-white" size={22} strokeWidth={2.5} />
+              <ClockIcon className="text-white size-[22px]" strokeWidth={2.5} />
             </motion.div>
           </motion.div>
           <motion.span style={{ opacity: leftLabelOpacity }} className="text-white/85 text-[10px] font-medium">
@@ -192,7 +192,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
               selected ? 'bg-primary border-primary' : 'border-muted-foreground/40',
             )}
           >
-            {selected && <Check size={12} className="text-primary-foreground" strokeWidth={3} />}
+            {selected && <CheckIcon className="size-3 text-primary-foreground" strokeWidth={3} />}
           </div>
         ) : (
           <span className="text-lg w-6 text-center leading-none shrink-0 mt-0.5">{task.emoji ?? ''}</span>
@@ -211,7 +211,7 @@ export function TaskRow({ task, goalMap, now, selectMode, selected, onToggleSele
                   <EventDateChip date={task.eventDate} now={now} />
                   {misaligned && (
                     <span title="Event date is outside the assigned sprint" className="shrink-0 flex">
-                      <TriangleAlert size={12} className="text-muted-foreground/50" />
+                      <ExclamationTriangleIcon className="size-3 text-muted-foreground/50" />
                     </span>
                   )}
                 </span>

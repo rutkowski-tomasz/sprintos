@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react'
 import { createPortal } from 'react-dom'
-import { Check } from 'lucide-react'
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { Input } from './input'
 
 interface SearchableDropdownProps<T> {
@@ -126,7 +126,7 @@ export function SearchableDropdown<T>({
             onMouseEnter={() => setHighlighted(idx)}
             onClick={() => onPick(option)}
           >
-            <div className="w-3 shrink-0">{isSelected(option) && <Check size={12} />}</div>
+            <div className="w-3 shrink-0">{isSelected(option) && <CheckIcon className="size-3" />}</div>
             {renderOption(option)}
           </div>
         ))}

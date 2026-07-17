@@ -1,7 +1,7 @@
 import { useMemo, type RefObject } from 'react'
 import { animate, motion, useMotionValue, useTransform, type PanInfo } from 'motion/react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import { cn } from '@/lib/utils'
 import { useSyncStatus } from '@/features/sync/useSyncStatus'
 import {
@@ -220,7 +220,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef, tasks = []
         className="absolute inset-y-0 left-0 z-0 flex items-center gap-1.5 pl-5"
         aria-hidden="true"
       >
-        <ChevronLeft size={18} strokeWidth={2.5} />
+        <ChevronLeftIcon className="size-[18px]" strokeWidth={2.5} />
         <span className="text-[11px] font-medium whitespace-nowrap">Go to</span>
         <span className="text-[11px] font-bold px-2 py-0.5 rounded-full border border-current whitespace-nowrap">
           Sprint {prevTargetNum}
@@ -235,7 +235,7 @@ export function ViewHeader({ viewName, sprintKey, scrollContainerRef, tasks = []
           Sprint {nextTargetNum}
         </span>
         <span className="text-[11px] font-medium whitespace-nowrap">Go to</span>
-        <ChevronRight size={18} strokeWidth={2.5} />
+        <ChevronRightIcon className="size-[18px]" strokeWidth={2.5} />
       </motion.div>
       <motion.div
         style={{ height, x: dragX }}

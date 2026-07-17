@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode, type RefObject } from 'react'
 import { AnimatePresence, motion, useTransform } from 'motion/react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ListChecks, ArrowRightLeft, Trash2 } from 'lucide-react'
+import { ArrowLeftIcon, QueueListIcon, ArrowsRightLeftIcon, TrashIcon } from '@heroicons/react/24/outline'
 import { db } from '@/lib/db'
 import { useNow } from '@/lib/useNow'
 import { useIsMobile } from '@/lib/useIsMobile'
@@ -178,13 +178,13 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, e
               Deselect all
             </Button>
             <Button variant="ghost" size="icon-sm" aria-label="Change status" onClick={() => setMassStatusOpen(true)}>
-              <ListChecks />
+              <QueueListIcon />
             </Button>
             <Button variant="ghost" size="icon-sm" aria-label="Move" onClick={() => setMassMoveOpen(true)}>
-              <ArrowRightLeft />
+              <ArrowsRightLeftIcon />
             </Button>
             <Button variant="ghost" size="icon-sm" aria-label="Delete" onClick={deleteSelected}>
-              <Trash2 />
+              <TrashIcon />
             </Button>
           </div>
         )}
@@ -221,14 +221,14 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, e
       {selectMode && (
         <>
           <div className="flex items-center gap-2 border-b border-border px-3 py-2 opacity-0 pointer-events-none" aria-hidden="true">
-            <Button variant="ghost" size="icon-sm"><ArrowLeft /></Button>
+            <Button variant="ghost" size="icon-sm"><ArrowLeftIcon /></Button>
           </div>
           <motion.div
             style={{ top: toolbarTop }}
             className="absolute left-0 right-0 z-20 flex items-center gap-2 border-b border-border bg-background px-3 py-2"
           >
             <Button variant="ghost" size="icon-sm" onClick={exitSelectMode}>
-              <ArrowLeft />
+              <ArrowLeftIcon />
             </Button>
             <span className="text-sm font-medium flex-1">{selectedIds.size} selected</span>
             <Button variant="ghost" size="sm" onClick={allSelected ? exitSelectMode : selectAll}>
@@ -241,7 +241,7 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, e
               aria-label="Change status"
               onClick={() => setMassStatusOpen(true)}
             >
-              <ListChecks />
+              <QueueListIcon />
             </Button>
             <Button
               variant="ghost"
@@ -250,7 +250,7 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, e
               aria-label="Move"
               onClick={() => setMassMoveOpen(true)}
             >
-              <ArrowRightLeft />
+              <ArrowsRightLeftIcon />
             </Button>
             <Button
               variant="ghost"
@@ -259,7 +259,7 @@ export function TaskList({ tasks, basePath, scrollContainerRef, groupBySprint, e
               aria-label="Delete"
               onClick={deleteSelected}
             >
-              <Trash2 />
+              <TrashIcon />
             </Button>
           </motion.div>
         </>

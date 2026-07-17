@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { Moon, ArrowRight } from 'lucide-react'
+import { MoonIcon, ArrowRightIcon } from '@heroicons/react/24/outline'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { updateTask } from '@/features/tasks/taskActions'
@@ -102,7 +102,7 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                 className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
               >
                 <span className="flex items-center gap-2.5">
-                  <Moon size={16} className="shrink-0 text-muted-foreground" />
+                  <MoonIcon className="size-4 shrink-0 text-muted-foreground" />
                   <span className="flex flex-col">
                     <span>{option.label}</span>
                     <span className="text-xs text-muted-foreground">{formatSnoozeOptionDate(date)}</span>
@@ -125,7 +125,7 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                     className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
                   >
                     <span className="flex items-center gap-2.5">
-                      <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+                      <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
                       <span className="flex flex-col gap-0.5">
                         <span>{option.label}</span>
                         <SprintChip sprint={sprintKey(date)} now={now} />
@@ -140,7 +140,7 @@ export function RescheduleSheet({ task, open, onOpenChange, snoozeOnly = false }
                   className="flex items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
                 >
                   <span className="flex items-center gap-2.5">
-                    <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+                    <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
                     <span className="flex flex-col gap-0.5">
                       <SprintChip sprint={null} now={now} />
                       <span className="text-xs text-muted-foreground">Unassigned, no snooze</span>

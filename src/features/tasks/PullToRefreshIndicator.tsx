@@ -1,5 +1,5 @@
 import { motion, useTransform, type MotionValue } from 'motion/react'
-import { RefreshCw } from 'lucide-react'
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
 import { PULL_THRESHOLD } from './usePullToRefresh'
 
 interface PullToRefreshIndicatorProps {
@@ -16,10 +16,9 @@ export function PullToRefreshIndicator({ pullY, refreshing }: PullToRefreshIndic
   return (
     <motion.div style={{ height }} className="flex items-center justify-center overflow-hidden">
       <motion.div style={{ opacity, scale, rotate: refreshing ? 0 : rotate }}>
-        <RefreshCw
-          size={16}
+        <ArrowPathIcon
+          className={`size-4 ${refreshing ? 'text-muted-foreground animate-spin' : 'text-muted-foreground'}`}
           strokeWidth={2.5}
-          className={refreshing ? 'text-muted-foreground animate-spin' : 'text-muted-foreground'}
         />
       </motion.div>
     </motion.div>

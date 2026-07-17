@@ -1,6 +1,14 @@
 import type { ComponentProps } from 'react'
 import { useMemo } from 'react'
-import { CircleDot, ArrowRight, FastForward, ArrowLeft, Rewind, List, CirclePlus } from 'lucide-react'
+import {
+  PlayCircleIcon,
+  ChevronRightIcon,
+  ChevronDoubleRightIcon,
+  ChevronLeftIcon,
+  ChevronDoubleLeftIcon,
+  QueueListIcon,
+  PlusCircleIcon,
+} from '@heroicons/react/24/outline'
 import { Logo } from './Logo'
 import { NavMain } from './NavMain'
 import { NavUser } from './NavUser'
@@ -30,15 +38,15 @@ export function AppSidebar({ onQuickCreate, ...props }: AppSidebarProps) {
   const pastSlug = sprintKeyOffset(now, -2).replace(/ /g, '-')
 
   const upcoming = [
-    { to: '/sprint/current', label: 'Current', icon: CircleDot },
-    { to: '/sprint/next', label: 'Next', icon: ArrowRight },
-    { to: `/sprint/${futureSlug}`, label: 'Future', icon: FastForward },
+    { to: '/sprint/current', label: 'Current', icon: PlayCircleIcon },
+    { to: '/sprint/next', label: 'Next', icon: ChevronRightIcon },
+    { to: `/sprint/${futureSlug}`, label: 'Future', icon: ChevronDoubleRightIcon },
   ]
   const history = [
-    { to: '/sprint/previous', label: 'Previous', icon: ArrowLeft },
-    { to: `/sprint/${pastSlug}`, label: 'Past', icon: Rewind },
+    { to: '/sprint/previous', label: 'Previous', icon: ChevronLeftIcon },
+    { to: `/sprint/${pastSlug}`, label: 'Past', icon: ChevronDoubleLeftIcon },
   ]
-  const backlog = [{ to: '/backlog', label: 'Backlog', icon: List }]
+  const backlog = [{ to: '/backlog', label: 'Backlog', icon: QueueListIcon }]
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -60,7 +68,7 @@ export function AppSidebar({ onQuickCreate, ...props }: AppSidebarProps) {
                   onClick={onQuickCreate}
                   className="min-w-8 bg-primary text-primary-foreground duration-200 ease-linear hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground"
                 >
-                  <CirclePlus />
+                  <PlusCircleIcon />
                   <span>Quick Create</span>
                   <kbd className="ml-auto rounded border border-primary-foreground/30 px-1 py-px text-[10px] font-mono leading-none text-primary-foreground/70 group-data-[collapsible=icon]:hidden">
                     {QUICK_CREATE_SHORTCUT}

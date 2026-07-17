@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowUpRight, TriangleAlert, Link, AlignLeft } from 'lucide-react'
+import { ArrowUpRightIcon, ExclamationTriangleIcon, LinkIcon, Bars3BottomLeftIcon } from '@heroicons/react/24/outline'
 import { TableRow, TableCell } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -97,8 +97,8 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
               <p className="truncate">{task.name}</p>
               {(task.sourceUrl || task.description) && (
                 <span className="inline-flex items-center gap-1 shrink-0 text-muted-foreground/70">
-                  {task.sourceUrl && <Link size={11} />}
-                  {task.description && <AlignLeft size={11} />}
+                  {task.sourceUrl && <LinkIcon className="size-[11px]" />}
+                  {task.description && <Bars3BottomLeftIcon className="size-[11px]" />}
                 </span>
               )}
             </span>
@@ -109,7 +109,7 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
               onClick={e => { e.stopPropagation(); onOpenDetail(task) }}
             >
               Open
-              <ArrowUpRight />
+              <ArrowUpRightIcon />
             </Button>
           </>
         )}
@@ -130,7 +130,7 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
             <EventDateChip date={task.eventDate} now={now} />
             {misaligned && (
               <span title="Event date is outside the assigned sprint" className="shrink-0 flex">
-                <TriangleAlert size={12} className="text-muted-foreground/50" />
+                <ExclamationTriangleIcon className="size-3 text-muted-foreground/50" />
               </span>
             )}
           </span>

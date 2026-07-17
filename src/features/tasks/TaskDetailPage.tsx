@@ -2,7 +2,19 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split, TriangleAlert, Maximize2, Minimize2 } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  ArrowTopRightOnSquareIcon,
+  ClipboardDocumentIcon,
+  DocumentDuplicateIcon,
+  TrashIcon,
+  EllipsisVerticalIcon,
+  XMarkIcon,
+  Square2StackIcon,
+  ExclamationTriangleIcon,
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+} from '@heroicons/react/24/outline'
 import { db } from '@/lib/db'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/lib/useIsMobile'
@@ -194,7 +206,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
 
         {misaligned && suggestedSprint && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40">
-            <TriangleAlert size={14} className="shrink-0 text-muted-foreground/50" />
+            <ExclamationTriangleIcon className="size-[14px] shrink-0 text-muted-foreground/50" />
             <span className="text-xs text-muted-foreground flex-1 min-w-0">
               Event date is outside the assigned sprint.
             </span>
@@ -220,7 +232,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
                 aria-label="Clear event date"
                 className="shrink-0 text-muted-foreground/40 hover:text-foreground transition-colors"
               >
-                <X className="h-3.5 w-3.5" />
+                <XMarkIcon className="h-3.5 w-3.5" />
               </button>
             </>
           ) : task.eventDate ? (
@@ -288,7 +300,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
                 onClick={() => void navigator.clipboard.writeText(task.sourceUrl ?? '')}
                 className="shrink-0 text-muted-foreground hover:text-foreground"
               >
-                <Copy size={14} />
+                <ClipboardDocumentIcon className="size-[14px]" />
               </button>
               <a
                 href={task.sourceUrl}
@@ -296,7 +308,7 @@ function TaskDetailForm({ task, now }: { task: Task; now: Date }) {
                 rel="noreferrer"
                 className="shrink-0 text-muted-foreground hover:text-foreground"
               >
-                <ExternalLink size={14} />
+                <ArrowTopRightOnSquareIcon className="size-[14px]" />
               </a>
             </div>
           ) : (
@@ -400,34 +412,34 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
   const header = (
     <div className="relative z-10 shrink-0 flex items-center px-2 py-2 border-b border-border">
       <Button variant="ghost" size="icon-sm" onClick={goBack}>
-        <ArrowLeft />
+        <ArrowLeftIcon />
       </Button>
 
       {!isMobile && (
         <Button variant="ghost" size="icon-sm" onClick={() => setFullscreen(v => !v)}>
-          {fullscreen ? <Minimize2 /> : <Maximize2 />}
+          {fullscreen ? <ArrowsPointingInIcon /> : <ArrowsPointingOutIcon />}
         </Button>
       )}
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" size="icon-sm" className="ml-auto">
-            <MoreVertical />
+            <EllipsisVerticalIcon />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem onClick={() => void handleDuplicate()}>
-            <Copy /> Duplicate
+            <DocumentDuplicateIcon /> Duplicate
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => void handleCopyContent()}>
-            <ClipboardCopy /> Copy content
+            <ClipboardDocumentIcon /> Copy content
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setSeriesOpen(true)}>
-            <Split /> Split into series
+            <Square2StackIcon /> Split into series
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
-            <Trash2 /> Delete
+            <TrashIcon /> Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

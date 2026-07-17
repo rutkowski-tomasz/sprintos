@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRightIcon } from '@heroicons/react/24/outline'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { updateTasks } from './taskActions'
 import { sprintKeyOffset } from '@/features/properties/sprint/sprintDef'
@@ -35,7 +35,7 @@ export function MassMoveSheet({ taskIds, open, onOpenChange, onDone }: MassMoveS
               onClick={() => moveTo(key)}
               className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
             >
-              <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+              <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
               <SprintChip sprint={key} now={now} />
             </button>
           ))}
@@ -43,7 +43,7 @@ export function MassMoveSheet({ taskIds, open, onOpenChange, onDone }: MassMoveS
             onClick={() => moveTo(null)}
             className="flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm hover:bg-accent"
           >
-            <ArrowRight size={16} className="shrink-0 text-muted-foreground" />
+            <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
             <SprintChip sprint={null} now={now} />
           </button>
         </div>

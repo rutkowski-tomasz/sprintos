@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'motion/react'
-import { ChevronDown } from 'lucide-react'
+import { ChevronDownIcon } from '@heroicons/react/24/outline'
 import { TaskStatus } from '@/types'
 import { TaskResultRow } from './TaskResultRow'
 import type { ParseResult } from './taskInputParser'
@@ -45,7 +45,7 @@ export function TaskPreviewCard({ parsed, suggestions, onSubmit }: TaskPreviewCa
         aria-label={collapsed ? 'Expand task preview' : 'Collapse task preview'}
       >
         <span className="text-[10px] font-semibold tracking-widest text-white/40 uppercase">Task Preview</span>
-        <ChevronDown size={14} className={`text-white/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
+        <ChevronDownIcon className={`size-[14px] text-white/40 transition-transform ${collapsed ? '-rotate-90' : ''}`} />
       </button>
       <AnimatePresence initial={false}>
         {!collapsed && (

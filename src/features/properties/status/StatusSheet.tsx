@@ -1,4 +1,4 @@
-import { Check } from 'lucide-react'
+import { CheckIcon } from '@heroicons/react/24/outline'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { updateTask } from '@/features/tasks/taskActions'
 import type { Task, TaskStatus } from '@/types'
@@ -31,7 +31,7 @@ export function StatusSheet({ task, open, onOpenChange }: StatusSheetProps) {
               className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm hover:bg-accent"
             >
               <StatusChip status={status} />
-              {task.status === status && <Check size={16} className="text-muted-foreground" />}
+              {task.status === status && <CheckIcon className="size-4 text-muted-foreground" />}
             </button>
           ))}
         </div>

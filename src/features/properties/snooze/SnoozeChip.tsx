@@ -1,4 +1,4 @@
-import { Moon } from 'lucide-react'
+import { MoonIcon } from '@heroicons/react/24/outline'
 import { Chip } from '../Chip'
 import { formatSnooze, isSnoozed } from './snoozeDef'
 import type { Task } from '@/types'
@@ -9,7 +9,7 @@ export function SnoozeChip({ task, now }: { task: Pick<Task, 'snooze' | 'eventDa
   if (!task.snooze || !isSnoozed(task, now)) return null
   return (
     <Chip color={SNOOZE_COLOR}>
-      <Moon size={10} />
+      <MoonIcon className="size-[10px]" />
       {formatSnooze(task.snooze, now)}
     </Chip>
   )
