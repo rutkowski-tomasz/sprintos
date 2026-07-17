@@ -2,8 +2,10 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { motion, useMotionValue, animate, useDragControls, type PanInfo } from 'motion/react'
-import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Copy, ClipboardCopy, Trash2, MoreVertical, X, Split, TriangleAlert, Maximize2, Minimize2 } from 'lucide-react'
 import { db } from '@/lib/db'
+import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/lib/useIsMobile'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -357,9 +359,11 @@ function SeriesSheet({ task, open, onOpenChange }: { task: Task; open: boolean; 
 export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
   const navigate = useNavigate()
   const task = useLiveQuery(() => db.tasks.get(taskId), [taskId])
+  const isMobile = useIsMobile()
   const x = useMotionValue(0)
   const dragControls = useDragControls()
   const [seriesOpen, setSeriesOpen] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
 
   function goBack() {
     navigate(listPath)
@@ -393,58 +397,94 @@ export function TaskDetailPage({ taskId, now, listPath }: TaskDetailPageProps) {
     goBack()
   }
 
-  return (
-    <motion.div
-      drag="x"
-      dragControls={dragControls}
-      dragListener={false}
-      dragConstraints={{ left: 0, right: 0 }}
-      dragElastic={{ left: 0, right: 0.6 }}
-      onDragEnd={handleDragEnd}
-      style={{ x }}
-      initial={{ x: '100%' }}
-      animate={{ x: 0 }}
-      exit={{ x: '100%' }}
-      transition={SPRING}
-      className="absolute inset-0 z-30 bg-background flex flex-col"
-    >
-      <div
-        className="absolute left-0 top-0 h-full touch-none"
-        style={{ width: EDGE_ZONE_WIDTH }}
-        onPointerDown={e => dragControls.start(e)}
-      />
+  const header = (
+    <div className="relative z-10 shrink-0 flex items-center px-2 py-2 border-b border-border">
+      <Button variant="ghost" size="icon-sm" onClick={goBack}>
+        <ArrowLeft />
+      </Button>
 
-      <div className="relative z-10 shrink-0 flex items-center px-2 py-2 border-b border-border">
-        <Button variant="ghost" size="icon-sm" onClick={goBack}>
-          <ArrowLeft />
+      {!isMobile && (
+        <Button variant="ghost" size="icon-sm" onClick={() => setFullscreen(v => !v)}>
+          {fullscreen ? <Minimize2 /> : <Maximize2 />}
         </Button>
+      )}
 
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-sm" className="ml-auto">
-              <MoreVertical />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => void handleDuplicate()}>
-              <Copy /> Duplicate
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => void handleCopyContent()}>
-              <ClipboardCopy /> Copy content
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setSeriesOpen(true)}>
-              <Split /> Split into series
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
-              <Trash2 /> Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon-sm" className="ml-auto">
+            <MoreVertical />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => void handleDuplicate()}>
+            <Copy /> Duplicate
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void handleCopyContent()}>
+            <ClipboardCopy /> Copy content
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setSeriesOpen(true)}>
+            <Split /> Split into series
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem variant="destructive" onClick={() => void handleDelete()}>
+            <Trash2 /> Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
 
+  const body = (
+    <>
       {task && <TaskDetailForm task={task} now={now} />}
       {task && <SeriesSheet task={task} open={seriesOpen} onOpenChange={setSeriesOpen} />}
-    </motion.div>
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <motion.div
+        drag="x"
+        dragControls={dragControls}
+        dragListener={false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={{ left: 0, right: 0.6 }}
+        onDragEnd={handleDragEnd}
+        style={{ x }}
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        exit={{ x: '100%' }}
+        transition={SPRING}
+        className="absolute inset-0 z-30 bg-background flex flex-col"
+      >
+        <div
+          className="absolute left-0 top-0 h-full touch-none"
+          style={{ width: EDGE_ZONE_WIDTH }}
+          onPointerDown={e => dragControls.start(e)}
+        />
+
+        {header}
+        {body}
+      </motion.div>
+    )
+  }
+
+  return (
+    <Sheet open onOpenChange={open => { if (!open) goBack() }}>
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className={cn(
+          'p-0 gap-0',
+          fullscreen
+            ? 'data-[side=right]:w-screen data-[side=right]:sm:max-w-none'
+            : 'data-[side=right]:w-full data-[side=right]:sm:max-w-xl'
+        )}
+      >
+        <SheetTitle className="sr-only">{task ? task.name : 'Task details'}</SheetTitle>
+        {header}
+        {body}
+      </SheetContent>
+    </Sheet>
   )
 }

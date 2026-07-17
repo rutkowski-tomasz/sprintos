@@ -4,7 +4,7 @@ import { classifySprintKey, formatSprintKey, formatSprintDateRange, SPRINT_LABEL
 import { TaskTableRow } from './TaskTableRow'
 import type { Goal, Task } from '@/types'
 
-const COLUMN_COUNT = 9
+const COLUMN_COUNT = 8
 
 interface TaskTableProps {
   tasks: Task[]
@@ -70,7 +70,6 @@ export function TaskTable({ tasks, goalMap, now, groupBySprint, selectedIds, onT
           <TableHead>Sprint</TableHead>
           <TableHead>Duration</TableHead>
           <TableHead>Goal</TableHead>
-          <TableHead className="w-8" />
         </TableRow>
       </TableHeader>
       <TableBody>

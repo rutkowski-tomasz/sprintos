@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChevronRight, TriangleAlert, Link, AlignLeft } from 'lucide-react'
+import { ArrowUpRight, TriangleAlert, Link, AlignLeft } from 'lucide-react'
 import { TableRow, TableCell } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
@@ -78,7 +78,7 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
       </TableCell>
       <TableCell className="text-base leading-none border-r-0">{task.emoji ?? ''}</TableCell>
       <TableCell
-        className="max-w-0 w-full whitespace-normal cursor-pointer"
+        className="group/name relative max-w-0 w-full whitespace-normal cursor-pointer"
         onClick={() => !editingName && startEditingName()}
       >
         {editingName ? (
@@ -92,15 +92,26 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
             className="w-full rounded px-1 -mx-1 py-0.5 bg-muted/60 border-0 outline-none text-sm"
           />
         ) : (
-          <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full">
-            <p className="truncate">{task.name}</p>
-            {(task.sourceUrl || task.description) && (
-              <span className="inline-flex items-center gap-1 shrink-0 text-muted-foreground/35">
-                {task.sourceUrl && <Link size={11} />}
-                {task.description && <AlignLeft size={11} />}
-              </span>
-            )}
-          </span>
+          <>
+            <span className="inline-flex items-center gap-1.5 min-w-0 max-w-full">
+              <p className="truncate">{task.name}</p>
+              {(task.sourceUrl || task.description) && (
+                <span className="inline-flex items-center gap-1 shrink-0 text-muted-foreground/70">
+                  {task.sourceUrl && <Link size={11} />}
+                  {task.description && <AlignLeft size={11} />}
+                </span>
+              )}
+            </span>
+            <Button
+              variant="secondary"
+              size="xs"
+              className="absolute right-1 top-1/2 -translate-y-1/2 shadow-md opacity-0 pointer-events-none cursor-pointer group-hover/name:opacity-100 group-hover/name:pointer-events-auto"
+              onClick={e => { e.stopPropagation(); onOpenDetail(task) }}
+            >
+              Open
+              <ArrowUpRight />
+            </Button>
+          </>
         )}
       </TableCell>
       <TableCell className="cursor-pointer" onClick={() => !editingDate && startEditingDate()}>
@@ -148,11 +159,6 @@ export function TaskTableRow({ task, goal, now, selected, onToggleSelect, onOpen
         ) : null}
       </TableCell>
       <TableCell>{goal ? <GoalChip goal={goal} /> : null}</TableCell>
-      <TableCell>
-        <Button variant="ghost" size="icon-sm" aria-label="Open task" onClick={() => onOpenDetail(task)}>
-          <ChevronRight />
-        </Button>
-      </TableCell>
     </TableRow>
   )
 }
